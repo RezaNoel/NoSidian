@@ -93,7 +93,42 @@ pub struct VaultWorkspaceProfile {
     pub right_width: u16,
     /// Free-form UI button preferences (pinned toolbar buttons etc.).
     pub ui_buttons: BTreeMap<String, bool>,
+    /// Open tabs (vault-relative paths) and the active one.
+    pub open_tabs: Vec<String>,
+    pub active_tab: Option<String>,
+    /// Starred notes.
+    pub starred: Vec<String>,
+    /// Recently opened notes, newest first, with unix-ms timestamps.
+    pub recent: Vec<RecentEntry>,
+    /// Folders the user collapsed in the explorer.
+    pub collapsed_folders: Vec<String>,
+    /// Explorer sort mode.
+    pub sort: SortMode,
+    /// Per-note view mode overrides (path -> mode).
+    pub note_modes: BTreeMap<String, ViewMode>,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RecentEntry {
+    pub path: String,
+    pub opened_at: u64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum SortMode {
+    #[default]
+    NameAsc,
+    NameDesc,
+    ModifiedNew,
+    ModifiedOld,
+    CreatedNew,
+    CreatedOld,
+}
+
+pub const MAX_RECENT: usize = 50;
+pub const MAX_TABS: usize = 30;
 
 impl Default for VaultWorkspaceProfile {
     fn default() -> Self {
@@ -106,6 +141,13 @@ impl Default for VaultWorkspaceProfile {
             left_width: LEFT_DEFAULT,
             right_width: RIGHT_DEFAULT,
             ui_buttons: BTreeMap::new(),
+            open_tabs: Vec::new(),
+            active_tab: None,
+            starred: Vec::new(),
+            recent: Vec::new(),
+            collapsed_folders: Vec::new(),
+            sort: SortMode::default(),
+            note_modes: BTreeMap::new(),
         }
     }
 }
@@ -114,6 +156,14 @@ impl VaultWorkspaceProfile {
     pub fn normalize(&mut self) {
         self.left_width = self.left_width.clamp(SIDEBAR_MIN, SIDEBAR_MAX);
         self.right_width = self.right_width.clamp(SIDEBAR_MIN, SIDEBAR_MAX);
+        self.recent.truncate(MAX_RECENT);
+        self.open_tabs.dedup();
+        self.open_tabs.truncate(MAX_TABS);
+        if let Some(a) = &self.active_tab {
+            if !self.open_tabs.contains(a) {
+                self.active_tab = self.open_tabs.first().cloned();
+            }
+        }
     }
 
     pub fn load(vault_root: &Path) -> CoreResult<Self> {

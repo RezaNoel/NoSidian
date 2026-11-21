@@ -1,57 +1,103 @@
 *, *::before, *::after { box-sizing: border-box; }
-html, body, #root { height: 100%; margin: 0; }
+html, body, #root { block-size: 100%; margin: 0; }
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-ui);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  overflow: hidden;
+  background: var(--bg-primary); color: var(--text-primary);
+  font-family: var(--font-ui); line-height: 1.5; overflow: hidden;
+  -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
 }
-button, input, select { font: inherit; color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
 :focus { outline: none; }
-:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-unit); }
+:focus-visible { box-shadow: var(--focus-ring); }
+::selection { background: var(--accent-soft); }
+* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
 
 .sr-only {
   position: absolute !important; inline-size: 1px; block-size: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 .skip-link {
-  position: absolute; inset-inline-start: 12px; inset-block-start: -100px; z-index: 100;
-  padding: 8px 14px; background: var(--accent); color: #fff; border-radius: var(--radius-unit);
+  position: absolute; inset-inline-start: 12px; inset-block-start: -100px; z-index: 1000;
+  padding: 8px 14px; background: var(--accent); color: #fff; border-radius: var(--radius-sm);
   text-decoration: none; font-weight: 600;
 }
 .skip-link:focus { inset-block-start: 12px; }
 
-/* ---------- Glass surfaces ----------
-   Real compositor blur of what is behind, a translucent tint, a hairline
-   border and a soft specular highlight along the top edge. Text sits on the
-   tint, never on raw blur, so it stays crisp. */
+/* ---------- Glass ----------
+   Real compositor blur of the backdrop, a translucent tint, a hairline border
+   and a specular top edge. Text always sits on the tint so it stays crisp. */
 .glass {
-  position: relative;
-  background: color-mix(in srgb, var(--surface) calc(var(--glass-opacity) * 100%), transparent);
+  background: var(--bg-secondary);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
   backdrop-filter: blur(var(--glass-blur)) saturate(160%);
-  border: 1px solid var(--hairline);
-  border-radius: calc(var(--radius-unit) * 1.5);
-  box-shadow: 0 1px 0 0 var(--specular) inset, 0 12px 32px -12px rgb(0 0 0 / 0.35);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 0 var(--specular);
+}
+.glass-card {
+  background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-md);
+  box-shadow: inset 0 1px 0 0 var(--specular);
+}
+.glass-modal {
+  background: var(--bg-modal);
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 1.4)) saturate(170%);
+  backdrop-filter: blur(calc(var(--glass-blur) * 1.4)) saturate(170%);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow), inset 0 1px 0 0 var(--specular);
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass { background: color-mix(in srgb, var(--surface) 94%, transparent); }
+  .glass, .glass-modal { background: rgb(var(--l1) / 0.96); }
 }
 
-/* ---------- Ambient mesh background ---------- */
-.ambient { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-.ambient span {
-  position: absolute; inline-size: 55vmax; block-size: 55vmax; border-radius: 50%;
-  filter: blur(70px); opacity: 0.55; animation: drift 28s ease-in-out infinite alternate;
+/* Atmospheric backdrop the glass blurs: a slow-moving mesh of soft color. */
+.backdrop { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.backdrop span {
+  position: absolute; inline-size: 60vmax; block-size: 60vmax; border-radius: 50%;
+  filter: blur(90px); opacity: 0.38; animation: drift 32s ease-in-out infinite alternate;
 }
-.ambient span:nth-child(1) { background: var(--mesh-1); inset-block-start: -15vmax; inset-inline-start: -10vmax; }
-.ambient span:nth-child(2) { background: var(--mesh-2); inset-block-end: -20vmax; inset-inline-end: -10vmax; animation-delay: -9s; }
-.ambient span:nth-child(3) { background: var(--mesh-3); inset-block-start: 30%; inset-inline-start: 35%; inline-size: 35vmax; block-size: 35vmax; animation-delay: -17s; }
-[data-mesh="false"] .ambient span { animation: none; opacity: 0.25; }
+.backdrop span:nth-child(1) { background: var(--mesh-1); inset-block-start: -22vmax; inset-inline-start: -18vmax; }
+.backdrop span:nth-child(2) { background: var(--mesh-2); inset-block-end: -26vmax; inset-inline-end: -16vmax; animation-delay: -11s; }
+.backdrop span:nth-child(3) { background: var(--mesh-3); inset-block-start: 25%; inset-inline-start: 40%; inline-size: 38vmax; block-size: 38vmax; opacity: 0.22; animation-delay: -21s; }
+[data-mesh="false"] .backdrop span { animation: none; }
 @keyframes drift {
   0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(6vmax, 4vmax) scale(1.08); }
-  100% { transform: translate(-4vmax, 7vmax) scale(0.95); }
+  50% { transform: translate(5vmax, 3vmax) scale(1.06); }
+  100% { transform: translate(-4vmax, 6vmax) scale(0.96); }
+}
+
+/* ---------- Common controls ---------- */
+.icon-btn {
+  display: inline-grid; place-items: center; inline-size: 32px; block-size: 32px; flex: none;
+  border: 0; background: transparent; color: var(--text-muted); border-radius: var(--radius-sm);
+  transition: background 120ms, color 120ms;
+}
+.icon-btn:hover { background: var(--hover); color: var(--text-primary); }
+.icon-btn[aria-pressed="true"], .icon-btn[aria-selected="true"], .icon-btn.active {
+  color: var(--accent); background: var(--accent-soft);
+}
+.icon-btn svg { inline-size: 18px; block-size: 18px; }
+.icon-btn.sm { inline-size: 26px; block-size: 26px; }
+.icon-btn.sm svg { inline-size: 15px; block-size: 15px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
+  background: var(--bg-tertiary); color: var(--text-primary); font-weight: 600; font-size: 0.92em;
+  transition: border-color 120ms, background 120ms;
+}
+.btn:hover { border-color: var(--accent-border); background: var(--hover); }
+.btn.primary { background: var(--accent); border-color: transparent; color: #fff; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn svg { inline-size: 16px; block-size: 16px; }
+
+.input {
+  inline-size: 100%; padding: 8px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: rgb(var(--l3) / 0.6);
+}
+.input:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.empty { color: var(--text-muted); font-size: 0.9em; padding: 12px; text-align: center; }
+.section-title {
+  font-size: 0.72em; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);
+  font-weight: 600; margin: 0;
 }

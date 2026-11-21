@@ -2,3 +2,18 @@
 # (brand names, product names). Format: <locale>:<id> or *:<id> for all.
 *:app-name
 *:theme-catppuccin-mocha
+# Loanwords that are the correct native term
+de:tab-tags
+fr:tab-tags
+pt-BR:tab-tags
+de:tab-links
+pt-BR:tab-links
+fr:tab-focus
+it:tab-focus
+de:mode-editor
+es:mode-editor
+it:mode-editor
+pt-BR:mode-editor
+de:ribbon-mindmap
+*:ribbon-kanban
+es:use-case-general

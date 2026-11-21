@@ -1,72 +1,102 @@
-/* Design tokens. Themes set colors; settings set --accent, --glass-blur,
-   --glass-opacity on <html> at runtime. All layout uses logical properties
-   (inline-start/end) so RTL works by flipping <html dir>. */
+/* Design tokens, matched to the AetherNote reference and refined.
+   Themes set colors; settings set --accent, --glass-blur, --glass-opacity at runtime.
+   Layout uses logical properties only, so RTL is a single <html dir> flip. */
 
 :root {
-  --accent: #8b7cf6;
+  --font-ui: "Plus Jakarta Sans", "Vazirmatn", system-ui, -apple-system, "Segoe UI", "Noto Sans",
+    "Noto Sans Arabic", "Noto Sans CJK SC", "Noto Sans Devanagari", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --accent: #7c3aed;
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+  --accent-border: color-mix(in srgb, var(--accent) 42%, transparent);
   --glass-blur: 18px;
-  --glass-opacity: 0.62;
-  --radius-unit: 8px;
+  --glass-opacity: 0.54;
+  --glass-surface: calc(var(--glass-opacity) * 0.82);
+  --glass-modal: max(0.78, var(--glass-opacity));
+  --radius-unit: 11px;
+  --radius-sm: calc(var(--radius-unit) * 0.55);
+  --radius-md: var(--radius-unit);
+  --radius-lg: calc(var(--radius-unit) * 1.45);
   --space: 8px;
-  --font-ui: system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans Arabic",
-    "Vazirmatn", "Noto Sans CJK SC", "Noto Sans Devanagari", sans-serif;
-  --ribbon-width: 52px;
+  --ribbon-width: 48px;
   --status-height: 28px;
-  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  --editor-font-size: 15px;
+  --editor-line-height: 1.8;
+  --editor-max-width: 760px;
+  --focus-ring: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent);
   color-scheme: dark;
 }
 
-/* ---------- Themes ---------- */
+/* Each theme: base color + RGB triples for glass layers + text + mesh colors. */
 :root, [data-theme="obsidian-slate"] {
-  --bg: #15171c; --surface: #1f2229; --text: #e6e8ee; --muted: #a3aab6;
-  --hairline: rgb(255 255 255 / 0.10); --specular: rgb(255 255 255 / 0.22);
-  --mesh-1: #5b4bd6; --mesh-2: #1f8a8a; --mesh-3: #a3417a;
+  --bg-primary: #0f1219; --l1: 20 24 34; --l2: 32 37 52; --l3: 18 21 31;
+  --text-primary: #eef0f6; --text-secondary: #b0b6c9; --text-muted: #868ea4;
+  --border: rgb(255 255 255 / 0.11); --border-strong: rgb(255 255 255 / 0.22);
+  --hover: rgb(255 255 255 / 0.07); --specular: rgb(255 255 255 / 0.10);
+  --shadow: 0 14px 36px rgb(0 0 0 / 0.48);
+  --mesh-1: #2a3cff; --mesh-2: #0f8f8a; --mesh-3: #7c3aed;
 }
 [data-theme="midnight-carbon"] {
-  --bg: #0b0c0f; --surface: #16181d; --text: #eceef2; --muted: #9aa0ab;
-  --hairline: rgb(255 255 255 / 0.08); --specular: rgb(255 255 255 / 0.18);
-  --mesh-1: #2c3e8f; --mesh-2: #6b2d8c; --mesh-3: #0f6e6e;
+  --bg-primary: #06070b; --l1: 11 13 20; --l2: 20 23 34; --l3: 11 13 21;
+  --text-primary: #f5f6fa; --text-secondary: #a6adc0; --text-muted: #7c8399;
+  --border: rgb(255 255 255 / 0.12); --border-strong: rgb(255 255 255 / 0.24);
+  --hover: rgb(255 255 255 / 0.08); --specular: rgb(255 255 255 / 0.09);
+  --shadow: 0 16px 40px rgb(0 0 0 / 0.72);
+  --mesh-1: #1d2b6b; --mesh-2: #4a1d6b; --mesh-3: #0b4f4f;
 }
 [data-theme="nord-arctic"] {
-  --bg: #2e3440; --surface: #3b4252; --text: #eceff4; --muted: #c0c8d6;
-  --hairline: rgb(255 255 255 / 0.12); --specular: rgb(255 255 255 / 0.24);
+  --bg-primary: #1f2530; --l1: 41 48 62; --l2: 56 65 83; --l3: 37 44 57;
+  --text-primary: #eceff4; --text-secondary: #d8dee9; --text-muted: #a3adc0;
+  --border: rgb(216 222 233 / 0.15); --border-strong: rgb(216 222 233 / 0.28);
+  --hover: rgb(216 222 233 / 0.10); --specular: rgb(255 255 255 / 0.11);
+  --shadow: 0 12px 30px rgb(0 0 0 / 0.36);
   --mesh-1: #5e81ac; --mesh-2: #88c0d0; --mesh-3: #b48ead;
 }
 [data-theme="catppuccin-mocha"] {
-  --bg: #1e1e2e; --surface: #313244; --text: #cdd6f4; --muted: #b4bcd8;
-  --hairline: rgb(255 255 255 / 0.10); --specular: rgb(255 255 255 / 0.22);
+  --bg-primary: #151522; --l1: 28 28 45; --l2: 43 44 68; --l3: 26 27 43;
+  --text-primary: #cdd6f4; --text-secondary: #b0b8d4; --text-muted: #8e94b0;
+  --border: rgb(205 214 244 / 0.14); --border-strong: rgb(205 214 244 / 0.25);
+  --hover: rgb(205 214 244 / 0.09); --specular: rgb(255 255 255 / 0.10);
+  --shadow: 0 12px 34px rgb(0 0 0 / 0.48);
   --mesh-1: #cba6f7; --mesh-2: #89b4fa; --mesh-3: #f5c2e7;
 }
 [data-theme="paper-daylight"] {
   color-scheme: light;
-  --bg: #eef0f4; --surface: #ffffff; --text: #1c2028; --muted: #4d5562;
-  --hairline: rgb(0 0 0 / 0.10); --specular: rgb(255 255 255 / 0.85);
+  --bg-primary: #edf1f8; --l1: 255 255 255; --l2: 244 247 253; --l3: 255 255 255;
+  --text-primary: #141720; --text-secondary: #434b5e; --text-muted: #5d6679;
+  --border: rgb(15 23 42 / 0.12); --border-strong: rgb(15 23 42 / 0.22);
+  --hover: rgb(15 23 42 / 0.06); --specular: rgb(255 255 255 / 0.75);
+  --shadow: 0 12px 30px rgb(15 23 42 / 0.12);
   --mesh-1: #a5b4fc; --mesh-2: #99f6e4; --mesh-3: #fbcfe8;
 }
 [data-theme="warm-parchment"] {
   color-scheme: light;
-  --bg: #efe6d6; --surface: #fbf6ee; --text: #2d2418; --muted: #5e5140;
-  --hairline: rgb(60 40 10 / 0.14); --specular: rgb(255 255 255 / 0.8);
+  --bg-primary: #f2ead8; --l1: 252 247 236; --l2: 240 230 209; --l3: 251 246 233;
+  --text-primary: #31261b; --text-secondary: #584836; --text-muted: #6e5c46;
+  --border: rgb(68 52 32 / 0.14); --border-strong: rgb(68 52 32 / 0.26);
+  --hover: rgb(68 52 32 / 0.07); --specular: rgb(255 255 255 / 0.6);
+  --shadow: 0 12px 30px rgb(68 52 32 / 0.14);
   --mesh-1: #f4c27a; --mesh-2: #e8a0a0; --mesh-3: #b7d3a8;
 }
+:root, [data-theme] {
+  --bg-secondary: rgb(var(--l1) / var(--glass-opacity));
+  --bg-tertiary: rgb(var(--l2) / var(--glass-surface));
+  --bg-modal: rgb(var(--l3) / var(--glass-modal));
+}
 
-/* ---------- Radius and density ---------- */
-[data-radius="sharp"] { --radius-unit: 3px; }
-[data-radius="balanced"] { --radius-unit: 8px; }
-[data-radius="soft"] { --radius-unit: 14px; }
-[data-density="compact"] { --space: 6px; font-size: 14px; }
-[data-density="comfortable"] { --space: 8px; font-size: 15px; }
+[data-radius="sharp"] { --radius-unit: 4px; }
+[data-radius="balanced"] { --radius-unit: 11px; }
+[data-radius="soft"] { --radius-unit: 16px; }
+[data-density="compact"] { --space: 6px; font-size: 13.5px; }
+[data-density="comfortable"] { --space: 8px; font-size: 14.5px; }
 
-/* ---------- Accessibility mode ---------- */
+/* Accessibility mode: stronger focus, opaque panels for contrast, no motion. */
 [data-a11y="true"] {
-  --focus-ring: 0 0 0 3px var(--bg), 0 0 0 6px var(--accent);
-  /* Keep glass panels opaque enough for strong text contrast. */
-  --glass-opacity: max(var(--glass-opacity), 0.9) !important;
+  --focus-ring: 0 0 0 3px var(--bg-primary), 0 0 0 6px var(--accent);
+  --glass-opacity: 0.94 !important;
 }
 [data-reduce-motion="true"] *, [data-reduce-motion="true"] *::before, [data-reduce-motion="true"] *::after {
-  animation-duration: 0.001ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.001ms !important;
+  animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important;
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }

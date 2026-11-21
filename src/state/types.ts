@@ -85,3 +85,57 @@ export function defaultConfig(): AppConfig {
     recentVaults: [],
   };
 }
+
+// ---------- Vault contents (mirrors crates/nosidian-core/src/notes.rs) ----------
+export type EntryKind = "markdown" | "pdf";
+export interface NoteMeta { path: string; kind: EntryKind; size: number; modified: number; created: number }
+export interface VaultTree { notes: NoteMeta[]; folders: string[] }
+
+export type ViewMode = "editor" | "split" | "reader" | "mindmap" | "kanban";
+export type LeftTab = "files" | "recent" | "search" | "tags" | "starred" | "calendar";
+export type RightTab = "links" | "outline" | "focus" | "history" | "srs";
+export type SortMode = "name-asc" | "name-desc" | "modified-new" | "modified-old" | "created-new" | "created-old";
+export type FocusProfile = "clean-minimal" | "deep-writing" | "review-quiz" | "full-studio";
+
+export interface WorkspaceProfile {
+  focusProfile: FocusProfile;
+  viewMode: ViewMode;
+  panels: { ribbon: boolean; left: boolean; right: boolean; statusBar: boolean };
+  leftTab: LeftTab;
+  rightTab: RightTab;
+  leftWidth: number;
+  rightWidth: number;
+  uiButtons: Record<string, boolean>;
+  openTabs: string[];
+  activeTab: string | null;
+  starred: string[];
+  recent: { path: string; openedAt: number }[];
+  collapsedFolders: string[];
+  sort: SortMode;
+  noteModes: Record<string, ViewMode>;
+}
+
+export const SIDEBAR_MIN = 200;
+export const SIDEBAR_MAX = 560;
+export const LEFT_DEFAULT = 280;
+export const RIGHT_DEFAULT = 300;
+
+export function defaultProfile(): WorkspaceProfile {
+  return {
+    focusProfile: "full-studio",
+    viewMode: "split",
+    panels: { ribbon: true, left: true, right: true, statusBar: true },
+    leftTab: "files",
+    rightTab: "links",
+    leftWidth: LEFT_DEFAULT,
+    rightWidth: RIGHT_DEFAULT,
+    uiButtons: {},
+    openTabs: [],
+    activeTab: null,
+    starred: [],
+    recent: [],
+    collapsedFolders: [],
+    sort: "name-asc",
+    noteModes: {},
+  };
+}
