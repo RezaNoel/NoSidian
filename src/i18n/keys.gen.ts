@@ -1167,6 +1167,27 @@ export interface MessageArgs {
   "media-watched-on": { date: string | number };
   "media-search": undefined;
   "media-stat-rating": undefined;
+  "mcp-stale": { path: string | number };
+  "mcp-connect-title": undefined;
+  "mcp-client-desktop": undefined;
+  "mcp-client-code": undefined;
+  "mcp-client-cursor": undefined;
+  "mcp-client-vscode": undefined;
+  "mcp-client-http": undefined;
+  "mcp-step-desktop": undefined;
+  "mcp-step-code": undefined;
+  "mcp-step-cursor": undefined;
+  "mcp-step-vscode": undefined;
+  "mcp-step-http": undefined;
+  "mcp-step-paste": undefined;
+  "mcp-step-restart": undefined;
+  "mcp-token-hint": undefined;
+  "mcp-examples-title": undefined;
+  "mcp-example-1": undefined;
+  "mcp-example-2": undefined;
+  "mcp-example-3": undefined;
+  "mcp-example-4": undefined;
+  "mcp-example-5": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2337,5 +2358,26 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "media-stat-titles",
   "media-watched-on",
   "media-search",
-  "media-stat-rating"
+  "media-stat-rating",
+  "mcp-stale",
+  "mcp-connect-title",
+  "mcp-client-desktop",
+  "mcp-client-code",
+  "mcp-client-cursor",
+  "mcp-client-vscode",
+  "mcp-client-http",
+  "mcp-step-desktop",
+  "mcp-step-code",
+  "mcp-step-cursor",
+  "mcp-step-vscode",
+  "mcp-step-http",
+  "mcp-step-paste",
+  "mcp-step-restart",
+  "mcp-token-hint",
+  "mcp-examples-title",
+  "mcp-example-1",
+  "mcp-example-2",
+  "mcp-example-3",
+  "mcp-example-4",
+  "mcp-example-5"
 ];

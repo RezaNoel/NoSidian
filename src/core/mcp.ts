@@ -34,7 +34,24 @@ export interface McpActivityLog {
   detail: string;
 }
 
-export const MCP_PROTOCOL_VERSION = '2024-11-05';
+/** Protocol versions this server speaks, newest first. */
+export const MCP_SUPPORTED_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
+export const MCP_PROTOCOL_VERSION = MCP_SUPPORTED_VERSIONS[0];
+
+/** A safe vault-relative note path ending in .md, or null for anything that could leave the vault or touch hidden folders. */
+export function cleanNotePath(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const p = raw.trim().replace(/\\/g, '/').replace(/^(\.\/)+/, '');
+  if (!p || p.startsWith('/') || /^[a-zA-Z]:/.test(p) || p.includes('\0')) return null;
+  const parts = p.split('/');
+  if (parts.some(s => !s.trim() || s === '.' || s === '..' || s.startsWith('.'))) return null;
+  return /\.md$/i.test(p) ? p : `${p}.md`;
+}
+
+const SERVER_INSTRUCTIONS =
+  'NoSidian vault: Markdown notes with [[wikilinks]], #tags and YAML front matter. ' +
+  'Start with list_notes or search_vault, then read_note. Paths are relative to the vault root, e.g. "Projects/Plan.md". ' +
+  'Writes (create_note, update_note, delete_note) only exist in read-write mode and may wait for the user to approve them in the app.';
 
 export function generateMcpToken(): string {
   const chars = 'abcdefghijkmnopqrstuvwxyz23456789';
@@ -56,11 +73,13 @@ export interface McpToolDefinition {
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean; openWorldHint?: boolean };
 }
 
 export const MCP_TOOLS: McpToolDefinition[] = [
   {
     name: 'list_notes',
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description: 'List all Markdown notes and folders in the user Vault with word counts and tags.',
     inputSchema: {
       type: 'object',
@@ -71,6 +90,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
   },
   {
     name: 'read_note',
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description: 'Read the full Markdown content and YAML frontmatter of a specific note path.',
     inputSchema: {
       type: 'object',
@@ -82,6 +102,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
   },
   {
     name: 'search_vault',
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description: 'Run full-text search across all vault notes including titles, content lines, and #tags.',
     inputSchema: {
       type: 'object',
@@ -94,6 +115,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
   },
   {
     name: 'get_backlinks',
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description: 'Inspect incoming backlinks and outgoing [[wikilinks]] for a given note.',
     inputSchema: {
       type: 'object',
@@ -105,11 +127,13 @@ export const MCP_TOOLS: McpToolDefinition[] = [
   },
   {
     name: 'list_tags',
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description: 'List every #tag and frontmatter tag across the entire vault with counts.',
     inputSchema: { type: 'object', properties: {} }
   },
   {
     name: 'create_note',
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description: 'Create a new Markdown note or suggest creating one in the user Vault.',
     inputSchema: {
       type: 'object',
@@ -123,6 +147,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
   },
   {
     name: 'update_note',
+    annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
     description: 'Update or append Markdown content to an existing note in the user Vault.',
     inputSchema: {
       type: 'object',
@@ -137,6 +162,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
   },
   {
     name: 'delete_note',
+    annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
     description: 'Propose or perform deletion of a note in the Vault.',
     inputSchema: {
       type: 'object',
@@ -259,10 +285,12 @@ export function runMcpToolCall(
   }
 
   if (toolName === 'create_note') {
-    const rawPath = typeof args.path === 'string' ? args.path.trim() : '';
     const content = typeof args.content === 'string' ? args.content : '';
-    if (!rawPath) return { isError: true, content: txt('Missing note path') };
-    const finalPath = rawPath.endsWith('.md') ? rawPath : `${rawPath}.md`;
+    const finalPath = cleanNotePath(args.path);
+    if (!finalPath) return { isError: true, content: txt('Invalid note path. Use a vault-relative path like "Folder/Note.md" without "..".') };
+    if (ctx.notes.some(n => n.path.toLowerCase() === finalPath.toLowerCase())) {
+      return { isError: true, content: txt(`Note already exists: "${finalPath}". Use update_note to change it.`) };
+    }
     const proposal: McpChangeProposal = {
       id: `prop-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
       action: 'create',
@@ -388,25 +416,27 @@ export function runMcpJsonRpc(
   }
 
   if (method === 'initialize') {
+    const requested = String(params?.protocolVersion ?? '');
     return {
       response: {
         jsonrpc: '2.0',
         id,
         result: {
-          protocolVersion: MCP_PROTOCOL_VERSION,
+          protocolVersion: MCP_SUPPORTED_VERSIONS.includes(requested) ? requested : MCP_PROTOCOL_VERSION,
+          instructions: SERVER_INSTRUCTIONS,
           capabilities: {
             tools: { listChanged: false },
             resources: { subscribe: false, listChanged: false },
             prompts: { listChanged: false }
           },
-          serverInfo: { name: 'nosidian-vault-mcp', version: '1.1.0' }
+          serverInfo: { name: 'nosidian', title: 'NoSidian vault', version: '1.2.0' }
         }
       },
       log: { method, ok: true, detail: 'Client initialized MCP session' }
     };
   }
 
-  if (method === 'notifications/initialized' || method === 'ping') {
+  if (method === 'notifications/initialized' || method === 'ping' || method.startsWith('notifications/')) {
     return { response: { jsonrpc: '2.0', id, result: {} } };
   }
 
@@ -454,6 +484,35 @@ export function runMcpJsonRpc(
     };
   }
 
+  if (method === 'resources/templates/list') {
+    return { response: { jsonrpc: '2.0', id, result: { resourceTemplates: [] } } };
+  }
+
+  if (method === 'prompts/get') {
+    const name = String(params?.name || '');
+    const pargs = (params?.arguments && typeof params.arguments === 'object' ? params.arguments : {}) as Record<string, unknown>;
+    const path = typeof pargs.path === 'string' ? pargs.path.trim() : '';
+    const note = path ? ctx.notes.find(n => n.path.toLowerCase() === path.toLowerCase()) : undefined;
+    if (path && !note) {
+      return { response: { jsonrpc: '2.0', id, error: { code: -32602, message: `Note not found: ${path}` } } };
+    }
+    let text: string;
+    if (name === 'review_vault_connections') {
+      text = note
+        ? `Review how "${note.path}" connects to the rest of my NoSidian vault. Use get_backlinks and search_vault to find related notes, then list missing [[wikilinks]] worth adding, notes that should be merged or split, and tags that would help. Do not change anything; give me a short list.\n\n---\n${note.content}`
+        : 'Review the structure of my NoSidian vault. Use list_notes, list_tags and search_vault to find orphan notes, missing [[wikilinks]], duplicate topics and tags that would help. Do not change anything; give me a short, prioritised list.';
+    } else if (name === 'generate_study_cards') {
+      if (!note) return { response: { jsonrpc: '2.0', id, error: { code: -32602, message: 'Argument "path" is required.' } } };
+      text = `Write flashcards for the note "${note.path}" in NoSidian card syntax, one per line: "question :: answer", "term ::: definition" for cards that work both ways, or "{{c1::hidden text}}" for cloze. Keep each card to one idea. Return only the cards so I can paste them under a "## Cards" heading.\n\n---\n${note.content}`;
+    } else {
+      return { response: { jsonrpc: '2.0', id, error: { code: -32602, message: `Unknown prompt: ${name}` } } };
+    }
+    return {
+      response: { jsonrpc: '2.0', id, result: { description: name, messages: [{ role: 'user', content: { type: 'text', text } }] } },
+      log: { method, ok: true, detail: `Prompt ${name}` }
+    };
+  }
+
   if (method === 'prompts/list') {
     return {
       response: {
@@ -464,12 +523,14 @@ export function runMcpJsonRpc(
             {
               name: 'review_vault_connections',
               description:
-                'Analyze notes, find missing [[wikilinks]], and propose structural improvements.'
+                'Analyze notes, find missing [[wikilinks]], and propose structural improvements.',
+              arguments: [{ name: 'path', description: 'Optional note to focus on', required: false }]
             },
             {
               name: 'generate_study_cards',
               description:
-                'Suggest ?? / +++ multi-line flashcards or {{c1::...}} cloze cards for a note.'
+                'Write flashcards for a note in NoSidian card syntax (question :: answer, {{c1::cloze}}).',
+              arguments: [{ name: 'path', description: 'Note to make cards from', required: true }]
             }
           ]
         }
@@ -517,13 +578,8 @@ export function buildClaudeDesktopConfigSnippet(endpointUrl: string, token: stri
       mcpServers: {
         nosidian: {
           command: 'npx',
-          args: [
-            '-y',
-            'mcp-remote',
-            endpointUrl,
-            '--header',
-            `Authorization: Bearer ${token}`
-          ]
+          args: ['-y', 'mcp-remote', endpointUrl, '--header', 'Authorization:${NOSIDIAN_AUTH}'],
+          env: { NOSIDIAN_AUTH: `Bearer ${token}` }
         }
       }
     },
@@ -535,7 +591,7 @@ export function buildClaudeDesktopConfigSnippet(endpointUrl: string, token: stri
 export function buildDirectHttpMcpSnippet(endpointUrl: string, token: string): string {
   return JSON.stringify(
     {
-      type: 'streamable-http',
+      type: 'http',
       url: endpointUrl,
       headers: {
         Authorization: `Bearer ${token}`
@@ -544,4 +600,17 @@ export function buildDirectHttpMcpSnippet(endpointUrl: string, token: string): s
     null,
     2
   );
+}
+
+/** One line for Claude Code: `claude mcp add`. */
+export function buildClaudeCodeCommand(endpointUrl: string, token: string): string {
+  return `claude mcp add --transport http nosidian ${endpointUrl} --header "Authorization: Bearer ${token}"`;
+}
+
+/** Cursor (~/.cursor/mcp.json) and VS Code (.vscode/mcp.json) entries. */
+export function buildCursorSnippet(endpointUrl: string, token: string): string {
+  return JSON.stringify({ mcpServers: { nosidian: { url: endpointUrl, headers: { Authorization: `Bearer ${token}` } } } }, null, 2);
+}
+export function buildVsCodeSnippet(endpointUrl: string, token: string): string {
+  return JSON.stringify({ servers: { nosidian: { type: 'http', url: endpointUrl, headers: { Authorization: `Bearer ${token}` } } } }, null, 2);
 }

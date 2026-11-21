@@ -896,3 +896,10 @@ svg.star.on { color: #f5b83d; fill: #f5b83d; }
 }
 .shelf > .empty-state { grid-column: 1 / -1; }
 .page-input span { white-space: nowrap; }
+.mcp-guide { border-block-start: 1px solid var(--border); padding-block-start: 12px; }
+.mcp-steps { margin: 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 0.9em; color: var(--text-secondary); }
+.code-box { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.code-box pre { margin: 0; inline-size: 100%; box-sizing: border-box; max-block-size: 220px; overflow: auto; padding: 10px 12px; border-radius: var(--radius-sm); background: rgb(var(--l3) / 0.7); border: 1px solid var(--border); font-size: 0.8em; direction: ltr; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mcp-examples { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.9em; }
+.mcp-examples li { display: flex; gap: 6px; align-items: flex-start; }
+.mcp-examples li span { padding-block-start: 4px; }

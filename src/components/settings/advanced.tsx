@@ -7,7 +7,7 @@ import { pref, setPref, type Prefs } from "../../state/prefs";
 import { settings, updateSettings } from "../../state/settings";
 import { dev, applyCustomCss, decideProposal, mcp, mcpActivity, mcpEndpoint, mcpError, mcpProposals, mcpStatus, pluginLogs, regenerateToken, runPlugin } from "../../state/devtools";
 import { DEVELOPER_CSS_PRESETS } from "../../core/devExtensions";
-import { buildClaudeDesktopConfigSnippet, buildDirectHttpMcpSnippet, type McpAccessMode } from "../../core/mcp";
+import { buildClaudeCodeCommand, buildClaudeDesktopConfigSnippet, buildCursorSnippet, buildDirectHttpMcpSnippet, buildVsCodeSnippet, type McpAccessMode } from "../../core/mcp";
 import { exportBackup, exportStandalone, importIntoVault } from "../../state/export";
 import { toast } from "../../state/ui";
 import { inTauri } from "../../state/backend";
@@ -28,6 +28,47 @@ export function PetSettings() {
       <button class="btn" onClick={openPetStudio}>{t("pet-open")}</button>
       <h3 class="set-sub">{t("pet-model-title")}</h3>
       <PetModelControls />
+    </div>
+  );
+}
+
+type McpClient = "desktop" | "code" | "cursor" | "vscode" | "http";
+const MCP_CLIENTS: McpClient[] = ["desktop", "code", "cursor", "vscode", "http"];
+const MCP_EXAMPLES = ["mcp-example-1", "mcp-example-2", "mcp-example-3", "mcp-example-4", "mcp-example-5"] as const;
+
+/** Step-by-step connection for common AI clients, with a ready-to-paste config and example requests. */
+function McpConnectGuide() {
+  const [client, setClient] = createSignal<McpClient>("desktop");
+  const snippet = () => {
+    const url = mcpEndpoint(), token = mcp.state.token;
+    switch (client()) {
+      case "desktop": return buildClaudeDesktopConfigSnippet(url, token);
+      case "code": return buildClaudeCodeCommand(url, token);
+      case "cursor": return buildCursorSnippet(url, token);
+      case "vscode": return buildVsCodeSnippet(url, token);
+      default: return buildDirectHttpMcpSnippet(url, token);
+    }
+  };
+  return (
+    <div class="mcp-guide stack">
+      <h3 class="section-title">{t("mcp-connect-title")}</h3>
+      <div class="chip-row" role="tablist" aria-label={t("mcp-connect-title")}>
+        <For each={MCP_CLIENTS}>{(c) => <button class="chip" role="tab" aria-selected={client() === c} onClick={() => setClient(c)}>{t(`mcp-client-${c}`)}</button>}</For>
+      </div>
+      <ol class="mcp-steps">
+        <li>{t(`mcp-step-${client()}`)}</li>
+        <li>{t("mcp-step-paste")}</li>
+        <li>{t("mcp-step-restart")}</li>
+      </ol>
+      <div class="code-box">
+        <pre dir="ltr">{snippet().replace(mcp.state.token, `${mcp.state.token.slice(0, 12)}…`)}</pre>
+        <button class="btn sm" onClick={() => copy(snippet())}><Copy />{t("action-copy")}</button>
+      </div>
+      <p class="hint">{t("mcp-token-hint")}</p>
+      <h3 class="section-title">{t("mcp-examples-title")}</h3>
+      <ul class="mcp-examples">
+        <For each={MCP_EXAMPLES}>{(k) => <li><button class="btn ghost sm" title={t("action-copy")} onClick={() => copy(t(k))}><Copy /></button><span>{t(k)}</span></li>}</For>
+      </ul>
     </div>
   );
 }
@@ -54,10 +95,7 @@ export function McpSettings() {
           <button class="btn sm" onClick={() => copy(mcp.state.token)}><Copy />{t("mcp-copy-token")}</button>
           <button class="btn sm" onClick={regenerateToken}><RefreshCw />{t("mcp-new-token")}</button>
         </div>
-        <div class="row wrap">
-          <button class="btn sm" onClick={() => copy(buildClaudeDesktopConfigSnippet(mcpEndpoint(), mcp.state.token))}><Copy />{t("mcp-copy-desktop")}</button>
-          <button class="btn sm" onClick={() => copy(buildDirectHttpMcpSnippet(mcpEndpoint(), mcp.state.token))}><Copy />{t("mcp-copy-http")}</button>
-        </div>
+        <McpConnectGuide />
         <Show when={mcpProposals().length}>
           <h3 class="section-title">{t("mcp-pending")}</h3>
           <For each={mcpProposals()}>

@@ -1,7 +1,7 @@
 //! Tauri entry point: wires the platform-independent core to the UI through
 //! a small set of commands. Shared by desktop (`main.rs`) and mobile.
 
-mod bridge;
+pub mod bridge;
 mod commands;
 mod google;
 

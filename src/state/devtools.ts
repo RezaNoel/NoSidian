@@ -119,24 +119,29 @@ export const mcpProposals = rt.proposals;
 export const mcpEndpoint = () => `http://127.0.0.1:${rt.boundPort() || mcp.state.port}/mcp`;
 export { MCP_PROTOCOL_VERSION };
 
-async function applyProposal(p: McpChangeProposal): Promise<void> {
+/** Apply an AI change. Returns false when the vault moved on since it was proposed, so nothing is lost. */
+async function applyProposal(p: McpChangeProposal): Promise<boolean> {
   const exists = markdownPaths().includes(p.path);
-  if (p.action === "delete") { if (exists) await trashEntry(p.path); return; }
-  if (p.action === "create" && !exists) {
+  if (p.action === "create") {
+    if (exists) return false;
     const clean = p.path.replace(/\.md$/i, "");
     await createNote(clean.split("/").pop()!, clean.includes("/") ? clean.slice(0, clean.lastIndexOf("/")) : undefined, p.newContent ?? "", false);
-    return;
+    return true;
   }
+  if (!exists) return false;
   await ensureLoaded(p.path);
-  setContent(p.path, p.newContent ?? "");
+  if (p.previousContent !== undefined && (contents[p.path] ?? "") !== p.previousContent) return false;
+  if (p.action === "delete") await trashEntry(p.path);
+  else setContent(p.path, p.newContent ?? "");
+  return true;
 }
 
 export async function decideProposal(id: string, approve: boolean): Promise<void> {
   const p = rt.proposals().find((x) => x.id === id);
   if (!p) return;
-  if (approve) await applyProposal(p);
+  const ok = approve ? await applyProposal(p) : true;
   rt.setProposals((l) => l.filter((x) => x.id !== id));
-  toast(approve ? t("mcp-applied", { path: p.path }) : t("mcp-rejected", { path: p.path }));
+  toast(!ok ? t("mcp-stale", { path: p.path }) : approve ? t("mcp-applied", { path: p.path }) : t("mcp-rejected", { path: p.path }), !ok);
 }
 
 let unlisten: (() => void) | null = null;
@@ -156,7 +161,7 @@ async function onRequest(id: number, body: string, client: string) {
         autoApplyChanges: mcp.state.autoApplyChanges,
         onApplyWrite: (proposal, now) => {
           const withClient = { ...proposal, clientName: client.slice(0, 60) };
-          if (now) void applyProposal(withClient);
+          if (now) void applyProposal(withClient).then((ok) => { if (!ok) toast(t("mcp-stale", { path: proposal.path }), true); });
           else { rt.setProposals((l) => [withClient, ...l].slice(0, 50)); toast(t("mcp-proposal", { path: proposal.path })); }
         },
       });
