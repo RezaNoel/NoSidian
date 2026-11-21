@@ -11,6 +11,7 @@ import { resolveNoteByLink } from "../../core/knowledge";
 import type { GraphSettings, Note } from "../../core/types";
 import { corpus, loadAllNotes } from "../../state/corpus";
 import { activePath, openNote } from "../../state/vault";
+import { noteItemMenu, tagMenu } from "../itemMenus";
 import { vaultDoc } from "../../state/persist";
 import { noteTitle } from "../../lib/markdown";
 import { settings } from "../../state/settings";
@@ -198,7 +199,7 @@ export default function GraphView() {
     return visible().nodes.find((n) => (n.x - p.x) ** 2 + (n.y - p.y) ** 2 <= (radius(n) + 4) ** 2) ?? null;
   };
   let moved = false;
-  const down = (e: PointerEvent) => { canvas.setPointerCapture(e.pointerId); dragging = pick(e); panning = !dragging; last = { x: e.clientX, y: e.clientY }; moved = false; };
+  const down = (e: PointerEvent) => { if (e.button !== 0) return; canvas.setPointerCapture(e.pointerId); dragging = pick(e); panning = !dragging; last = { x: e.clientX, y: e.clientY }; moved = false; };
   const move = (e: PointerEvent) => {
     if (dragging) { const p = toWorld(e); dragging.x = p.x; dragging.y = p.y; alpha = Math.max(alpha, 0.3); moved = true; }
     else if (panning) { view.x += e.clientX - last.x; view.y += e.clientY - last.y; moved = moved || Math.abs(e.clientX - last.x) + Math.abs(e.clientY - last.y) > 2; }
@@ -206,6 +207,7 @@ export default function GraphView() {
     last = { x: e.clientX, y: e.clientY };
   };
   const up = (e: PointerEvent) => {
+    if (e.button !== 0) return;
     const hit = dragging;
     dragging = null; panning = false;
     if (!moved) { const n = hit ?? pick(e); if (n?.note) openNote(n.note.path); else if (n?.tag) window.dispatchEvent(new CustomEvent("nosidian:search", { detail: n.label })); }
@@ -240,7 +242,8 @@ export default function GraphView() {
         <button class="icon-btn" aria-pressed={panel()} title={t("graph-settings")} aria-label={t("graph-settings")} onClick={() => setPanel(!panel())}><Settings2 /></button>
       </div>
       <div class="graph-body">
-        <canvas ref={canvas} class="graph-canvas" aria-hidden="true" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerLeave={() => setHover(null)} onWheel={wheel} />
+        <canvas ref={canvas} class="graph-canvas" aria-hidden="true" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerLeave={() => setHover(null)} onWheel={wheel}
+          onContextMenu={(e) => { const n = pick(e); if (n?.note) noteItemMenu(e, n.note.path); else if (n?.tag) tagMenu(e, n.label.replace(/^#/, "")); else e.preventDefault(); }} />
         <Show when={hover()}>{(n) => <div class="graph-tip glass-modal" dir="auto">{n().label} · {t("graph-links", { count: n().deg })}</div>}</Show>
         <Show when={panel()}>
           <aside class="graph-panel glass-modal stack" aria-label={t("graph-settings")}>

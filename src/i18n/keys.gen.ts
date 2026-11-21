@@ -1194,6 +1194,13 @@ export interface MessageArgs {
   "tab-close-all": undefined;
   "tab-copy-path": undefined;
   "tab-show-in-files": undefined;
+  "menu-remove-recent": undefined;
+  "menu-clear-recent": undefined;
+  "tag-search": undefined;
+  "tag-copy": undefined;
+  "cal-add-yearly": undefined;
+  "cal-add-once": undefined;
+  "cal-remove-date": { name: string | number };
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2391,5 +2398,12 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "tab-close-right",
   "tab-close-all",
   "tab-copy-path",
-  "tab-show-in-files"
+  "tab-show-in-files",
+  "menu-remove-recent",
+  "menu-clear-recent",
+  "tag-search",
+  "tag-copy",
+  "cal-add-yearly",
+  "cal-add-once",
+  "cal-remove-date"
 ];

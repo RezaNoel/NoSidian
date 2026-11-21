@@ -18,6 +18,7 @@ import { promptNewNote } from "./FileTree";
 import { Logo } from "./Logo";
 import { PetViewport } from "./pet/PetViewport";
 import type { ModuleId } from "../state/types";
+import { noteItemMenu, recentExtras } from "./itemMenus";
 
 interface Shortcut { key: MessageKey; icon: typeof Brain; module?: ModuleId; combo?: string; run: () => void }
 
@@ -82,7 +83,7 @@ export function StartPage() {
             <For each={recent()}>
               {(r) => (
                 <li>
-                  <button class="start-file" onClick={() => openNote(r.path)}>
+                  <button class="start-file" onClick={() => openNote(r.path)} onContextMenu={(e) => noteItemMenu(e, r.path, recentExtras(r.path))}>
                     <FileText aria-hidden="true" />
                     <span class="start-file-name" dir="auto">{noteTitle(r.path)}</span>
                     <span class="start-file-time">{relativeTime(r.openedAt, locale())}</span>

@@ -14,6 +14,8 @@ import { revealLine } from "./Editor";
 import { CalendarPanel } from "./Calendar";
 import { FileTree } from "./FileTree";
 import { VaultFooter } from "./VaultFooter";
+import { noteItemMenu, recentExtras, tagMenu } from "./itemMenus";
+import type { MenuItem } from "./ContextMenu";
 import { VaultBanner } from "./Banner";
 import { hasTitleBar } from "./TitleBar";
 
@@ -34,10 +36,10 @@ const open = (path: string) => {
   if (isMobile()) setDrawer("none");
 };
 
-function NoteLink(props: { path: string; meta?: string; snippet?: string }) {
+function NoteLink(props: { path: string; meta?: string; snippet?: string; extra?: MenuItem[] }) {
   return (
     <li>
-      <button class="list-row" classList={{ active: activePath() === props.path }} onClick={() => open(props.path)}>
+      <button class="list-row" classList={{ active: activePath() === props.path }} onClick={() => open(props.path)} onContextMenu={(e) => noteItemMenu(e, props.path, props.extra)}>
         <span class="list-title" dir="auto">{noteTitle(props.path)}</span>
         <Show when={props.meta}><span class="list-meta">{props.meta}</span></Show>
         <Show when={props.snippet}><span class="list-snippet" dir="auto">{props.snippet}</span></Show>
@@ -55,7 +57,7 @@ function RecentPanel() {
     <div class="panel">
       <div class="panel-head"><h2 class="section-title">{t("tab-recent")}</h2></div>
       <Show when={items().length} fallback={<p class="empty">{t("links-none")}</p>}>
-        <ul class="list"><For each={items()}>{(r) => <NoteLink path={r.path} meta={relativeTime(r.openedAt, locale())} />}</For></ul>
+        <ul class="list"><For each={items()}>{(r) => <NoteLink path={r.path} meta={relativeTime(r.openedAt, locale())} extra={recentExtras(r.path)} />}</For></ul>
       </Show>
     </div>
   );
@@ -129,7 +131,7 @@ function SearchPanel() {
             <For each={results()}>
               {(r) => (
                 <li class="search-hit">
-                  <button class="list-row" classList={{ active: activePath() === r.path }} onClick={() => go(r.path, r.matches[0]?.line)}>
+                  <button class="list-row" classList={{ active: activePath() === r.path }} onClick={() => go(r.path, r.matches[0]?.line)} onContextMenu={(e) => noteItemMenu(e, r.path)}>
                     <span class="list-title" dir="auto"><Highlighted text={r.title} terms={terms()} /></span>
                     <Show when={r.path.includes("/")}><span class="list-meta" dir="auto">{r.path.slice(0, r.path.lastIndexOf("/"))}</span></Show>
                   </button>
@@ -167,7 +169,7 @@ function TagsPanel() {
         <div class="tag-cloud">
           <For each={tags()}>
             {(tag) => (
-              <button class="tag-chip" aria-pressed={selected() === tag.tag} onClick={() => setSelected(selected() === tag.tag ? null : tag.tag)}>
+              <button class="tag-chip" aria-pressed={selected() === tag.tag} onClick={() => setSelected(selected() === tag.tag ? null : tag.tag)} onContextMenu={(e) => tagMenu(e, tag.tag)}>
                 <Hash aria-hidden="true" />{tag.tag}<span class="count">{tag.count}</span>
               </button>
             )}

@@ -11,6 +11,7 @@ import { askText } from "../state/ui";
 import { locale, t } from "../i18n";
 import { calendarFor, intlLocale, monthGrid, monthOf, sameDay, shiftMonth, weekStartFor, type MonthRef } from "../lib/dates";
 import { openDailyNote } from "../state/daily";
+import { dayMenu } from "./itemMenus";
 import { isMobile, setDrawer } from "../state/ui";
 
 const ICONS: Record<MarkKind, typeof Star> = { birthday: Cake, date: Star, deadline: Flag, task: Clock, google: CalendarDays, cards: Brain, focus: Timer, daily: FileText };
@@ -131,6 +132,7 @@ export function CalendarPanel() {
                               title={marks().map((m) => m.label).join("\n") || undefined}
                               onClick={() => { if (isFocus()) open(day()); else setFocus(day()); }}
                               onDblClick={() => open(day())}
+                              onContextMenu={(e) => { setFocus(day()); dayMenu(e, day()); }}
                             >
                               <span class="cal-num">{dayNum().format(day())}</span>
                               <DayMarks marks={marks()} />
