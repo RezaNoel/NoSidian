@@ -68,6 +68,7 @@ pub fn run() {
             commands::file_write,
             commands::files_import,
             commands::export_text,
+            commands::export_bytes,
             commands::vault_backup,
             commands::reveal_in_os,
             commands::entry_abs_path,

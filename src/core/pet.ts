@@ -57,6 +57,26 @@ export const PET_SPECIES_INFO: PetSpeciesMeta[] = [
     houseTitle: 'Bamboo Tea Pavilion',
     houseDescription: 'Misty bamboo grove veranda, warm tea table, and serene stone lanterns.',
     houseThemeGradient: 'from-emerald-950/80 via-teal-950/70 to-slate-950/80'
+  },
+  {
+    id: 'bunny',
+    name: 'Meadow Bunny',
+    tagline: 'Quick reviews and light reading',
+    accent: '#f9a8d4',
+    houseStyle: 'sunroom',
+    houseTitle: 'Clover Meadow Nook',
+    houseDescription: 'Soft clover rug, carrot basket and a sunny window.',
+    houseThemeGradient: ''
+  },
+  {
+    id: 'pup',
+    name: 'Golden Pup',
+    tagline: 'Loyal company for long sessions',
+    accent: '#f59e0b',
+    houseStyle: 'den',
+    houseTitle: 'Fireside Kennel',
+    houseDescription: 'Warm blanket, chew toy and a fireplace.',
+    houseThemeGradient: ''
   }
 ];
 
@@ -176,14 +196,16 @@ export function createDefaultPetState(now = Date.now()): PetState {
     equippedAccessories: ['carbon-cap'],
     lastInteractionAt: now,
     playWindowStart: now,
-    playCoinsUsedInWindow: 0
+    playCoinsUsedInWindow: 0,
+    bornAt: now,
+    bond: 20
   };
 }
 
 export function normalizePetState(raw?: Partial<PetState> | null, now = Date.now()): PetState {
   const base = createDefaultPetState(now);
   if (!raw || typeof raw !== 'object') return base;
-  const validSpecies: PetSpecies[] = ['fox', 'owl', 'cat', 'panda'];
+  const validSpecies: PetSpecies[] = ['fox', 'owl', 'cat', 'panda', 'bunny', 'pup'];
   const validActivities: PetActivityState[] = ['idle', 'playing', 'sleep', 'feeding'];
   const normalizedEnergy = clampStat(raw.energy, base.energy);
   const rawActivity = validActivities.includes(raw.activity as PetActivityState)
@@ -227,8 +249,25 @@ export function normalizePetState(raw?: Partial<PetState> | null, now = Date.now
     customModelName:
       typeof raw.customModelName === 'string' && raw.customModelName.trim()
         ? raw.customModelName.trim().slice(0, 64)
-        : undefined
+        : undefined,
+    bornAt: typeof raw.bornAt === 'number' && Number.isFinite(raw.bornAt) && raw.bornAt <= now ? raw.bornAt : now,
+    bond: typeof raw.bond === 'number' && Number.isFinite(raw.bond) ? Math.max(0, Math.min(100, Math.round(raw.bond * 10) / 10)) : 20
   };
+}
+
+/** Overall contentment (0..100) from the four needs, weighted toward mood and health. */
+export function petSatisfaction(s: PetState): number {
+  return Math.round(s.happiness * 0.35 + s.health * 0.25 + s.hunger * 0.25 + s.energy * 0.15);
+}
+
+/** Whole days since adoption. */
+export function petAgeDays(s: PetState, now = Date.now()): number {
+  return Math.max(0, Math.floor((now - (s.bornAt ?? now)) / 86_400_000));
+}
+
+export type BondTier = 'new' | 'friendly' | 'close' | 'best';
+export function petBondTier(bond: number): BondTier {
+  return bond >= 85 ? 'best' : bond >= 60 ? 'close' : bond >= 30 ? 'friendly' : 'new';
 }
 
 export function renamePet(state: PetState, nextName: string): PetState {

@@ -25,7 +25,7 @@ function damp(prev: Pet3DRigPose | null, target: Pet3DRigPose, dt: number): Pet3
   return { ...target, bodyPosX: d(prev.bodyPosX, target.bodyPosX), bodyPosY: d(prev.bodyPosY, target.bodyPosY), bodyPosZ: d(prev.bodyPosZ, target.bodyPosZ), bodyRotX: d(prev.bodyRotX, target.bodyRotX), bodyRotY: d(prev.bodyRotY, target.bodyRotY), bodyRotZ: d(prev.bodyRotZ, target.bodyRotZ), toyPosX: d(prev.toyPosX, target.toyPosX), toyPosY: d(prev.toyPosY, target.toyPosY), toyPosZ: d(prev.toyPosZ, target.toyPosZ), bowlSpin: d(prev.bowlSpin, target.bowlSpin), moonGlow: d(prev.moonGlow, target.moonGlow) };
 }
 
-export function PetViewport(props: { species: PetSpecies; activity: PetActivityState; accessories: string[]; customModelId?: string; variant?: Variant; label: string; onAction?: (a: Pet3DInteractAction) => void }) {
+export function PetViewport(props: { species: PetSpecies; activity: PetActivityState; accessories: string[]; customModelId?: string; variant?: Variant; label: string; onAction?: (a: Pet3DInteractAction) => void; onCapture?: (capture: () => string) => void }) {
   let mount!: HTMLDivElement;
   const [failed, setFailed] = createSignal(false);
   const [ready, setReady] = createSignal(false);
@@ -87,9 +87,9 @@ export function PetViewport(props: { species: PetSpecies; activity: PetActivityS
     const key = new THREE.DirectionalLight(0xfff7ed, 2.0);
     key.position.set(2.8, 4.5, 3.2);
     if (!softGl && !mini) { key.castShadow = true; key.shadow.mapSize.set(512, 512); Object.assign(key.shadow.camera, { near: 0.5, far: 12, left: -2.2, right: 2.2, top: 2.2, bottom: -2.2 }); key.shadow.bias = -0.0005; key.shadow.normalBias = 0.02; }
-    const rim = new THREE.DirectionalLight(0x60a5fa, 0.95);
+    const rim = new THREE.DirectionalLight(0xe8eef7, 0.7);
     rim.position.set(-2.6, 2.2, -2.8);
-    sc.add(new THREE.HemisphereLight(0xdbeafe, 0x1e293b, 0.9), key, rim);
+    sc.add(new THREE.HemisphereLight(0xf5f5f4, 0x2a2a2e, 0.9), key, rim);
     const cfg = CAMERA[variant()];
     const cam = new THREE.PerspectiveCamera(cfg.fov, r.domElement.clientWidth / Math.max(1, r.domElement.clientHeight), 0.1, 30);
     cam.position.set(...cfg.pos);
@@ -102,6 +102,8 @@ export function PetViewport(props: { species: PetSpecies; activity: PetActivityS
       controls.update();
     }
     buildModel();
+    // Render a fresh frame and read it straight back (no preserved buffer needed).
+    props.onCapture?.(() => { r.render(sc, cam); return r.domElement.toDataURL("image/png"); });
 
     const ray = new THREE.Raycaster();
     ray.layers.set(1);

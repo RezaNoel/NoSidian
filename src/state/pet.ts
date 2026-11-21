@@ -11,10 +11,17 @@ export function setPet(next: PetState): void {
   pet.replace(normalizePetState(next));
 }
 
+/** Care and attention strengthen the bond a little each time. */
+export function bumpBond(amount: number): void {
+  if (!pet.ready()) return;
+  const s = JSON.parse(JSON.stringify(pet.state)) as PetState;
+  setPet({ ...s, bond: Math.min(100, (s.bond ?? 20) + amount), lastInteractionAt: Date.now() });
+}
+
 export function rewardPet(kind: PetVaultActivityKind): number {
   if (!settings.petEnabled) return 0;
   const r = awardPetVaultActivity(JSON.parse(JSON.stringify(pet.state)), kind);
-  setPet(r.next);
+  setPet({ ...r.next, bond: Math.min(100, (r.next.bond ?? 20) + 0.3) });
   return r.coinsAwarded;
 }
 
@@ -35,6 +42,8 @@ if (typeof window !== "undefined") {
     const s = JSON.parse(JSON.stringify(pet.state)) as PetState;
     let next = tickPetSleepRecovery(s);
     if (next.activity !== "sleep") next = { ...next, hunger: Math.max(0, next.hunger - 0.4), energy: Math.max(0, next.energy - 0.2), happiness: Math.max(0, next.happiness - (next.hunger < 25 ? 0.5 : 0.1)) };
+    // Long neglect (hungry and unhappy) slowly loosens the bond.
+    if (next.hunger < 15 && next.happiness < 25) next = { ...next, bond: Math.max(0, (next.bond ?? 20) - 0.05) };
     setPet(next);
   }, 60_000);
 }

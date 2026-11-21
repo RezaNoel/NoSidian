@@ -72,53 +72,82 @@ interface SpeciesPalette {
 }
 
 const SPECIES_PALETTES: Record<PetSpecies, SpeciesPalette> = {
+  // Natural coats: red fox with cream chest and dark socks.
   fox: {
-    primary: 0x2563eb,
-    secondary: 0x1d4ed8,
-    belly: 0xf1f5f9,
-    earInner: 0x93c5fd,
-    nose: 0x0f172a,
-    rugBase: '#271e18',
-    rugAccent: '#d97706',
-    eyeIris: 0x0f172a,
-    toyPrimary: 0xf59e0b,
+    primary: 0xe0712f,
+    secondary: 0x3a2a22,
+    belly: 0xfff4e6,
+    earInner: 0x3a2a22,
+    nose: 0x1c1917,
+    rugBase: '#2a211b',
+    rugAccent: '#c2894b',
+    eyeIris: 0x1c1917,
+    toyPrimary: 0x3b7ddd,
     toyStripe: 0xffffff
   },
+  // Tawny owl: warm brown with a pale facial disc and amber eyes.
   owl: {
-    primary: 0x0284c7,
-    secondary: 0x0369a1,
-    belly: 0xe0f2fe,
-    earInner: 0x7dd3fc,
-    nose: 0xf59e0b,
-    rugBase: '#111a2e',
-    rugAccent: '#38bdf8',
-    eyeIris: 0xfbbf24,
-    toyPrimary: 0x38bdf8,
-    toyStripe: 0xfde047
+    primary: 0x9a7451,
+    secondary: 0x6b4f37,
+    belly: 0xf0e2c6,
+    earInner: 0x6b4f37,
+    nose: 0xe0a43a,
+    rugBase: '#1d2230',
+    rugAccent: '#8fa3c7',
+    eyeIris: 0xf2b134,
+    toyPrimary: 0x3b7ddd,
+    toyStripe: 0xf0e2c6
   },
+  // Grey tabby with white muzzle and green eyes.
   cat: {
-    primary: 0xec4899,
-    secondary: 0xdb2777,
-    belly: 0xfff1f2,
-    earInner: 0xfbcfe8,
-    nose: 0xfb7185,
-    rugBase: '#2a1624',
-    rugAccent: '#f472b6',
-    eyeIris: 0x10b981,
-    toyPrimary: 0xf43f5e,
-    toyStripe: 0xfde047
+    primary: 0x8e9299,
+    secondary: 0x5f636b,
+    belly: 0xf5f5f4,
+    earInner: 0xf2b8c4,
+    nose: 0xe88a9c,
+    rugBase: '#24222a',
+    rugAccent: '#b9a2c9',
+    eyeIris: 0x5fa86b,
+    toyPrimary: 0xe0712f,
+    toyStripe: 0xffffff
   },
   panda: {
-    primary: 0xf8fafc,
-    secondary: 0x1e293b,
-    belly: 0xf8fafc,
-    earInner: 0x334155,
-    nose: 0x0f172a,
-    rugBase: '#12261e',
-    rugAccent: '#34d399',
-    eyeIris: 0x1e293b,
-    toyPrimary: 0x10b981,
-    toyStripe: 0xfef08a
+    primary: 0xf7f7f5,
+    secondary: 0x22252b,
+    belly: 0xf7f7f5,
+    earInner: 0x22252b,
+    nose: 0x16181c,
+    rugBase: '#18261f',
+    rugAccent: '#7fb98f',
+    eyeIris: 0x22252b,
+    toyPrimary: 0x7fb98f,
+    toyStripe: 0xf7f7f5
+  },
+  // Cream bunny with pink ears and nose.
+  bunny: {
+    primary: 0xf3ece2,
+    secondary: 0xd9cbb8,
+    belly: 0xffffff,
+    earInner: 0xf4b6c2,
+    nose: 0xe98a9e,
+    rugBase: '#22281f',
+    rugAccent: '#9cc48a',
+    eyeIris: 0x2b1d1a,
+    toyPrimary: 0xe9772f,
+    toyStripe: 0x6fae4f
+  },
+  // Golden retriever pup with soft ears.
+  pup: {
+    primary: 0xd9a45b,
+    secondary: 0xb9813f,
+    belly: 0xfbeed8,
+    earInner: 0xb9813f,
+    nose: 0x2a1f1a,
+    rugBase: '#2a2119',
+    rugAccent: '#d29a54',
+    eyeIris: 0x2a1f1a,
+    toyPrimary: 0xd94f4f,
+    toyStripe: 0xffffff
   }
 };
 
@@ -132,9 +161,11 @@ function createCanvasCoatTexture(baseColorHex: number, species: PetSpecies): THR
     ctx.fillStyle = `#${col.getHexString()}`;
     ctx.fillRect(0, 0, 128, 128);
     // Subtle organic fur / feather micro-strokes
+    let seed = 1337;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
     for (let i = 0; i < 420; i++) {
-      const x = (i * 53) % 128;
-      const y = (i * 97) % 128;
+      const x = Math.floor(rnd() * 128);
+      const y = Math.floor(rnd() * 128);
       ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.08)';
       ctx.fillRect(x, y, species === 'owl' ? 3 : 2, species === 'owl' ? 5 : 3);
     }
@@ -377,6 +408,7 @@ export function buildPet3DSceneRig(
 
   // Four limbs (pivoted near body sockets for bouncy walk / tuck animations)
   const limbMat = species === 'panda' || species === 'fox' ? secondaryMat : primaryMat;
+  const pawScale = species === 'bunny' ? 0.85 : 1;
   const pawTipMat = species === 'panda' ? secondaryMat : bellyMat;
   const makeLimb = (x: number, y: number, z: number, isArm: boolean): THREE.Group => {
     const g = new THREE.Group();
@@ -387,7 +419,7 @@ export function buildPet3DSceneRig(
     cyl.castShadow = shadowMapEnabled;
     g.add(cyl);
     const paw = new THREE.Mesh(new THREE.SphereGeometry(0.105, 14, 12), pawTipMat);
-    paw.scale.set(1.05, 0.72, 1.2);
+    paw.scale.set(1.05 * pawScale, 0.72, 1.2 * (species === 'bunny' ? 1.25 : 1));
     paw.position.set(0, -len * 0.82, 0.03);
     paw.castShadow = shadowMapEnabled;
     g.add(paw);
@@ -458,6 +490,24 @@ export function buildPet3DSceneRig(
     const pom = new THREE.Mesh(new THREE.SphereGeometry(0.12, 14, 12), secondaryMat);
     pom.position.set(0, 0.05, -0.06);
     tailPivot.add(pom);
+  } else if (species === 'bunny') {
+    const pom = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 14), bellyMat);
+    pom.scale.set(1, 0.95, 0.9);
+    pom.position.set(0, 0.04, -0.04);
+    pom.castShadow = shadowMapEnabled;
+    tailPivot.add(pom);
+  } else if (species === 'pup') {
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 0.1, -0.16),
+      new THREE.Vector3(0, 0.3, -0.24),
+      new THREE.Vector3(0, 0.44, -0.16)
+    ]);
+    const tailMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 18, 0.07, 10, false), primaryMat);
+    tailMesh.castShadow = shadowMapEnabled;
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 10), primaryMat);
+    tip.position.set(0, 0.44, -0.16);
+    tailPivot.add(tailMesh, tip);
   } else {
     // Owl tail fan
     for (let i = -1; i <= 1; i++) {
@@ -506,6 +556,13 @@ export function buildPet3DSceneRig(
     muzzle.position.set(0, -0.1, 0.3);
     headPivot.add(muzzle);
 
+    if (species === 'bunny') muzzle.scale.set(0.92, 0.62, 0.8);
+    if (species === 'pup') {
+      const snout = new THREE.Mesh(new THREE.SphereGeometry(0.16, 18, 14), bellyMat);
+      snout.scale.set(1.1, 0.8, 1.05);
+      snout.position.set(0, -0.12, 0.44);
+      headPivot.add(snout);
+    }
     if (species === 'fox') {
       const snout = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.26, 18), bellyMat);
       snout.rotation.x = Math.PI / 2;
@@ -575,14 +632,14 @@ export function buildPet3DSceneRig(
   } else {
     const nose = new THREE.Mesh(new THREE.SphereGeometry(0.052, 14, 12), noseMat);
     nose.scale.set(1.2, 0.85, 0.9);
-    nose.position.set(0, -0.07, species === 'fox' ? 0.56 : 0.48);
+    nose.position.set(0, species === 'pup' ? -0.06 : -0.07, species === 'fox' ? 0.56 : species === 'pup' ? 0.58 : 0.48);
     headPivot.add(nose);
   }
 
   // Animated Jaw / Happy Mouth
   const jawGroup = new THREE.Group();
   jawGroup.name = 'jawGroup';
-  jawGroup.position.set(0, -0.155, species === 'fox' ? 0.43 : 0.4);
+  jawGroup.position.set(0, -0.155, species === 'fox' ? 0.43 : species === 'pup' ? 0.5 : 0.4);
   headPivot.add(jawGroup);
   const mouthMat = new THREE.MeshStandardMaterial({
     color: 0xf43f5e,
@@ -608,6 +665,28 @@ export function buildPet3DSceneRig(
       tuft.rotation.z = side * -0.55;
       tuft.castShadow = shadowMapEnabled;
       eg.add(tuft);
+    } else if (species === 'bunny') {
+      // Tall upright ears that flop a little at the tip.
+      eg.position.set(side * 0.16, 0.36, -0.02);
+      const outer = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.32, 8, 14), primaryMat);
+      outer.scale.set(1, 1, 0.55);
+      outer.position.y = 0.24;
+      outer.rotation.z = side * -0.12;
+      outer.castShadow = shadowMapEnabled;
+      const inner = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.26, 6, 12), innerEarMat);
+      inner.scale.set(1, 1, 0.4);
+      inner.position.set(side * -0.005, 0.24, 0.03);
+      inner.rotation.z = side * -0.12;
+      eg.add(outer, inner);
+    } else if (species === 'pup') {
+      // Soft floppy ears hanging at the sides of the head.
+      eg.position.set(side * 0.36, 0.2, 0.0);
+      const ear = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.22, 8, 14), secondaryMat);
+      ear.scale.set(0.9, 1, 0.45);
+      ear.position.set(side * 0.04, -0.14, 0);
+      ear.rotation.z = side * 0.32;
+      ear.castShadow = shadowMapEnabled;
+      eg.add(ear);
     } else {
       const h = species === 'fox' ? 0.34 : 0.27;
       const r = species === 'fox' ? 0.14 : 0.13;
@@ -1047,7 +1126,7 @@ export function getSpecies3DThumbnailUrls(): Record<PetSpecies, string> | null {
     camera.position.set(0.35, 1.15, 2.35);
     camera.lookAt(0, 0.72, 0);
 
-    const speciesList: PetSpecies[] = ['fox', 'owl', 'cat', 'panda'];
+    const speciesList: PetSpecies[] = ['fox', 'owl', 'cat', 'panda', 'bunny', 'pup'];
     const result = {} as Record<PetSpecies, string>;
 
     for (const sp of speciesList) {
@@ -1357,17 +1436,17 @@ export function applyPoseToStageProps(stage: PetStageWorldHandles, pose: Pet3DRi
  */
 export function buildSpeciesAnimationClips(species: PetSpecies): THREE.AnimationClip[] {
   const activities: Array<{ activity: PetActivityState; clipName: string; duration: number }> = [
-    { activity: 'idle', clipName: 'Idle', duration: 3.6 },
-    { activity: 'playing', clipName: 'Playing', duration: 2.4 },
-    { activity: 'sleep', clipName: 'Sleep', duration: 4.0 },
-    { activity: 'feeding', clipName: 'Feeding', duration: 2.4 }
+    { activity: 'idle', clipName: 'Idle', duration: 16 },
+    { activity: 'playing', clipName: 'Playing', duration: 4.8 },
+    { activity: 'sleep', clipName: 'Sleep', duration: 8.0 },
+    { activity: 'feeding', clipName: 'Feeding', duration: 4.8 }
   ];
 
   const euler = new THREE.Euler();
   const quat = new THREE.Quaternion();
 
   return activities.map(({ activity, clipName, duration }) => {
-    const steps = 16;
+    const steps = Math.ceil(duration * 30);
     const times: number[] = [];
     const bodyPos: number[] = [];
     const bodyQuat: number[] = [];
@@ -1395,7 +1474,7 @@ export function buildSpeciesAnimationClips(species: PetSpecies): THREE.Animation
     for (let i = 0; i <= steps; i++) {
       // Repeat frame 0 at exact end index so LoopRepeat wraps seamlessly
       const t = (i / steps) * duration;
-      const sampleElapsed = i === steps ? 0 : t;
+      const sampleElapsed = t;
       times.push(t);
       const p = solvePet3DPose({
         species,
@@ -1404,7 +1483,8 @@ export function buildSpeciesAnimationClips(species: PetSpecies): THREE.Animation
         pointerX: 0,
         pointerY: 0,
         burstTime: -1,
-        burstKind: null
+        burstKind: null,
+        loop: duration
       });
 
       bodyPos.push(p.bodyPosX, p.bodyPosY + 0.02, p.bodyPosZ);

@@ -12,7 +12,7 @@ import { exportBackup, exportStandalone, importIntoVault } from "../../state/exp
 import { toast } from "../../state/ui";
 import { inTauri } from "../../state/backend";
 import { Toggle } from "../controls";
-import { openPetStudio } from "../pet/PetCard";
+import { PetModelControls, openPetStudio } from "../pet/PetCard";
 
 export function PrefToggle(props: { k: { [K in keyof Prefs]: Prefs[K] extends boolean ? K : never }[keyof Prefs]; label: string; hint?: string }) {
   return <Toggle label={props.label} hint={props.hint} checked={pref(props.k) as boolean} onChange={(v) => setPref(props.k, v as never)} />;
@@ -26,7 +26,8 @@ export function PetSettings() {
       <Toggle label={t("onboarding-pet")} checked={settings.petEnabled} onChange={(v) => updateSettings((c) => { c.petEnabled = v; })} />
       <PrefToggle k="petFloating" label={t("pet-floating")} />
       <button class="btn" onClick={openPetStudio}>{t("pet-open")}</button>
-      <p class="hint">{t("pet-economy-hint")}</p>
+      <h3 class="set-sub">{t("pet-model-title")}</h3>
+      <PetModelControls />
     </div>
   );
 }

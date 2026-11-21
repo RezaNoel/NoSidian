@@ -56,6 +56,8 @@ export interface VaultBackend {
   importFiles(folder: string): Promise<string[]>;
   /** Ask where to save and write text there. Returns false if cancelled. */
   saveText(defaultName: string, content: string, ext: string): Promise<boolean>;
+  /** Ask where to save and write binary data there. Returns false if cancelled. */
+  saveBytes(defaultName: string, bytes: Uint8Array, ext: string): Promise<boolean>;
   vaultBackup(): Promise<string>;
   /** Show an entry in the system file manager (desktop only). */
   revealInOs(path: string): Promise<void>;
@@ -130,6 +132,13 @@ const tauriBackend: VaultBackend = {
     const path = await save({ defaultPath: defaultName, filters: [{ name: ext.toUpperCase(), extensions: [ext] }] });
     if (!path) return false;
     await invoke("export_text", { path, content });
+    return true;
+  },
+  async saveBytes(defaultName, bytes, ext) {
+    const { save } = await import("@tauri-apps/plugin-dialog");
+    const path = await save({ defaultPath: defaultName, filters: [{ name: ext.toUpperCase(), extensions: [ext] }] });
+    if (!path) return false;
+    await invoke("export_bytes", { path, bytes: Array.from(bytes) });
     return true;
   },
   vaultBackup: () => invoke("vault_backup"),

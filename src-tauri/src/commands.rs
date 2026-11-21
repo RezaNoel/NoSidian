@@ -328,6 +328,12 @@ pub fn export_text(path: PathBuf, content: String) -> CmdResult<()> {
     std::fs::write(&path, content).map_err(|e| CoreError::Io { path, source: e }.into())
 }
 
+/// Write binary data (an image, for example) to a path the user picked.
+#[tauri::command]
+pub fn export_bytes(path: PathBuf, bytes: Vec<u8>) -> CmdResult<()> {
+    std::fs::write(&path, bytes).map_err(|e| CoreError::Io { path, source: e }.into())
+}
+
 #[tauri::command]
 pub fn vault_backup(state: State<'_, AppState>) -> CmdResult<String> {
     let b = files::backup(&active_root(&state)?, now_ms())?;

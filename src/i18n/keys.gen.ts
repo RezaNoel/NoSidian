@@ -948,6 +948,24 @@ export interface MessageArgs {
   "cal-src-focus": undefined;
   "cal-src-dates": undefined;
   "cal-src-google": undefined;
+  "pet-species-bunny": undefined;
+  "pet-species-pup": undefined;
+  "pet-age": undefined;
+  "pet-age-unit": undefined;
+  "pet-age-days": { days: string | number };
+  "pet-satisfaction": undefined;
+  "pet-bond": undefined;
+  "pet-bond-new": undefined;
+  "pet-bond-friendly": undefined;
+  "pet-bond-close": undefined;
+  "pet-bond-best": undefined;
+  "pet-level-short": undefined;
+  "pet-coins": undefined;
+  "pet-card-share": undefined;
+  "pet-card-saved": undefined;
+  "pet-card-failed": undefined;
+  "pet-card-owner": { owner: string | number; tier: string | number };
+  "pet-model-title": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -1899,5 +1917,23 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "cal-src-flashcards",
   "cal-src-focus",
   "cal-src-dates",
-  "cal-src-google"
+  "cal-src-google",
+  "pet-species-bunny",
+  "pet-species-pup",
+  "pet-age",
+  "pet-age-unit",
+  "pet-age-days",
+  "pet-satisfaction",
+  "pet-bond",
+  "pet-bond-new",
+  "pet-bond-friendly",
+  "pet-bond-close",
+  "pet-bond-best",
+  "pet-level-short",
+  "pet-coins",
+  "pet-card-share",
+  "pet-card-saved",
+  "pet-card-failed",
+  "pet-card-owner",
+  "pet-model-title"
 ];

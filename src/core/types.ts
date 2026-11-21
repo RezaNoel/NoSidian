@@ -416,7 +416,7 @@ export interface AmbientConfig {
   customAudioMediaId?: string;
 }
 
-export type PetSpecies = 'fox' | 'owl' | 'cat' | 'panda';
+export type PetSpecies = 'fox' | 'owl' | 'cat' | 'panda' | 'bunny' | 'pup';
 export type PetActivityState = 'idle' | 'playing' | 'sleep' | 'feeding';
 
 export interface PetFoodItem {
@@ -457,6 +457,10 @@ export interface PetState {
   playCoinsUsedInWindow?: number;
   customModelId?: string;
   customModelName?: string;
+  /** When the companion was adopted (ms). */
+  bornAt?: number;
+  /** Bond with the owner, 0..100: grows with care and attention. */
+  bond?: number;
 }
 
 export interface Snapshot {

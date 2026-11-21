@@ -368,7 +368,7 @@ export const ENTRIES: Entry[] = [
   e("calendar", CalendarDays, ["cal-show", "cal-google"], () => <CalendarSettings />, { tags: "calendar google events tasks markers sync", wide: true }),
 
   // Companion
-  e("companion", undefined, ["onboarding-pet", "pet-open", "pet-floating", "pet-model-upload"], () => <PetSettings />, { tags: "pet companion animal model upload 3d", wide: true }),
+  e("companion", undefined, ["onboarding-pet", "pet-open", "pet-floating", "pet-model-upload", "pet-model-title"], () => <PetSettings />, { tags: "pet companion animal model upload 3d", wide: true }),
 
   // Hotkeys
   e("hotkeys", undefined, ["settings-tab-hotkeys", "hotkeys-filter"], () => <Hotkeys />, { tags: "shortcuts keyboard keys bindings", wide: true }),

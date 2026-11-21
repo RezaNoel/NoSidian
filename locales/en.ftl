@@ -972,3 +972,24 @@ cal-src-flashcards = Busy review days
 cal-src-focus = Focus sessions
 cal-src-dates = Birthdays and important dates
 cal-src-google = Google Calendar events
+pet-species-bunny = Bunny
+pet-species-pup = Pup
+pet-age = Age
+pet-age-unit = days old
+pet-age-days = { $days ->
+    [one] { $days } day old
+   *[other] { $days } days old
+}
+pet-satisfaction = Satisfaction
+pet-bond = Bond
+pet-bond-new = New friend
+pet-bond-friendly = Friends
+pet-bond-close = Close friends
+pet-bond-best = Best friends
+pet-level-short = Level
+pet-coins = Coins
+pet-card-share = Save a card to share
+pet-card-saved = Card saved
+pet-card-failed = Could not make the card
+pet-card-owner = { $owner } and their companion · { $tier }
+pet-model-title = Your own 3D model
