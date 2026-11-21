@@ -17,8 +17,10 @@ const v = createRoot(() => {
   const [contents, setContents] = createStore<Record<string, string>>({});
   const [saving, setSaving] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+  // Bumped after every change on disk so index-backed views refetch.
+  const [rev, setRev] = createSignal(0);
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
-  return { vault, setVault, tree, setTree, contents, setContents, saving, setSaving, error, setError, timers };
+  return { vault, setVault, tree, setTree, contents, setContents, saving, setSaving, error, setError, timers, rev, setRev };
 });
 
 export const vault = v.vault;
@@ -26,6 +28,13 @@ export const tree = v.tree;
 export const contents = v.contents;
 export const saving = v.saving;
 export const vaultError = v.error;
+/** Index revision: read it inside a resource source to refetch after edits. */
+export const indexRev = v.rev;
+let revTimer: ReturnType<typeof setTimeout> | undefined;
+function bumpIndex(delay = 0) {
+  clearTimeout(revTimer);
+  revTimer = setTimeout(() => v.setRev((n) => n + 1), delay);
+}
 
 export const activePath = () => profile.activeTab;
 export const markdownPaths = () => tree.notes.filter((n) => n.kind === "markdown").map((n) => n.path);
@@ -44,10 +53,14 @@ function reportError(e: unknown) {
 export async function refresh(): Promise<void> {
   const next = await backend.scan();
   v.setTree(reconcile(next));
-  // Load Markdown contents for links, tags and search (indexing moves to Rust in Phase 2).
-  const missing = next.notes.filter((n) => n.kind === "markdown" && v.contents[n.path] === undefined);
-  const loaded = await Promise.all(missing.map(async (n) => [n.path, await backend.read(n.path).catch(() => "")] as const));
-  v.setContents(produce((c) => { for (const [p, s] of loaded) c[p] = s; }));
+  bumpIndex();
+}
+
+/** Load a note's text into memory (the editor, reader and outline use it). */
+export async function ensureLoaded(path: string): Promise<void> {
+  if (v.contents[path] !== undefined || !path.toLowerCase().endsWith(".md")) return;
+  const text = await backend.read(path).catch(() => "");
+  if (v.contents[path] === undefined) v.setContents(path, text);
 }
 
 /** Switch to a vault: load its profile, files and last open tabs. */
@@ -67,9 +80,11 @@ export async function enterVault(next: Vault): Promise<void> {
       p.activeTab = "Welcome to NoSidian.md";
     }
   });
+  await Promise.all(profile.openTabs.map(ensureLoaded));
 }
 
 export function openNote(path: string): void {
+  void ensureLoaded(path);
   updateProfile((p) => {
     if (!p.openTabs.includes(path)) p.openTabs.push(path);
     p.activeTab = path;
@@ -99,6 +114,7 @@ export function setContent(path: string, text: string): void {
         await backend.write(path, text);
         const now = Date.now();
         v.setTree("notes", (n) => n.path === path, "modified", now);
+        bumpIndex(400);
       } catch (e) {
         reportError(e);
       } finally {

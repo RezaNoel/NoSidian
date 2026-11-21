@@ -224,6 +224,92 @@ export interface MessageArgs {
   "state-collapsed": undefined;
   "state-selected": undefined;
   "state-pressed": undefined;
+  "search-sort-label": undefined;
+  "search-sort-relevance": undefined;
+  "search-sort-title": undefined;
+  "search-sort-modified": undefined;
+  "search-help": undefined;
+  "action-link": undefined;
+  "announce-linked": { name: string | number };
+  "explorer-display": undefined;
+  "explorer-last-opened": undefined;
+  "explorer-updated": undefined;
+  "explorer-words": undefined;
+  "explorer-backlinks": undefined;
+  "explorer-tags": undefined;
+  "switcher-placeholder": undefined;
+  "switcher-create": { name: string | number };
+  "switcher-hint": undefined;
+  "palette-placeholder": undefined;
+  "cmd-rebuild-index": undefined;
+  "cmd-next-tab": undefined;
+  "cmd-prev-tab": undefined;
+  "cmd-next-theme": undefined;
+  "cmd-focus-files": undefined;
+  "calendar-today": undefined;
+  "calendar-prev": undefined;
+  "calendar-next": undefined;
+  "calendar-has-note": undefined;
+  "daily-folder": undefined;
+  "daily-format": undefined;
+  "daily-template": undefined;
+  "daily-template-none": undefined;
+  "daily-open-startup": undefined;
+  "settings-search": undefined;
+  "settings-no-match": { query: string | number };
+  "settings-tabs-label": undefined;
+  "settings-tab-general": undefined;
+  "settings-tab-workspace": undefined;
+  "settings-tab-editor": undefined;
+  "settings-tab-files": undefined;
+  "settings-tab-appearance": undefined;
+  "settings-tab-daily": undefined;
+  "settings-tab-hotkeys": undefined;
+  "settings-tab-pet": undefined;
+  "settings-tab-mcp": undefined;
+  "settings-tab-modules": undefined;
+  "settings-tab-developer": undefined;
+  "settings-tab-vault": undefined;
+  "settings-tab-sync": undefined;
+  "coming-soon": undefined;
+  "sync-desc": undefined;
+  "startup-screen": undefined;
+  "startup-last": undefined;
+  "startup-empty": undefined;
+  "startup-daily": undefined;
+  "focus-profile": undefined;
+  "focus-clean-minimal": undefined;
+  "focus-deep-writing": undefined;
+  "focus-review-quiz": undefined;
+  "focus-full-studio": undefined;
+  "editor-default-mode": undefined;
+  "editor-readable": undefined;
+  "editor-line-numbers": undefined;
+  "editor-autopair": undefined;
+  "editor-tab-size": undefined;
+  "editor-spellcheck": undefined;
+  "editor-strict-breaks": undefined;
+  "editor-font-size": undefined;
+  "editor-line-height": undefined;
+  "files-new-note-folder": undefined;
+  "files-root": undefined;
+  "files-confirm-delete": undefined;
+  "hotkeys-filter": undefined;
+  "hotkeys-record": undefined;
+  "hotkeys-reset": undefined;
+  "hotkeys-conflict": { name: string | number };
+  "hotkey-none": undefined;
+  "module-daily-calendar": undefined;
+  "module-recent-files": undefined;
+  "module-pdf-support": undefined;
+  "module-ambient-effects": undefined;
+  "module-companion-pet": undefined;
+  "module-dependency-graph": undefined;
+  "module-mcp-bridge": undefined;
+  "module-developer-extensions": undefined;
+  "module-advanced-ribbon-tools": undefined;
+  "modules-hint": undefined;
+  "index-rebuilt": { count: string | number };
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -451,5 +537,91 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "state-expanded",
   "state-collapsed",
   "state-selected",
-  "state-pressed"
+  "state-pressed",
+  "search-sort-label",
+  "search-sort-relevance",
+  "search-sort-title",
+  "search-sort-modified",
+  "search-help",
+  "action-link",
+  "announce-linked",
+  "explorer-display",
+  "explorer-last-opened",
+  "explorer-updated",
+  "explorer-words",
+  "explorer-backlinks",
+  "explorer-tags",
+  "switcher-placeholder",
+  "switcher-create",
+  "switcher-hint",
+  "palette-placeholder",
+  "cmd-rebuild-index",
+  "cmd-next-tab",
+  "cmd-prev-tab",
+  "cmd-next-theme",
+  "cmd-focus-files",
+  "calendar-today",
+  "calendar-prev",
+  "calendar-next",
+  "calendar-has-note",
+  "daily-folder",
+  "daily-format",
+  "daily-template",
+  "daily-template-none",
+  "daily-open-startup",
+  "settings-search",
+  "settings-no-match",
+  "settings-tabs-label",
+  "settings-tab-general",
+  "settings-tab-workspace",
+  "settings-tab-editor",
+  "settings-tab-files",
+  "settings-tab-appearance",
+  "settings-tab-daily",
+  "settings-tab-hotkeys",
+  "settings-tab-pet",
+  "settings-tab-mcp",
+  "settings-tab-modules",
+  "settings-tab-developer",
+  "settings-tab-vault",
+  "settings-tab-sync",
+  "coming-soon",
+  "sync-desc",
+  "startup-screen",
+  "startup-last",
+  "startup-empty",
+  "startup-daily",
+  "focus-profile",
+  "focus-clean-minimal",
+  "focus-deep-writing",
+  "focus-review-quiz",
+  "focus-full-studio",
+  "editor-default-mode",
+  "editor-readable",
+  "editor-line-numbers",
+  "editor-autopair",
+  "editor-tab-size",
+  "editor-spellcheck",
+  "editor-strict-breaks",
+  "editor-font-size",
+  "editor-line-height",
+  "files-new-note-folder",
+  "files-root",
+  "files-confirm-delete",
+  "hotkeys-filter",
+  "hotkeys-record",
+  "hotkeys-reset",
+  "hotkeys-conflict",
+  "hotkey-none",
+  "module-daily-calendar",
+  "module-recent-files",
+  "module-pdf-support",
+  "module-ambient-effects",
+  "module-companion-pet",
+  "module-dependency-graph",
+  "module-mcp-bridge",
+  "module-developer-extensions",
+  "module-advanced-ribbon-tools",
+  "modules-hint",
+  "index-rebuilt"
 ];

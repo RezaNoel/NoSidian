@@ -147,3 +147,14 @@ export function defaultProfile(): WorkspaceProfile {
     banner: { enabled: false, image: "carbon", height: 96, posY: 50, opacity: 90 },
   };
 }
+
+// ---------- Index (mirrors crates/nosidian-core/src/index.rs) ----------
+export type SearchSort = "relevance" | "title" | "modified";
+export interface LineMatch { line: number; text: string }
+export interface SearchHit { path: string; title: string; score: number; matches: LineMatch[] }
+export interface Mention { path: string; line: number; snippet: string }
+export interface OutgoingLink { target: string; path: string | null }
+export interface NoteLinks { backlinks: Mention[]; outgoing: OutgoingLink[]; unlinked: Mention[] }
+export interface TagCount { tag: string; count: number; paths: string[] }
+export interface IndexHeading { level: number; text: string; line: number }
+export interface NoteSummary { path: string; words: number; backlinks: number; tags: string[]; headings: IndexHeading[] }
