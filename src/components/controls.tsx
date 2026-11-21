@@ -3,7 +3,7 @@ import { For, createUniqueId, type JSX } from "solid-js";
 import { announce } from "../a11y/announcer";
 import { format, t } from "../i18n";
 import { LANGUAGES, type LanguageCode } from "../i18n/languages";
-import { updateSettings } from "../state/settings";
+import { settings, updateSettings } from "../state/settings";
 import type { ThemeId } from "../state/types";
 
 export function Field(props: { label: string; hint?: string; children: (id: string) => JSX.Element }) {
@@ -58,4 +58,21 @@ export function changeLanguage(code: LanguageCode): void {
 export function changeTheme(theme: ThemeId): void {
   updateSettings((c) => { c.appearance.theme = theme; });
   announce(t("announce-theme-changed", { theme: t(`theme-${theme}`) }));
+}
+
+/** Live sample of the glass material over sharp content, so blur and opacity changes are visible. */
+export function GlassPreview() {
+  return (
+    <div class="glass-preview" role="img" aria-label={t("glass-preview-label")}>
+      <div class="gp-scene" aria-hidden="true">
+        <span class="gp-dot a" /><span class="gp-dot b" /><span class="gp-dot c" />
+        <span class="gp-text">NoSidian · Aa Bb 123 · نوسیدین</span>
+        <span class="gp-text two">Markdown · [[links]] · #tags</span>
+      </div>
+      <div class="gp-pane glass" aria-hidden="true">
+        <strong>{t("glass-preview-label")}</strong>
+        <span>{t("field-glass-blur")}: {settings.appearance.glassBlur}px</span>
+      </div>
+    </div>
+  );
 }

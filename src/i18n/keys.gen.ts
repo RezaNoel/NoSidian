@@ -186,6 +186,44 @@ export interface MessageArgs {
   "error-invalid-path": undefined;
   "error-no-vault": undefined;
   "vault-recent": undefined;
+  "win-minimize": undefined;
+  "win-maximize": undefined;
+  "win-restore": undefined;
+  "win-close": undefined;
+  "banner-title": undefined;
+  "banner-toggle": undefined;
+  "banner-height": undefined;
+  "banner-position": undefined;
+  "banner-opacity": undefined;
+  "banner-upload": undefined;
+  "banner-remove": undefined;
+  "banner-preset-carbon": undefined;
+  "banner-preset-language": undefined;
+  "banner-preset-writer": undefined;
+  "banner-preset-observatory": undefined;
+  "glass-preview-label": undefined;
+  "speech-no-voice": { language: string | number };
+  "speech-read-note": undefined;
+  "speech-stop": undefined;
+  "speech-shortcuts": undefined;
+  "speech-rate": undefined;
+  "role-button": undefined;
+  "role-tab": undefined;
+  "role-checkbox": undefined;
+  "role-switch": undefined;
+  "role-radio": undefined;
+  "role-treeitem": undefined;
+  "role-link": undefined;
+  "role-textbox": undefined;
+  "role-slider": undefined;
+  "role-menuitem": undefined;
+  "role-dialog": undefined;
+  "state-checked": undefined;
+  "state-unchecked": undefined;
+  "state-expanded": undefined;
+  "state-collapsed": undefined;
+  "state-selected": undefined;
+  "state-pressed": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -375,5 +413,43 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "action-back",
   "error-invalid-path",
   "error-no-vault",
-  "vault-recent"
+  "vault-recent",
+  "win-minimize",
+  "win-maximize",
+  "win-restore",
+  "win-close",
+  "banner-title",
+  "banner-toggle",
+  "banner-height",
+  "banner-position",
+  "banner-opacity",
+  "banner-upload",
+  "banner-remove",
+  "banner-preset-carbon",
+  "banner-preset-language",
+  "banner-preset-writer",
+  "banner-preset-observatory",
+  "glass-preview-label",
+  "speech-no-voice",
+  "speech-read-note",
+  "speech-stop",
+  "speech-shortcuts",
+  "speech-rate",
+  "role-button",
+  "role-tab",
+  "role-checkbox",
+  "role-switch",
+  "role-radio",
+  "role-treeitem",
+  "role-link",
+  "role-textbox",
+  "role-slider",
+  "role-menuitem",
+  "role-dialog",
+  "state-checked",
+  "state-unchecked",
+  "state-expanded",
+  "state-collapsed",
+  "state-selected",
+  "state-pressed"
 ];

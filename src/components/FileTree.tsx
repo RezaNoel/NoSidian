@@ -3,14 +3,14 @@
 import { For, Show, createMemo, createSignal } from "solid-js";
 import {
   ArrowUpDown, ChevronDown, ChevronRight, ChevronsDownUp, Crosshair, FilePlus, FileText, FileType,
-  Folder, FolderOpen, FolderPlus, Pencil, Star, Trash2,
+  Folder, FolderOpen, FolderPlus, Image, Pencil, Star, Trash2,
 } from "lucide-solid";
 import { locale, t } from "../i18n";
 import { buildTree, relativeTime, visibleNodes, type TreeNode } from "../lib/tree";
 import { noteTitle } from "../lib/markdown";
 import { activePath, createFolder, createNote, openNote, renameEntry, toggleStar, trashEntry, tree } from "../state/vault";
 import { profile, updateProfile } from "../state/workspace";
-import { askConfirm, askText, isMobile, setDrawer } from "../state/ui";
+import { askConfirm, askText, isMobile, setDrawer, setOverlay } from "../state/ui";
 import type { SortMode } from "../state/types";
 import { openMenu } from "./ContextMenu";
 
@@ -146,6 +146,7 @@ export function FileTree() {
           <button class="icon-btn sm" title={`${t("action-sort")}: ${t(`sort-${profile.sort}`)}`} aria-label={t("action-sort")} aria-haspopup="menu" onClick={cycleSort}><ArrowUpDown /></button>
           <button class="icon-btn sm" title={t("action-reveal-active")} aria-label={t("action-reveal-active")} onClick={reveal} disabled={!activePath()}><Crosshair /></button>
           <button class="icon-btn sm" title={t("action-collapse-all")} aria-label={t("action-collapse-all")} onClick={() => updateProfile((p) => { p.collapsedFolders = [...tree.folders]; })}><ChevronsDownUp /></button>
+          <button class="icon-btn sm" aria-pressed={profile.banner.enabled} title={t("banner-title")} aria-label={t("banner-title")} aria-haspopup="dialog" onClick={() => setOverlay("banner")}><Image /></button>
         </div>
       </div>
       <Show when={visible().length} fallback={<p class="empty">{t("links-none")}</p>}>

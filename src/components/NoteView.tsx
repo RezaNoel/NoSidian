@@ -11,6 +11,11 @@ import type { ViewMode } from "../state/types";
 import { Editor } from "./Editor";
 import { Reader } from "./Reader";
 import { promptNewNote } from "./FileTree";
+import { Logo } from "./Logo";
+import { setNoteSource } from "../a11y/voice";
+import { contents } from "../state/vault";
+
+setNoteSource(() => (activePath() ? contents[activePath()!] ?? null : null));
 
 type PaneMode = "editor" | "split" | "reader";
 const MODES: { id: PaneMode; icon: typeof BookOpen }[] = [
@@ -29,7 +34,7 @@ function EmptyState() {
   const recent = createMemo(() => profile.recent.filter((r) => tree.notes.some((n) => n.path === r.path)).slice(0, 5));
   return (
     <div class="empty-state">
-      <div class="empty-mark" aria-hidden="true">N</div>
+      <Logo size={76} class="empty-mark" />
       <h1>{t("empty-title")}</h1>
       <p>{t("empty-subtitle")}</p>
       <button class="btn primary" onClick={() => void promptNewNote()}><FilePlus />{t("action-new-note")}</button>

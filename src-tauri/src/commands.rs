@@ -161,3 +161,20 @@ pub fn open_sample_vault(app: tauri::AppHandle, state: State<'_, AppState>) -> C
     remember_vault(&state, &vault)?;
     Ok(vault)
 }
+
+// ---------- Vault assets (banner images) ----------
+
+#[tauri::command]
+pub fn asset_write(state: State<'_, AppState>, name: String, data: String) -> CmdResult<()> {
+    Ok(nosidian_core::assets::write_asset(&active_root(&state)?, &name, &data)?)
+}
+
+#[tauri::command]
+pub fn asset_read(state: State<'_, AppState>, name: String) -> CmdResult<String> {
+    Ok(nosidian_core::assets::read_asset_data_url(&active_root(&state)?, &name)?)
+}
+
+#[tauri::command]
+pub fn asset_delete(state: State<'_, AppState>, name: String) -> CmdResult<()> {
+    Ok(nosidian_core::assets::delete_asset(&active_root(&state)?, &name)?)
+}

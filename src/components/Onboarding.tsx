@@ -6,8 +6,9 @@ import { locale, t } from "../i18n";
 import { LANGUAGES } from "../i18n/languages";
 import { settings, updateSettings } from "../state/settings";
 import { THEMES, type ExperienceLevel, type UseCase } from "../state/types";
-import { Choice, Toggle, changeLanguage, changeTheme } from "./controls";
+import { Choice, GlassPreview, Toggle, changeLanguage, changeTheme } from "./controls";
 import { VaultPicker } from "./VaultPicker";
+import { Logo } from "./Logo";
 
 const TOTAL = 4;
 const LEVELS: ExperienceLevel[] = ["beginner", "intermediate", "advanced"];
@@ -41,7 +42,7 @@ export function Onboarding(props: { onFinish: () => void }) {
     <main class="onboarding" id="main">
       <div class="onboarding-card glass-modal" role="region" aria-labelledby="ob-title">
         <div class="ob-top">
-          <div class="ob-brand"><span class="ribbon-logo" aria-hidden="true">N</span>{t("app-name")}</div>
+          <div class="ob-brand"><Logo size={30} />{t("app-name")}</div>
           <div class="ob-progress" role="progressbar" aria-valuemin={1} aria-valuemax={TOTAL} aria-valuenow={step() + 1} aria-label={t("onboarding-step", { current: step() + 1, total: TOTAL })}>
             <For each={Array.from({ length: TOTAL }, (_, i) => i)}>{(i) => <span classList={{ done: i < step(), current: i === step() }} />}</For>
           </div>
@@ -98,10 +99,11 @@ export function Onboarding(props: { onFinish: () => void }) {
               <div class="field">
                 <label for="ob-blur">{`${t("field-glass-blur")} (${settings.appearance.glassBlur}px)`}</label>
                 <input id="ob-blur" type="range" min="0" max="40" value={settings.appearance.glassBlur} onInput={(e) => updateSettings((c) => { c.appearance.glassBlur = Number(e.currentTarget.value); })} />
+                <GlassPreview />
               </div>
               <Toggle label={t("onboarding-pet")} checked={settings.petEnabled} onChange={(v) => updateSettings((c) => { c.petEnabled = v; })} />
               <Toggle label={t("onboarding-ambient")} checked={settings.ambientEffectsEnabled} onChange={(v) => updateSettings((c) => { c.ambientEffectsEnabled = v; c.appearance.ambientMesh = v; })} />
-              <Toggle label={t("field-screen-reader")} hint={t("field-screen-reader-hint")} checked={settings.accessibility.screenReaderMode} onChange={(v) => updateSettings((c) => { c.accessibility.screenReaderMode = v; })} />
+              <Toggle label={t("field-screen-reader")} hint={`${t("field-screen-reader-hint")} ${t("speech-shortcuts")}`} checked={settings.accessibility.screenReaderMode} onChange={(v) => updateSettings((c) => { c.accessibility.screenReaderMode = v; })} />
             </div>
           </Match>
           <Match when={step() === 3}>

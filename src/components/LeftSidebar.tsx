@@ -11,6 +11,7 @@ import { isMobile, setDrawer } from "../state/ui";
 import type { LeftTab } from "../state/types";
 import { FileTree } from "./FileTree";
 import { VaultFooter } from "./VaultFooter";
+import { VaultBanner } from "./Banner";
 
 const TABS: { id: LeftTab; icon: typeof Files; label: () => string }[] = [
   { id: "files", icon: Files, label: () => t("tab-files") },
@@ -134,6 +135,7 @@ function CalendarPanel() {
 export function LeftSidebar() {
   return (
     <aside class="sidebar left glass" aria-label={t("shell-left-sidebar-label")}>
+      <VaultBanner />
       <div class="sidebar-tabs" role="tablist" aria-label={t("left-tabs-label")} onKeyDown={rovingKeydown("[role=tab]", "horizontal")}>
         <For each={TABS}>
           {(tab) => (

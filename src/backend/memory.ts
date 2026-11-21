@@ -131,11 +131,25 @@ export const memoryBackend: VaultBackend = {
     return `.nosidian/trash/${Date.now()}/${path}`;
   },
   async loadProfile() {
-    return { ...defaultProfile(), ...need().profile };
+    const d = defaultProfile();
+    const p = need().profile;
+    return { ...d, ...p, banner: { ...d.banner, ...p.banner } };
   },
   async saveProfile(p) {
     need().profile = p;
     save();
     return p;
+  },
+  async assetWrite(name, data) {
+    const mime = name.endsWith(".png") ? "image/png" : name.endsWith(".webp") ? "image/webp" : "image/jpeg";
+    try { localStorage.setItem(`${KEY}.asset.${name}`, `data:${mime};base64,${data}`); } catch { throw { code: "io", detail: name }; }
+  },
+  async assetRead(name) {
+    const v = localStorage.getItem(`${KEY}.asset.${name}`);
+    if (!v) throw { code: "not-found", detail: name };
+    return v;
+  },
+  async assetDelete(name) {
+    localStorage.removeItem(`${KEY}.asset.${name}`);
   },
 };

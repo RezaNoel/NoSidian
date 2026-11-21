@@ -40,6 +40,9 @@ pub fn run() {
             commands::entry_rename,
             commands::entry_trash,
             commands::open_sample_vault,
+            commands::asset_write,
+            commands::asset_read,
+            commands::asset_delete,
         ])
         .run(tauri::generate_context!())
         .expect("error while running NoSidian");

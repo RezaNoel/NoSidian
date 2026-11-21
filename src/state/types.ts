@@ -36,6 +36,7 @@ export interface Accessibility {
   reduceMotion: boolean;
   speechCues: boolean;
   soundCues: boolean;
+  speechRate: number;
 }
 
 export interface VaultRef { path: string; name: string; lastOpened: number }
@@ -77,7 +78,7 @@ export function defaultConfig(): AppConfig {
       radius: "balanced",
       density: "comfortable",
     },
-    accessibility: { screenReaderMode: false, reduceMotion: false, speechCues: false, soundCues: false },
+    accessibility: { screenReaderMode: false, reduceMotion: false, speechCues: false, soundCues: false, speechRate: 1 },
     petEnabled: true,
     ambientEffectsEnabled: true,
     moduleOverrides: {},
@@ -113,7 +114,13 @@ export interface WorkspaceProfile {
   collapsedFolders: string[];
   sort: SortMode;
   noteModes: Record<string, ViewMode>;
+  banner: BannerConfig;
 }
+
+/** `image` is a preset id or `asset:<file name>` for an uploaded image. */
+export interface BannerConfig { enabled: boolean; image: string; height: number; posY: number; opacity: number }
+export const BANNER_PRESETS = ["carbon", "language", "writer", "observatory"] as const;
+export type BannerPreset = (typeof BANNER_PRESETS)[number];
 
 export const SIDEBAR_MIN = 200;
 export const SIDEBAR_MAX = 560;
@@ -137,5 +144,6 @@ export function defaultProfile(): WorkspaceProfile {
     collapsedFolders: [],
     sort: "name-asc",
     noteModes: {},
+    banner: { enabled: false, image: "carbon", height: 96, posY: 50, opacity: 90 },
   };
 }

@@ -5,7 +5,7 @@ import { announce } from "../a11y/announcer";
 export const MOBILE_QUERY = "(max-width: 767px)";
 
 export type Drawer = "none" | "left" | "right" | "more";
-export type Overlay = "none" | "settings" | "vaults";
+export type Overlay = "none" | "settings" | "vaults" | "banner";
 
 export interface PromptRequest {
   kind: "prompt" | "confirm";
@@ -60,6 +60,7 @@ export function closeDialog(result: string | boolean | null): void {
 }
 
 let toastId = 0;
+if (typeof window !== "undefined") window.addEventListener("nosidian:toast", (e) => toast((e as CustomEvent<string>).detail));
 export const toasts = ui.toasts;
 /** Brief on-screen message, also spoken by screen readers. */
 export function toast(text: string, error = false): void {

@@ -3,6 +3,7 @@
 //! Everything in this crate is plain Rust with no UI or Tauri dependency, so it
 //! runs the same on desktop and mobile and is fully unit-testable.
 
+pub mod assets;
 pub mod config;
 pub mod error;
 pub mod fsutil;

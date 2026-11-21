@@ -1,13 +1,16 @@
 // Quick settings (language, appearance, accessibility). The full 13-tab
 // settings window with search replaces this in Phase 2.
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
+import { Volume2, VolumeX } from "lucide-solid";
+import { readOpenNote } from "../a11y/voice";
+import { stopSpeaking } from "../a11y/speech";
 import { t } from "../i18n";
 import { LANGUAGES, type LanguageCode } from "../i18n/languages";
 import { resetSettings, settings, updateSettings } from "../state/settings";
 import { setOverlay } from "../state/ui";
 import { THEMES, type Density, type ExperienceLevel, type RadiusScale, type ThemeId } from "../state/types";
 import { Modal } from "./Modal";
-import { Choice, Field, Toggle, changeLanguage, changeTheme } from "./controls";
+import { Choice, Field, GlassPreview, Toggle, changeLanguage, changeTheme } from "./controls";
 
 export function SettingsOverlay() {
   const a = () => settings.appearance;
@@ -51,6 +54,7 @@ export function SettingsOverlay() {
           <Field label={`${t("field-glass-opacity")} (${Math.round(a().glassOpacity * 100)}%)`}>
             {(id) => <input id={id} type="range" min="0.2" max="0.95" step="0.01" value={a().glassOpacity} onInput={(e) => updateSettings((c) => { c.appearance.glassOpacity = Number(e.currentTarget.value); })} />}
           </Field>
+          <GlassPreview />
           <Choice<RadiusScale> legend={t("field-radius")} value={a().radius}
             options={(["sharp", "balanced", "soft"] as const).map((v) => ({ value: v, label: t(`radius-${v}`) }))}
             onChange={(v) => updateSettings((c) => { c.appearance.radius = v; })} />
@@ -61,7 +65,16 @@ export function SettingsOverlay() {
         </section>
         <section aria-labelledby="set-a11y">
           <h3 id="set-a11y" class="section-title">{t("preview-section-accessibility")}</h3>
-          <Toggle label={t("field-screen-reader")} hint={t("field-screen-reader-hint")} checked={settings.accessibility.screenReaderMode} onChange={(v) => updateSettings((c) => { c.accessibility.screenReaderMode = v; })} />
+          <Toggle label={t("field-screen-reader")} hint={`${t("field-screen-reader-hint")} ${t("speech-shortcuts")}`} checked={settings.accessibility.screenReaderMode} onChange={(v) => updateSettings((c) => { c.accessibility.screenReaderMode = v; })} />
+          <Show when={settings.accessibility.screenReaderMode}>
+            <Field label={`${t("speech-rate")} (${settings.accessibility.speechRate.toFixed(1)}×)`}>
+              {(id) => <input id={id} type="range" min="0.5" max="2" step="0.1" value={settings.accessibility.speechRate} onChange={(e) => updateSettings((c) => { c.accessibility.speechRate = Number(e.currentTarget.value); })} />}
+            </Field>
+            <div class="inline-actions">
+              <button class="btn" onClick={() => readOpenNote()}><Volume2 aria-hidden="true" />{t("speech-read-note")}</button>
+              <button class="btn" onClick={() => stopSpeaking()}><VolumeX aria-hidden="true" />{t("speech-stop")}</button>
+            </div>
+          </Show>
           <Toggle label={t("field-reduce-motion")} checked={settings.accessibility.reduceMotion} onChange={(v) => updateSettings((c) => { c.accessibility.reduceMotion = v; })} />
         </section>
       </div>

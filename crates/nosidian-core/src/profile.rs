@@ -106,7 +106,31 @@ pub struct VaultWorkspaceProfile {
     pub sort: SortMode,
     /// Per-note view mode overrides (path -> mode).
     pub note_modes: BTreeMap<String, ViewMode>,
+    /// Image banner above the file explorer.
+    pub banner: BannerConfig,
 }
+
+/// Banner above the explorer. `image` is a preset id (`carbon`, `language`,
+/// `writer`, `observatory`) or `asset:<name>` for an uploaded image stored in
+/// `.nosidian/assets/`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct BannerConfig {
+    pub enabled: bool,
+    pub image: String,
+    pub height: u16,
+    pub pos_y: u8,
+    pub opacity: u8,
+}
+
+impl Default for BannerConfig {
+    fn default() -> Self {
+        Self { enabled: false, image: "carbon".into(), height: 96, pos_y: 50, opacity: 90 }
+    }
+}
+
+pub const BANNER_MIN_HEIGHT: u16 = 48;
+pub const BANNER_MAX_HEIGHT: u16 = 220;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -148,6 +172,7 @@ impl Default for VaultWorkspaceProfile {
             collapsed_folders: Vec::new(),
             sort: SortMode::default(),
             note_modes: BTreeMap::new(),
+            banner: BannerConfig::default(),
         }
     }
 }
@@ -157,6 +182,9 @@ impl VaultWorkspaceProfile {
         self.left_width = self.left_width.clamp(SIDEBAR_MIN, SIDEBAR_MAX);
         self.right_width = self.right_width.clamp(SIDEBAR_MIN, SIDEBAR_MAX);
         self.recent.truncate(MAX_RECENT);
+        self.banner.height = self.banner.height.clamp(BANNER_MIN_HEIGHT, BANNER_MAX_HEIGHT);
+        self.banner.pos_y = self.banner.pos_y.min(100);
+        self.banner.opacity = self.banner.opacity.clamp(20, 100);
         self.open_tabs.dedup();
         self.open_tabs.truncate(MAX_TABS);
         if let Some(a) = &self.active_tab {
@@ -196,9 +224,13 @@ mod tests {
         p.left_width = 5;
         p.right_width = 9000;
         p.right_tab = RightTab::Srs;
+        p.banner.height = 9;
+        p.banner.opacity = 0;
         let saved = p.save(dir.path()).unwrap();
         assert_eq!(saved.left_width, SIDEBAR_MIN);
         assert_eq!(saved.right_width, SIDEBAR_MAX);
+        assert_eq!(saved.banner.height, BANNER_MIN_HEIGHT);
+        assert_eq!(saved.banner.opacity, 20);
         let loaded = VaultWorkspaceProfile::load(dir.path()).unwrap();
         assert_eq!(loaded, saved);
     }

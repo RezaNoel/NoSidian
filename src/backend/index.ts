@@ -25,6 +25,10 @@ export interface VaultBackend {
   trash(path: string): Promise<string>;
   loadProfile(): Promise<WorkspaceProfile>;
   saveProfile(p: WorkspaceProfile): Promise<WorkspaceProfile>;
+  /** Vault-owned binary assets (banner images), base64 in, data: URL out. */
+  assetWrite(name: string, base64: string): Promise<void>;
+  assetRead(name: string): Promise<string>;
+  assetDelete(name: string): Promise<void>;
 }
 
 async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
@@ -50,9 +54,14 @@ const tauriBackend: VaultBackend = {
   rename: (from, to) => invoke("entry_rename", { from, to }),
   trash: (path) => invoke("entry_trash", { path }),
   async loadProfile() {
-    return { ...defaultProfile(), ...(await invoke<Partial<WorkspaceProfile>>("load_profile")) };
+    const p = await invoke<Partial<WorkspaceProfile>>("load_profile");
+    const d = defaultProfile();
+    return { ...d, ...p, banner: { ...d.banner, ...p.banner } };
   },
   saveProfile: (profile) => invoke("save_profile", { profile }),
+  assetWrite: (name, data) => invoke("asset_write", { name, data }),
+  assetRead: (name) => invoke("asset_read", { name }),
+  assetDelete: (name) => invoke("asset_delete", { name }),
 };
 
 export const backend: VaultBackend = inTauri() ? tauriBackend : memoryBackend;
