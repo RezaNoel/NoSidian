@@ -1,25 +1,29 @@
 // Files explorer: toolbar (new note/folder, sort, reveal, collapse) and an
 // ARIA tree with keyboard navigation and a context menu.
-import { For, Show, createMemo, createSignal } from "solid-js";
+import { For, Show, createMemo, createResource, createSignal } from "solid-js";
 import {
   ArrowUpDown, ChevronDown, ChevronRight, ChevronsDownUp, Crosshair, FilePlus, FileText, FileType,
-  Folder, FolderOpen, FolderPlus, Image, Pencil, Star, Trash2,
+  Folder, FolderOpen, FolderPlus, Image, Pencil, SlidersHorizontal, Star, Trash2,
 } from "lucide-solid";
 import { locale, t } from "../i18n";
 import { buildTree, relativeTime, visibleNodes, type TreeNode } from "../lib/tree";
 import { noteTitle } from "../lib/markdown";
-import { activePath, createFolder, createNote, openNote, renameEntry, toggleStar, trashEntry, tree } from "../state/vault";
+import { backend } from "../backend";
+import { activePath, indexRev, createFolder, createNote, openNote, renameEntry, toggleStar, trashEntry, tree } from "../state/vault";
 import { profile, updateProfile } from "../state/workspace";
 import { askConfirm, askText, isMobile, setDrawer, setOverlay } from "../state/ui";
-import type { SortMode } from "../state/types";
+import type { NoteSummary, SortMode } from "../state/types";
 import { openMenu } from "./ContextMenu";
+import { pref } from "../state/prefs";
 
+type DisplayKey = "updated" | "last-opened" | "words" | "backlinks" | "tags";
+const DISPLAY: DisplayKey[] = ["updated", "last-opened", "words", "backlinks", "tags"];
 const SORTS: SortMode[] = ["name-asc", "name-desc", "modified-new", "modified-old", "created-new", "created-old"];
 
 export async function promptNewNote(folder?: string) {
   const name = await askText(t("prompt-note-name"), t("untitled-note"), t("action-create"));
   if (name) {
-    await createNote(name, folder);
+    await createNote(name, folder ?? (pref("newNoteFolder") || undefined));
     if (isMobile()) setDrawer("none");
   }
 }
@@ -33,7 +37,7 @@ async function promptRename(node: { path: string; name: string; kind: string }) 
   if (name) await renameEntry(node.path, name);
 }
 async function confirmTrash(node: { path: string; name: string }) {
-  if (await askConfirm(t("confirm-delete-title"), t("confirm-delete-body", { name: node.name }), t("action-delete"))) {
+  if (!pref("confirmDelete") || await askConfirm(t("confirm-delete-title"), t("confirm-delete-body", { name: node.name }), t("action-delete"))) {
     await trashEntry(node.path);
   }
 }
@@ -130,6 +134,29 @@ export function FileTree() {
     focusPath(a);
   };
 
+  const show = (k: DisplayKey) => profile.uiButtons[`explorer.${k}`] ?? k === "updated";
+  const needSummaries = () => show("words") || show("backlinks") || show("tags");
+  const [summaries] = createResource(
+    () => (needSummaries() ? indexRev() + 1 : false),
+    async () => new Map((await backend.summaries()).map((x) => [x.path, x])),
+    { initialValue: new Map<string, NoteSummary>() },
+  );
+  const opened = createMemo(() => new Map(profile.recent.map((r) => [r.path, r.openedAt])));
+  const metaOf = (path: string, modified: number) => {
+    const parts: string[] = [];
+    const sum = summaries().get(path);
+    if (show("updated")) parts.push(relativeTime(modified, locale()));
+    if (show("last-opened") && opened().has(path)) parts.push(`${t("explorer-last-opened")}: ${relativeTime(opened().get(path)!, locale())}`);
+    if (show("words") && sum) parts.push(t("status-words", { count: sum.words }));
+    if (show("backlinks") && sum?.backlinks) parts.push(t("status-backlinks", { count: sum.backlinks }));
+    return parts.join(" · ");
+  };
+  const displayMenu = (e: MouseEvent) =>
+    openMenu(e.currentTarget instanceof HTMLElement ? rectPoint(e.currentTarget) : e, DISPLAY.map((k) => ({
+      label: (show(k) ? "✓ " : "") + t(`explorer-${k}`),
+      run: () => updateProfile((p) => { p.uiButtons[`explorer.${k}`] = !show(k); }),
+    })));
+
   const cycleSort = (e: MouseEvent) =>
     openMenu(e.currentTarget instanceof HTMLElement ? rectPoint(e.currentTarget) : e, SORTS.map((s) => ({
       label: (profile.sort === s ? "✓ " : "") + t(`sort-${s}`),
@@ -144,6 +171,7 @@ export function FileTree() {
           <button class="icon-btn sm" title={t("action-new-note")} aria-label={t("action-new-note")} onClick={() => void promptNewNote()}><FilePlus /></button>
           <button class="icon-btn sm" title={t("action-new-folder")} aria-label={t("action-new-folder")} onClick={() => void promptNewFolder()}><FolderPlus /></button>
           <button class="icon-btn sm" title={`${t("action-sort")}: ${t(`sort-${profile.sort}`)}`} aria-label={t("action-sort")} aria-haspopup="menu" onClick={cycleSort}><ArrowUpDown /></button>
+          <button class="icon-btn sm" title={t("explorer-display")} aria-label={t("explorer-display")} aria-haspopup="menu" onClick={displayMenu}><SlidersHorizontal /></button>
           <button class="icon-btn sm" title={t("action-reveal-active")} aria-label={t("action-reveal-active")} onClick={reveal} disabled={!activePath()}><Crosshair /></button>
           <button class="icon-btn sm" title={t("action-collapse-all")} aria-label={t("action-collapse-all")} onClick={() => updateProfile((p) => { p.collapsedFolders = [...tree.folders]; })}><ChevronsDownUp /></button>
           <button class="icon-btn sm" aria-pressed={profile.banner.enabled} title={t("banner-title")} aria-label={t("banner-title")} aria-haspopup="dialog" onClick={() => setOverlay("banner")}><Image /></button>
@@ -183,8 +211,11 @@ export function FileTree() {
                   </span>
                   <span class="tree-label">
                     <span class="tree-name" dir="auto">{n.kind === "markdown" ? noteTitle(n.path) : n.name}</span>
-                    <Show when={!isFolder && n.meta}>
-                      <span class="tree-meta">{relativeTime(n.meta!.modified, locale())}</span>
+                    <Show when={!isFolder && n.meta && metaOf(n.path, n.meta.modified)}>
+                      <span class="tree-meta">{metaOf(n.path, n.meta!.modified)}</span>
+                    </Show>
+                    <Show when={!isFolder && show("tags") && summaries().get(n.path)?.tags.length}>
+                      <span class="tree-tags" dir="auto">{summaries().get(n.path)!.tags.slice(0, 3).map((x) => `#${x}`).join(" ")}</span>
                     </Show>
                   </span>
                   <Show when={profile.starred.includes(n.path)}>

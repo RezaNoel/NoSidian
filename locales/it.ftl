@@ -324,3 +324,5 @@ module-developer-extensions = Estensioni per sviluppatori
 module-advanced-ribbon-tools = Strumenti avanzati della barra
 modules-hint = Il tuo livello di esperienza imposta i valori predefiniti. Attiva o disattiva qui qualsiasi modulo.
 index-rebuilt = Indice di ricerca ricostruito: { $count } note
+status-results = Risultati: { $count }
+hotkeys-record-hint = Fai clic su una scorciatoia, poi premi i nuovi tasti. Esc annulla, Backspace rimuove la scorciatoia.

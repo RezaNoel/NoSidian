@@ -324,3 +324,5 @@ module-developer-extensions = डेवलपर एक्सटेंशन
 module-advanced-ribbon-tools = उन्नत रिबन टूल
 modules-hint = आपका अनुभव स्तर डिफ़ॉल्ट तय करता है। किसी भी मॉड्यूल को यहाँ चालू या बंद करें।
 index-rebuilt = खोज इंडेक्स फिर से बनाया गया: { $count } नोट
+status-results = परिणाम: { $count }
+hotkeys-record-hint = किसी शॉर्टकट पर क्लिक करें, फिर नई कुंजियाँ दबाएँ। Esc रद्द करता है, Backspace शॉर्टकट हटाता है।

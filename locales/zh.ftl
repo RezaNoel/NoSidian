@@ -320,3 +320,5 @@ module-developer-extensions = 开发者扩展
 module-advanced-ribbon-tools = 高级功能区工具
 modules-hint = 你的经验等级决定默认设置。可在此开启或关闭任意模块。
 index-rebuilt = 搜索索引已重建：{ $count } 篇笔记
+status-results = 结果：{ $count }
+hotkeys-record-hint = 点击一个快捷键，然后按下新的按键。Esc 取消，Backspace 删除该快捷键。

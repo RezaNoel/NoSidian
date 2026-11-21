@@ -324,3 +324,5 @@ module-developer-extensions = Geliştirici uzantıları
 module-advanced-ribbon-tools = Gelişmiş şerit araçları
 modules-hint = Deneyim seviyeniz varsayılanları belirler. Herhangi bir modülü buradan açıp kapatın.
 index-rebuilt = Arama dizini yeniden oluşturuldu: { $count } not
+status-results = Sonuç: { $count }
+hotkeys-record-hint = Bir kısayola tıklayın, sonra yeni tuşlara basın. Esc iptal eder, Backspace kısayolu kaldırır.

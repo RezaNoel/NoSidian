@@ -310,6 +310,8 @@ export interface MessageArgs {
   "module-advanced-ribbon-tools": undefined;
   "modules-hint": undefined;
   "index-rebuilt": { count: string | number };
+  "status-results": { count: string | number };
+  "hotkeys-record-hint": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -623,5 +625,7 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "module-developer-extensions",
   "module-advanced-ribbon-tools",
   "modules-hint",
-  "index-rebuilt"
+  "index-rebuilt",
+  "status-results",
+  "hotkeys-record-hint"
 ];

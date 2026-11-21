@@ -1,8 +1,10 @@
 // CodeMirror 6 Markdown editor. One instance per open note; mixed RTL/LTR
 // lines get their own direction, and the theme follows the app tokens.
 import { createEffect, onCleanup, onMount } from "solid-js";
-import { EditorState } from "@codemirror/state";
-import { EditorView, drawSelection, highlightActiveLine, keymap, placeholder } from "@codemirror/view";
+import { Compartment, EditorState, type Extension } from "@codemirror/state";
+import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
+import { indentUnit } from "@codemirror/language";
+import { EditorView, drawSelection, highlightActiveLine, highlightActiveLineGutter, keymap, lineNumbers, placeholder } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
@@ -11,6 +13,7 @@ import { tags as tg } from "@lezer/highlight";
 import { t } from "../i18n";
 import { noteTitle } from "../lib/markdown";
 import { contents, setContent } from "../state/vault";
+import { pref } from "../state/prefs";
 
 const highlight = HighlightStyle.define([
   { tag: tg.heading1, fontSize: "1.4em", fontWeight: "700", color: "var(--text-primary)" },
@@ -37,7 +40,21 @@ const theme = EditorView.theme({
   ".cm-searchMatch": { backgroundColor: "var(--accent-soft)", outline: "1px solid var(--accent-border)" },
   ".cm-panels": { backgroundColor: "var(--bg-modal)", color: "var(--text-primary)", borderColor: "var(--border)" },
   ".cm-placeholder": { color: "var(--text-muted)" },
+  ".cm-gutters": { backgroundColor: "transparent", border: "none", color: "var(--text-muted)", paddingBlockStart: "28px" },
+  ".cm-activeLineGutter": { backgroundColor: "transparent", color: "var(--text-secondary)" },
 });
+
+/** Extensions driven by the editor preferences; reconfigured live. */
+function prefExtensions(): Extension[] {
+  const size = pref("tabSize");
+  return [
+    pref("lineNumbers") ? [lineNumbers(), highlightActiveLineGutter()] : [],
+    pref("autopair") ? [closeBrackets(), keymap.of(closeBracketsKeymap)] : [],
+    EditorState.tabSize.of(size),
+    indentUnit.of(" ".repeat(size)),
+    EditorView.contentAttributes.of({ spellcheck: String(pref("spellcheck")) }),
+  ];
+}
 
 /** Imperative handle used by the outline panel. */
 let activeView: EditorView | null = null;
@@ -50,9 +67,21 @@ export function editorGotoLine(line: number): boolean {
   return true;
 }
 
+/** Line to reveal once the editor for `path` has its text (search results). */
+let pending: { path: string; line: number } | null = null;
+export function revealLine(path: string, line: number): void {
+  pending = { path, line };
+  if (activeView && activeViewPath === path && activeView.state.doc.length > 0) {
+    pending = null;
+    editorGotoLine(line);
+  }
+}
+let activeViewPath: string | null = null;
+
 export function Editor(props: { path: string }) {
   let host!: HTMLDivElement;
   let view: EditorView | undefined;
+  const prefsSlot = new Compartment();
 
   onMount(() => {
     view = new EditorView({
@@ -73,14 +102,31 @@ export function Editor(props: { path: string }) {
           placeholder(t("editor-label")),
           EditorView.contentAttributes.of({ "aria-label": `${t("editor-label")}: ${noteTitle(props.path)}`, "aria-multiline": "true", dir: "auto" }),
           theme,
+          prefsSlot.of(prefExtensions()),
           EditorView.updateListener.of((u) => {
             if (u.docChanged) setContent(props.path, u.state.doc.toString());
-            if (u.focusChanged && u.view.hasFocus) activeView = u.view;
+            if (u.focusChanged && u.view.hasFocus) { activeView = u.view; activeViewPath = props.path; }
           }),
         ],
       }),
     });
     activeView = view;
+    activeViewPath = props.path;
+    takePending();
+  });
+
+  const takePending = () => {
+    if (!view || !pending || pending.path !== props.path || view.state.doc.length === 0) return;
+    const line = pending.line;
+    pending = null;
+    activeView = view;
+    activeViewPath = props.path;
+    requestAnimationFrame(() => editorGotoLine(line));
+  };
+
+  createEffect(() => {
+    const ext = prefExtensions();
+    view?.dispatch({ effects: prefsSlot.reconfigure(ext) });
   });
 
   // Content changed outside the editor (e.g. file reloaded): sync it in.
@@ -89,10 +135,11 @@ export function Editor(props: { path: string }) {
     if (view && text !== view.state.doc.toString()) {
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
     }
+    takePending();
   });
 
   onCleanup(() => {
-    if (activeView === view) activeView = null;
+    if (activeView === view) { activeView = null; activeViewPath = null; }
     view?.destroy();
   });
 

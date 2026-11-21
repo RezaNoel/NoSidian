@@ -324,3 +324,5 @@ module-developer-extensions = افزونه‌های توسعه‌دهنده
 module-advanced-ribbon-tools = ابزارهای پیشرفتهٔ نوار ابزار
 modules-hint = سطح تجربه‌تان پیش‌فرض‌ها را تعیین می‌کند. هر ماژول را اینجا روشن یا خاموش کنید.
 index-rebuilt = فهرست جستجو بازسازی شد: { $count } یادداشت
+status-results = نتیجه‌ها: { $count }
+hotkeys-record-hint = روی یک میانبر کلیک کن و کلیدهای جدید را بزن. Esc لغو می‌کند و Backspace میانبر را حذف می‌کند.

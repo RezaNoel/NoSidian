@@ -1,17 +1,21 @@
 // Status bar: language, theme, backlinks, counts and save state.
-import { Show, createMemo } from "solid-js";
+import { Show, createMemo, createResource } from "solid-js";
 import { Check, Globe, LoaderCircle, Palette } from "lucide-solid";
 import { t } from "../i18n";
 import { languageInfo } from "../i18n/languages";
 import { stats } from "../lib/markdown";
-import { backlinks } from "../lib/links";
-import { activePath, contents, markdownPaths, saving } from "../state/vault";
+import { backend } from "../backend";
+import { activePath, contents, indexRev, saving } from "../state/vault";
 import { settings } from "../state/settings";
 import { setOverlay } from "../state/ui";
 
 export function StatusBar() {
   const s = createMemo(() => (activePath() ? stats(contents[activePath()!] ?? "") : null));
-  const back = createMemo(() => (activePath() ? backlinks(activePath()!, contents, markdownPaths()).length : 0));
+  const [back] = createResource(
+    () => (activePath() ? { path: activePath()!, rev: indexRev() } : false),
+    async ({ path }) => (await backend.links(path)).backlinks.length,
+    { initialValue: 0 },
+  );
   return (
     <footer class="statusbar glass" aria-label={t("shell-status-bar-label")}>
       <button class="status-item" onClick={() => setOverlay("settings")} title={t("field-language")}>

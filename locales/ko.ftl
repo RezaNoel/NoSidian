@@ -320,3 +320,5 @@ module-developer-extensions = 개발자 확장 기능
 module-advanced-ribbon-tools = 고급 리본 도구
 modules-hint = 경험 수준에 따라 기본값이 정해집니다. 여기서 모듈을 켜거나 끌 수 있습니다.
 index-rebuilt = 검색 색인을 다시 만들었습니다: 노트 { $count }개
+status-results = 결과: { $count }개
+hotkeys-record-hint = 단축키를 클릭한 다음 새 키를 누르세요. Esc는 취소, Backspace는 단축키를 지웁니다.

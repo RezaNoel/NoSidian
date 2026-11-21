@@ -324,3 +324,5 @@ module-developer-extensions = Entwicklererweiterungen
 module-advanced-ribbon-tools = Erweiterte Leistenwerkzeuge
 modules-hint = Deine Erfahrungsstufe legt die Standardwerte fest. Schalte hier jedes Modul ein oder aus.
 index-rebuilt = Suchindex neu aufgebaut: { $count } Notizen
+status-results = Ergebnisse: { $count }
+hotkeys-record-hint = Klicke auf ein Tastenkürzel und drücke dann die neuen Tasten. Esc bricht ab, Rücktaste entfernt das Kürzel.

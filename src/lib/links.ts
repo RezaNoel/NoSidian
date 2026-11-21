@@ -45,3 +45,22 @@ export function unlinkedMentions(path: string, contents: Record<string, string>,
   }
   return out;
 }
+
+/** Turn the first plain mention of `title` on `line` of `path` into a wikilink. */
+export function linkMention(src: string, line: number, title: string): string | null {
+  const lines = src.split("\n");
+  const text = lines[line];
+  if (text === undefined) return null;
+  const esc = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Skip text already inside [[...]] or `code`.
+  const re = new RegExp(`\\[\\[[^\\]]*\\]\\]|\`[^\`]*\`|(?<![\\p{L}\\p{N}])(${esc})(?![\\p{L}\\p{N}])`, "giu");
+  let done = false;
+  const next = text.replace(re, (whole, hit: string | undefined) => {
+    if (done || hit === undefined) return whole;
+    done = true;
+    return hit === title ? `[[${title}]]` : `[[${title}|${hit}]]`;
+  });
+  if (!done) return null;
+  lines[line] = next;
+  return lines.join("\n");
+}

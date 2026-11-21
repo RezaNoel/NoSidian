@@ -328,3 +328,5 @@ module-developer-extensions = إضافات المطوّرين
 module-advanced-ribbon-tools = أدوات الشريط المتقدمة
 modules-hint = مستوى خبرتك يحدد الإعدادات الافتراضية. فعّل أي وحدة أو عطّلها من هنا.
 index-rebuilt = أعيد بناء فهرس البحث: { $count } ملاحظة
+status-results = النتائج: { $count }
+hotkeys-record-hint = انقر على اختصار ثم اضغط المفاتيح الجديدة. ‏Esc للإلغاء، وBackspace لإزالة الاختصار.

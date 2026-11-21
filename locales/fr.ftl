@@ -324,3 +324,5 @@ module-developer-extensions = Extensions pour développeurs
 module-advanced-ribbon-tools = Outils avancés du ruban
 modules-hint = Votre niveau d’expérience définit les valeurs par défaut. Activez ou désactivez chaque module ici.
 index-rebuilt = Index de recherche reconstruit : { $count } notes
+status-results = Résultats : { $count }
+hotkeys-record-hint = Cliquez sur un raccourci, puis appuyez sur les nouvelles touches. Échap annule, Retour arrière supprime le raccourci.

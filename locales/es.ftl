@@ -324,3 +324,5 @@ module-developer-extensions = Extensiones para desarrolladores
 module-advanced-ribbon-tools = Herramientas avanzadas de la cinta
 modules-hint = Tu nivel de experiencia define los valores predeterminados. Activa o desactiva cualquier módulo aquí.
 index-rebuilt = Índice de búsqueda reconstruido: { $count } notas
+status-results = Resultados: { $count }
+hotkeys-record-hint = Haz clic en un atajo y pulsa las teclas nuevas. Esc cancela y Retroceso elimina el atajo.

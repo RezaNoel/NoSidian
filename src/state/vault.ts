@@ -31,7 +31,7 @@ export const vaultError = v.error;
 /** Index revision: read it inside a resource source to refetch after edits. */
 export const indexRev = v.rev;
 let revTimer: ReturnType<typeof setTimeout> | undefined;
-function bumpIndex(delay = 0) {
+export function bumpIndex(delay = 0) {
   clearTimeout(revTimer);
   revTimer = setTimeout(() => v.setRev((n) => n + 1), delay);
 }
@@ -126,13 +126,15 @@ export function setContent(path: string, text: string): void {
 
 const joinPath = (folder: string | undefined, name: string) => (folder ? `${folder}/${name}` : name);
 
-export async function createNote(name: string, folder?: string): Promise<string | null> {
+export async function createNote(name: string, folder?: string, body?: string): Promise<string | null> {
   const clean = name.trim().replace(/\.md$/i, "");
   if (!clean) return null;
   const path = joinPath(folder, `${clean}.md`);
+  const text = body ?? `# ${clean}\n\n`;
   try {
-    await backend.createNote(path, `# ${clean}\n\n`);
-    v.setContents(path, `# ${clean}\n\n`);
+    if (folder && !tree.folders.includes(folder)) await backend.createFolder(folder).catch(() => undefined);
+    await backend.createNote(path, text);
+    v.setContents(path, text);
     await refresh();
     openNote(path);
     return path;

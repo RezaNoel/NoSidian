@@ -324,3 +324,5 @@ module-developer-extensions = Extensões para desenvolvedores
 module-advanced-ribbon-tools = Ferramentas avançadas da faixa
 modules-hint = Seu nível de experiência define os padrões. Ative ou desative qualquer módulo aqui.
 index-rebuilt = Índice de busca reconstruído: { $count } notas
+status-results = Resultados: { $count }
+hotkeys-record-hint = Clique em um atalho e pressione as novas teclas. Esc cancela e Backspace remove o atalho.

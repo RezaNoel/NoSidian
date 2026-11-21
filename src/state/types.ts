@@ -54,6 +54,8 @@ export interface AppConfig {
   moduleOverrides: Partial<Record<ModuleId, boolean>>;
   activeVault: string | null;
   recentVaults: VaultRef[];
+  /** Free-form UI preferences; see state/prefs.ts for keys and defaults. */
+  prefs: Record<string, unknown>;
 }
 
 export interface VaultMeta { id: string; name: string; createdAt: number; formatVersion: number }
@@ -84,6 +86,7 @@ export function defaultConfig(): AppConfig {
     moduleOverrides: {},
     activeVault: null,
     recentVaults: [],
+    prefs: {},
   };
 }
 

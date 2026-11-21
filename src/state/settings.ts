@@ -38,7 +38,7 @@ const store = createRoot(() => {
       if (loaded) persist();
     },
     reset() {
-      const keep = { language: config.language, onboarding: config.onboarding };
+      const keep = { language: config.language, onboarding: config.onboarding, activeVault: config.activeVault, recentVaults: config.recentVaults };
       setConfig(reconcile({ ...defaultConfig(), ...keep }));
       if (loaded) persist();
     },

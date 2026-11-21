@@ -14,6 +14,7 @@ import { promptNewNote } from "./FileTree";
 import { Logo } from "./Logo";
 import { setNoteSource } from "../a11y/voice";
 import { contents } from "../state/vault";
+import { pref } from "../state/prefs";
 
 setNoteSource(() => (activePath() ? contents[activePath()!] ?? null : null));
 
@@ -25,7 +26,7 @@ const MODES: { id: PaneMode; icon: typeof BookOpen }[] = [
 ];
 
 export function modeOf(path: string): PaneMode {
-  const m: ViewMode = profile.noteModes[path] ?? profile.viewMode;
+  const m: ViewMode = profile.noteModes[path] ?? pref("editorDefaultMode");
   const pane: PaneMode = m === "editor" || m === "reader" || m === "split" ? m : "split";
   return pane === "split" && isMobile() ? "editor" : pane;
 }
@@ -55,7 +56,7 @@ export function NoteView() {
           const folder = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
           const starred = () => profile.starred.includes(path);
           const mode = () => modeOf(path);
-          const setMode = (m: PaneMode) => updateProfile((p) => { p.noteModes[path] = m; p.viewMode = m; });
+          const setMode = (m: PaneMode) => updateProfile((p) => { p.noteModes[path] = m; });
           return (
             <>
               <header class="note-header">

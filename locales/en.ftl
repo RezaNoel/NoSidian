@@ -334,3 +334,5 @@ module-developer-extensions = Developer extensions
 module-advanced-ribbon-tools = Advanced ribbon tools
 modules-hint = Your experience level sets the defaults. Turn any module on or off here.
 index-rebuilt = Search index rebuilt: { $count } notes
+status-results = Results: { $count }
+hotkeys-record-hint = Click a shortcut, then press the new keys. Esc cancels, Backspace removes the shortcut.

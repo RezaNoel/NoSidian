@@ -326,3 +326,5 @@ module-developer-extensions = Расширения для разработчик
 module-advanced-ribbon-tools = Расширенные инструменты панели
 modules-hint = Уровень опыта задаёт значения по умолчанию. Здесь можно включить или выключить любой модуль.
 index-rebuilt = Поисковый индекс перестроен: заметок — { $count }
+status-results = Результатов: { $count }
+hotkeys-record-hint = Нажмите на сочетание, затем нажмите новые клавиши. Esc отменяет, Backspace удаляет сочетание.

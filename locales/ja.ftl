@@ -320,3 +320,5 @@ module-developer-extensions = 開発者向け拡張機能
 module-advanced-ribbon-tools = 高度なリボンツール
 modules-hint = 経験レベルで既定値が決まります。各モジュールはここでオン・オフできます。
 index-rebuilt = 検索インデックスを再構築しました：{ $count } 件のノート
+status-results = 結果：{ $count } 件
+hotkeys-record-hint = ショートカットをクリックしてから新しいキーを押してください。Esc でキャンセル、Backspace で削除します。
