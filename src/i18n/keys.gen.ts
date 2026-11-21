@@ -1189,6 +1189,11 @@ export interface MessageArgs {
   "mcp-example-4": undefined;
   "mcp-example-5": undefined;
   "nav-start": undefined;
+  "tab-close-others": undefined;
+  "tab-close-right": undefined;
+  "tab-close-all": undefined;
+  "tab-copy-path": undefined;
+  "tab-show-in-files": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2381,5 +2386,10 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "mcp-example-3",
   "mcp-example-4",
   "mcp-example-5",
-  "nav-start"
+  "nav-start",
+  "tab-close-others",
+  "tab-close-right",
+  "tab-close-all",
+  "tab-copy-path",
+  "tab-show-in-files"
 ];

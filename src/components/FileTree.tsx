@@ -47,6 +47,20 @@ async function confirmTrash(node: { path: string; name: string }) {
   }
 }
 
+/** Show a file or folder in the Files panel: open the panel, expand its folders and focus it. */
+export function revealInFiles(path: string): void {
+  updateProfile((p) => {
+    p.panels.left = true;
+    p.leftTab = "files";
+    const parts = path.split("/");
+    const ancestors = parts.map((_, i) => parts.slice(0, i + 1).join("/"));
+    p.collapsedFolders = p.collapsedFolders.filter((f) => !ancestors.includes(f));
+  });
+  if (isMobile()) setDrawer("left");
+  setTimeout(() => document.querySelector<HTMLElement>(`.tree [data-path="${CSS.escape(path)}"]`)?.focus(), 120);
+}
+if (typeof window !== "undefined") window.addEventListener("nosidian:reveal", (e) => { const d = (e as CustomEvent<string>).detail; if (d) revealInFiles(d); });
+
 export function FileTree() {
   let list!: HTMLUListElement;
   const collapsed = createMemo(() => new Set(profile.collapsedFolders));
