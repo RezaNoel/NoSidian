@@ -1188,6 +1188,7 @@ export interface MessageArgs {
   "mcp-example-3": undefined;
   "mcp-example-4": undefined;
   "mcp-example-5": undefined;
+  "nav-start": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2379,5 +2380,6 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "mcp-example-2",
   "mcp-example-3",
   "mcp-example-4",
-  "mcp-example-5"
+  "mcp-example-5",
+  "nav-start"
 ];

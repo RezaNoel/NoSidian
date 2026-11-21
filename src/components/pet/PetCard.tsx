@@ -9,7 +9,7 @@ import { saveCustomPetModelFile, deleteCustomPetModel } from "../../core/utils/p
 import { bumpBond, pet, setPet } from "../../state/pet";
 import { backend } from "../../backend";
 import { cardFileName, renderPetCard } from "./shareCard";
-import { askText, toast } from "../../state/ui";
+import { askText, isMobile, toast } from "../../state/ui";
 import { pref, setPref } from "../../state/prefs";
 import { Modal } from "../Modal";
 import { PetViewport } from "./PetViewport";
@@ -164,7 +164,7 @@ const onStartPage = () => { const a = activePath(); return !a || a === "app:star
 
 export function PetCompanion() {
   return (
-    <Show when={pref("petFloating") && !studioOpen() && !onStartPage()}>
+    <Show when={pref("petFloating") && !studioOpen() && !onStartPage() && !isMobile()}>
       <div class="pet-float glass">
         <button class="pet-float-btn" aria-label={t("pet-open")} title={t("pet-open")} onClick={openPetStudio}>
           <PetViewport species={pet.state.species} activity={pet.state.activity} accessories={pet.state.equippedAccessories} customModelId={pet.state.customModelId} variant="mini" label={t("pet-label", { name: pet.state.name, mood: t(`pet-mood-${getPetMoodLabel(pet.state).toLowerCase()}` as "pet-mood-happy") })} />

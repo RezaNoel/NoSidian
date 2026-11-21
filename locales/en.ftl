@@ -1230,3 +1230,4 @@ mcp-example-2 = Which of my notes link to "Ideas"? Suggest three new [[links]] t
 mcp-example-3 = Make flashcards from my note "Biology/Photosynthesis.md" with the generate_study_cards prompt.
 mcp-example-4 = Read today's daily note and create a note "Inbox/Plan for tomorrow.md" with the open tasks.
 mcp-example-5 = List my tags and tell me which ones are used only once.
+nav-start = Start

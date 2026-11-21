@@ -52,7 +52,7 @@ export function StartPage() {
           <Logo size={88} class="start-logo" />
           <Show when={showPet()}>
             <div class="start-pet" aria-hidden="true">
-              <PetViewport species={pet.state.species} activity="playing" accessories={pet.state.equippedAccessories} customModelId={pet.state.customModelId} variant="mini" label={pet.state.name} />
+              <PetViewport species={pet.state.species} activity="idle" accessories={pet.state.equippedAccessories} customModelId={pet.state.customModelId} variant="mini" label={pet.state.name} />
             </div>
           </Show>
         </div>

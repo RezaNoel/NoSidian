@@ -14,7 +14,7 @@ import { t } from "../../i18n";
 
 type Variant = "mini" | "card" | "studio";
 const CAMERA: Record<Variant, { pos: [number, number, number]; target: [number, number, number]; fov: number }> = {
-  mini: { pos: [0.22, 1.12, 2.05], target: [0, 0.78, 0.04], fov: 35 },
+  mini: { pos: [0.22, 1.1, 2.6], target: [0, 0.72, 0.04], fov: 35 },
   card: { pos: [0.35, 1.38, 3.35], target: [0, 0.58, 0], fov: 37 },
   studio: { pos: [0.42, 1.48, 3.45], target: [0, 0.58, 0], fov: 38 },
 };

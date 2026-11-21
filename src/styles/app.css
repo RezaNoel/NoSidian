@@ -5,7 +5,7 @@
   --gap: 6px;
   --code-fg: color-mix(in srgb, var(--accent) 55%, var(--text-primary));
   --active-line: color-mix(in srgb, var(--text-primary) 4%, transparent);
-  --mobile-nav-height: 64px;
+  --mobile-nav-height: 70px;
   --titlebar-h: 0px;
 }
 [data-titlebar="true"] { --titlebar-h: 40px; }
@@ -402,11 +402,11 @@ input[type="range"] { accent-color: var(--accent); inline-size: 100%; }
   }
   html:not([data-desktop]) .mnav-btn {
     flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; border: 0; background: transparent;
-    color: var(--text-muted); font-size: 0.68em; font-weight: 600; padding: 6px 0; min-block-size: 48px; justify-content: center;
+    color: var(--text-muted); font-size: 0.74em; font-weight: 600; padding: 6px 0; min-block-size: 54px; justify-content: center;
   }
-  html:not([data-desktop]) .mnav-btn svg { inline-size: 21px; block-size: 21px; }
+  html:not([data-desktop]) .mnav-btn svg { inline-size: 24px; block-size: 24px; }
   html:not([data-desktop]) .mnav-btn[aria-current="page"], html:not([data-desktop]) .mnav-btn[aria-expanded="true"] { color: var(--accent); }
-  html:not([data-desktop]) .mnav-btn.fab { flex: none; inline-size: 52px; block-size: 52px; border-radius: 16px; background: var(--accent); color: var(--accent-ink); margin-block-start: -18px;
+  html:not([data-desktop]) .mnav-btn.fab { flex: none; inline-size: 56px; block-size: 56px; border-radius: 16px; background: var(--accent); color: var(--accent-ink); margin-block-start: -18px;
   }
   html:not([data-desktop]) .mnav-btn.fab span { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
@@ -420,7 +420,20 @@ input[type="range"] { accent-color: var(--accent); inline-size: 100%; }
   html:not([data-desktop]) .sheet-item:hover { background: var(--hover); }
   html:not([data-desktop]) .sheet-item svg { inline-size: 22px; block-size: 22px; color: var(--accent); }
 
-  html:not([data-desktop]) .note-header { padding: 10px 12px 8px; }
+  html:not([data-desktop]) .note-header { padding: 10px 12px 8px; gap: 4px; }
+  html:not([data-desktop]) .note-title { font-size: 1.3em; }
+  html:not([data-desktop]) .icon-btn { min-inline-size: 40px; min-block-size: 40px; }
+  html:not([data-desktop]) .icon-btn svg { inline-size: 20px; block-size: 20px; }
+  html:not([data-desktop]) .btn { min-block-size: 40px; }
+  html:not([data-desktop]) .format-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 2px; padding-inline: 8px; }
+  html:not([data-desktop]) .format-bar::-webkit-scrollbar { display: none; }
+  html:not([data-desktop]) .format-bar button { flex: none; min-inline-size: 40px; min-block-size: 40px; }
+  html:not([data-desktop]) .reader, html:not([data-desktop]) .editor-host .cm-content { font-size: 1.06rem; }
+  html:not([data-desktop]) .page { padding: 14px 14px 28px; }
+  html:not([data-desktop]) .page-head h1 { font-size: 1.25em; }
+  html:not([data-desktop]) .start-shortcuts kbd { display: none; }
+  html:not([data-desktop]) .start-shortcuts { grid-template-columns: 1fr 1fr; }
+  html:not([data-desktop]) .start-tile { flex-direction: column; align-items: flex-start; min-block-size: 76px; }
   html:not([data-desktop]) .seg-label { display: none; }
   html:not([data-desktop]) .reader { padding: 18px 18px 30vh; }
   html:not([data-desktop]) .editor-host .cm-content { padding: 18px 16px 40vh !important; }
