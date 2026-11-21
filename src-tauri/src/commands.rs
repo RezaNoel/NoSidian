@@ -84,14 +84,80 @@ pub fn open_vault(state: State<'_, AppState>, path: PathBuf) -> CmdResult<Vault>
 }
 
 #[tauri::command]
-pub fn load_profile(vault_root: PathBuf) -> CmdResult<VaultWorkspaceProfile> {
-    Ok(VaultWorkspaceProfile::load(&vault_root)?)
+pub fn load_profile(state: State<'_, AppState>) -> CmdResult<VaultWorkspaceProfile> {
+    Ok(VaultWorkspaceProfile::load(&active_root(&state)?)?)
 }
 
 #[tauri::command]
 pub fn save_profile(
-    vault_root: PathBuf,
+    state: State<'_, AppState>,
     profile: VaultWorkspaceProfile,
 ) -> CmdResult<VaultWorkspaceProfile> {
-    Ok(profile.save(&vault_root)?)
+    Ok(profile.save(&active_root(&state)?)?)
+}
+
+// ---------- Notes inside the active vault ----------
+// The vault root always comes from the saved config, never from the UI, so
+// the webview can only reach files inside the vault the user opened.
+
+use nosidian_core::notes::{self, VaultTree};
+
+fn active_root(state: &State<'_, AppState>) -> CmdResult<PathBuf> {
+    let store = state.config.lock().map_err(internal)?;
+    store
+        .load()?
+        .active_vault
+        .ok_or_else(|| CommandError { code: "no-vault", detail: "no active vault".into() })
+}
+
+#[tauri::command]
+pub fn vault_scan(state: State<'_, AppState>) -> CmdResult<VaultTree> {
+    Ok(notes::scan(&active_root(&state)?)?)
+}
+
+#[tauri::command]
+pub fn note_read(state: State<'_, AppState>, path: String) -> CmdResult<String> {
+    Ok(notes::read_text(&active_root(&state)?, &path)?)
+}
+
+#[tauri::command]
+pub fn note_write(state: State<'_, AppState>, path: String, content: String) -> CmdResult<()> {
+    Ok(notes::write_text(&active_root(&state)?, &path, &content)?)
+}
+
+#[tauri::command]
+pub fn note_create(state: State<'_, AppState>, path: String, content: String) -> CmdResult<()> {
+    Ok(notes::create_note(&active_root(&state)?, &path, &content)?)
+}
+
+#[tauri::command]
+pub fn folder_create(state: State<'_, AppState>, path: String) -> CmdResult<()> {
+    Ok(notes::create_folder(&active_root(&state)?, &path)?)
+}
+
+#[tauri::command]
+pub fn entry_rename(state: State<'_, AppState>, from: String, to: String) -> CmdResult<()> {
+    Ok(notes::rename(&active_root(&state)?, &from, &to)?)
+}
+
+#[tauri::command]
+pub fn entry_trash(state: State<'_, AppState>, path: String) -> CmdResult<String> {
+    Ok(notes::trash(&active_root(&state)?, &path, now_ms())?)
+}
+
+/// Create (or reopen) the sample vault in the Documents folder and fill it
+/// with the demo notes.
+#[tauri::command]
+pub fn open_sample_vault(app: tauri::AppHandle, state: State<'_, AppState>) -> CmdResult<Vault> {
+    let parent = default_vault_parent(app)?;
+    std::fs::create_dir_all(&parent).map_err(internal)?;
+    let root = parent.join("NoSidian Demo Vault");
+    let vault = if root.exists() {
+        Vault::open(&root, now_ms())?
+    } else {
+        Vault::create(&parent, "NoSidian Demo Vault", now_ms())?
+    };
+    notes::seed_sample(&vault.root)?;
+    remember_vault(&state, &vault)?;
+    Ok(vault)
 }

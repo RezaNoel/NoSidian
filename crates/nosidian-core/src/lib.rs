@@ -7,6 +7,7 @@ pub mod config;
 pub mod error;
 pub mod fsutil;
 pub mod modules;
+pub mod notes;
 pub mod profile;
 pub mod vault;
 

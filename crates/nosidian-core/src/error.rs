@@ -26,6 +26,8 @@ pub enum CoreError {
     NotFound(PathBuf),
     #[error("path is not a folder: {0}")]
     NotADirectory(PathBuf),
+    #[error("invalid path inside vault: {0}")]
+    InvalidPath(String),
 }
 
 impl CoreError {
@@ -39,6 +41,7 @@ impl CoreError {
             CoreError::AlreadyExists(_) => "already-exists",
             CoreError::NotFound(_) => "not-found",
             CoreError::NotADirectory(_) => "not-a-folder",
+            CoreError::InvalidPath(_) => "invalid-path",
         }
     }
 
