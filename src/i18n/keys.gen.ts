@@ -1138,6 +1138,35 @@ export interface MessageArgs {
   "proj-mark-complete": undefined;
   "proj-plan-at": undefined;
   "proj-primary-project": undefined;
+  "media-add-quote": undefined;
+  "media-details": undefined;
+  "media-empty-books": undefined;
+  "media-empty-cinema": undefined;
+  "media-finished-on": { date: string | number };
+  "media-goal-none": undefined;
+  "media-goal-set": undefined;
+  "media-highlights": undefined;
+  "media-mark-watched": undefined;
+  "media-no-highlights": undefined;
+  "media-no-quotes": undefined;
+  "media-now-reading": undefined;
+  "media-now-watching": undefined;
+  "media-pages-back": undefined;
+  "media-pages-forward": undefined;
+  "media-plus-episode": undefined;
+  "media-quotes-title": undefined;
+  "media-rated": { n: string | number };
+  "media-runtime": undefined;
+  "media-started": { date: string | number };
+  "media-stat-books": undefined;
+  "media-stat-episodes": undefined;
+  "media-stat-hours": undefined;
+  "media-stat-pages": undefined;
+  "media-stat-this-year": undefined;
+  "media-stat-titles": undefined;
+  "media-watched-on": { date: string | number };
+  "media-search": undefined;
+  "media-stat-rating": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2279,5 +2308,34 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "proj-reopen",
   "proj-mark-complete",
   "proj-plan-at",
-  "proj-primary-project"
+  "proj-primary-project",
+  "media-add-quote",
+  "media-details",
+  "media-empty-books",
+  "media-empty-cinema",
+  "media-finished-on",
+  "media-goal-none",
+  "media-goal-set",
+  "media-highlights",
+  "media-mark-watched",
+  "media-no-highlights",
+  "media-no-quotes",
+  "media-now-reading",
+  "media-now-watching",
+  "media-pages-back",
+  "media-pages-forward",
+  "media-plus-episode",
+  "media-quotes-title",
+  "media-rated",
+  "media-runtime",
+  "media-started",
+  "media-stat-books",
+  "media-stat-episodes",
+  "media-stat-hours",
+  "media-stat-pages",
+  "media-stat-this-year",
+  "media-stat-titles",
+  "media-watched-on",
+  "media-search",
+  "media-stat-rating"
 ];

@@ -737,6 +737,8 @@ export interface BookEntry {
 export interface MediaLibraryState {
   movies: CinemaEntry[];
   books: BookEntry[];
+  /** Books to finish this year (0 or missing: no goal). */
+  readingGoal?: number;
 }
 
 export interface CustomScriptPlugin {
