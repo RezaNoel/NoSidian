@@ -15,6 +15,7 @@ import { CalendarPanel } from "./Calendar";
 import { FileTree } from "./FileTree";
 import { VaultFooter } from "./VaultFooter";
 import { VaultBanner } from "./Banner";
+import { hasTitleBar } from "./TitleBar";
 
 const TABS: { id: LeftTab; icon: typeof Files; label: () => string }[] = [
   { id: "files", icon: Files, label: () => t("tab-files") },
@@ -24,6 +25,9 @@ const TABS: { id: LeftTab; icon: typeof Files; label: () => string }[] = [
   { id: "starred", icon: Star, label: () => t("tab-starred") },
   { id: "calendar", icon: Calendar, label: () => t("tab-calendar") },
 ];
+
+/** These live in the window title bar on desktop, so the panel strip skips them. */
+const TOP_BAR_TABS: LeftTab[] = ["files", "search", "starred"];
 
 const open = (path: string) => {
   openNote(path);
@@ -193,7 +197,7 @@ export function LeftSidebar() {
     <aside class="sidebar left glass" aria-label={t("shell-left-sidebar-label")}>
       <VaultBanner />
       <div class="sidebar-tabs" role="tablist" aria-label={t("left-tabs-label")} onKeyDown={rovingKeydown("[role=tab]", "horizontal")}>
-        <For each={TABS}>
+        <For each={TABS.filter((x) => !(hasTitleBar() && !isMobile() && TOP_BAR_TABS.includes(x.id)))}>
           {(tab) => (
             <button
               role="tab"

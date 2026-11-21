@@ -69,6 +69,8 @@ pub fn run() {
             commands::files_import,
             commands::export_text,
             commands::vault_backup,
+            commands::reveal_in_os,
+            commands::entry_abs_path,
             bridge::terminal_exec,
             bridge::mcp_start,
             bridge::mcp_stop,

@@ -8,7 +8,6 @@ import { pref } from "../state/prefs";
 import { settings } from "../state/settings";
 import { setZoomImage, toast } from "../state/ui";
 import { contents, createNote, ensureLoaded, markdownPaths, openNote, setContent } from "../state/vault";
-import { profile } from "../state/workspace";
 import { openPdfAt } from "../state/pdf";
 import { Properties } from "./Properties";
 
@@ -157,7 +156,7 @@ export function Reader(props: { path: string; source?: () => string; readOnly?: 
   const text = () => (props.source ? props.source() : contents[props.path] ?? "");
   const html = createMemo(() => renderMarkdown(text(), { breaks: !pref("strictBreaks") }));
   createEffect(on(html, () => queueMicrotask(() => el && enhance(el, props.path))));
-  const dir = () => profile.noteDirs?.[props.path] ?? "auto";
+  const dir = () => "auto" as const;
 
   const onClick = (e: MouseEvent) => {
     const target = e.target as HTMLElement;

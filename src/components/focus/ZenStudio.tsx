@@ -2,7 +2,7 @@
 // reward, mix ambient sounds and music, pick a background effect, and enter
 // the distraction-free full-screen mode.
 import { For, Show } from "solid-js";
-import { ArrowDown, ArrowUp, Coffee, Gift, Maximize2, Pause, Play, Plus, Trash2 } from "lucide-solid";
+import { ArrowDown, ArrowLeft, ArrowUp, Coffee, Gift, Maximize2, Pause, Play, Plus, Trash2 } from "lucide-solid";
 import { t } from "../../i18n";
 import { addBreakAfterBlock, addFocusBlock, removeZenBlock, updateZenBlock } from "../../core/zenMode";
 import { AMBIENT_MUSIC_TRACKS } from "../../core/utils/ambientMusic";
@@ -14,7 +14,7 @@ import { Mixer } from "./FocusPanel";
 
 export const EFFECTS: AmbientEffectType[] = ["none", "snow", "autumn", "sakura", "fireflies", "rain", "starfield", "embers", "aurora"];
 
-export default function ZenStudio() {
+export default function ZenStudio(props: { onClose?: () => void }) {
   const blocks = () => zen.state.blocks;
   const setBlocks = (fn: (b: typeof zen.state.blocks) => typeof zen.state.blocks) => zen.update((z) => { z.blocks = fn(JSON.parse(JSON.stringify(z.blocks))); });
   const swap = (i: number, j: number) => setBlocks((b) => { if (j < 0 || j >= b.length) return b; [b[i], b[j]] = [b[j], b[i]]; return b; });
@@ -22,6 +22,9 @@ export default function ZenStudio() {
   return (
     <div class="zen-studio page">
       <header class="page-head">
+        <Show when={props.onClose}>
+          <button class="icon-btn" title={t("zen-back")} aria-label={t("zen-back")} onClick={() => props.onClose?.()}><ArrowLeft class="flip-rtl" /></button>
+        </Show>
         <h1>{t("view-zen")}</h1>
         <button class="btn primary" onClick={() => setZenOpen(true)}><Maximize2 />{t("focus-zen-mode")}</button>
       </header>

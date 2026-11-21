@@ -884,6 +884,34 @@ export interface MessageArgs {
   "focus-default-reward": undefined;
   "pet-render-failed": undefined;
   "dash-queue-today": undefined;
+  "menu-cut": undefined;
+  "menu-copy": undefined;
+  "menu-paste": undefined;
+  "menu-select-all": undefined;
+  "ribbon-menu-reset": undefined;
+  "menu-open": undefined;
+  "menu-duplicate": undefined;
+  "menu-copy-link": undefined;
+  "menu-copy-location": undefined;
+  "menu-reveal-os": undefined;
+  "menu-reveal-vault": undefined;
+  "menu-copy-suffix": undefined;
+  "menu-copied": undefined;
+  "menu-failed": undefined;
+  "start-shortcuts": undefined;
+  "personal-birthday": undefined;
+  "greet-morning": undefined;
+  "greet-afternoon": undefined;
+  "greet-evening": undefined;
+  "greet-night": undefined;
+  "greet-morning-name": { name: string | number };
+  "greet-afternoon-name": { name: string | number };
+  "greet-evening-name": { name: string | number };
+  "greet-night-name": { name: string | number };
+  "greet-birthday": undefined;
+  "greet-birthday-name": { name: string | number };
+  "view-start": undefined;
+  "zen-back": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -1771,5 +1799,33 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "focus-default-goal",
   "focus-default-reward",
   "pet-render-failed",
-  "dash-queue-today"
+  "dash-queue-today",
+  "menu-cut",
+  "menu-copy",
+  "menu-paste",
+  "menu-select-all",
+  "ribbon-menu-reset",
+  "menu-open",
+  "menu-duplicate",
+  "menu-copy-link",
+  "menu-copy-location",
+  "menu-reveal-os",
+  "menu-reveal-vault",
+  "menu-copy-suffix",
+  "menu-copied",
+  "menu-failed",
+  "start-shortcuts",
+  "personal-birthday",
+  "greet-morning",
+  "greet-afternoon",
+  "greet-evening",
+  "greet-night",
+  "greet-morning-name",
+  "greet-afternoon-name",
+  "greet-evening-name",
+  "greet-night-name",
+  "greet-birthday",
+  "greet-birthday-name",
+  "view-start",
+  "zen-back"
 ];

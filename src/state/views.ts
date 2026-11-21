@@ -3,7 +3,7 @@
 import { t } from "../i18n";
 import { noteTitle } from "../lib/markdown";
 
-export const APP_VIEWS = ["dashboard", "graph", "flashcards", "projects", "media", "zen"] as const;
+export const APP_VIEWS = ["start", "dashboard", "graph", "flashcards", "projects", "media", "zen"] as const;
 export type AppView = (typeof APP_VIEWS)[number];
 
 export const isAppView = (path: string) => path.startsWith("app:");
@@ -15,6 +15,8 @@ export function tabTitle(path: string): string {
 }
 
 export async function openView(v: AppView): Promise<void> {
+  // The Zen studio is a page of its own over the whole window, never a tab.
+  if (v === "zen") { const { setZenPage } = await import("./ui"); setZenPage(true); return; }
   const { openNote } = await import("./vault");
   openNote(viewPath(v));
 }

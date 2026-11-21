@@ -15,13 +15,14 @@
         "title": "NoSidian",
         "width": 1280,
         "height": 820,
-        "minWidth": 360,
+        "minWidth": 640,
         "minHeight": 520,
         "transparent": false,
         "decorations": false,
         "label": "main",
         "center": true,
-        "dragDropEnabled": false
+        "dragDropEnabled": false,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required"
       }
     ],
     "security": {

@@ -11,6 +11,7 @@ import { askText, toast } from "../../state/ui";
 import { pref, setPref } from "../../state/prefs";
 import { Modal } from "../Modal";
 import { PetViewport } from "./PetViewport";
+import { activePath } from "../../state/vault";
 
 const [studioOpen, setStudioOpen] = createSignal(false);
 export const openPetStudio = () => setStudioOpen(true);
@@ -128,9 +129,12 @@ export function PetStudio() {
 }
 
 /** Small always-visible companion in the corner of the workspace. */
+/** The start page has its own running companion, so the corner one steps aside. */
+const onStartPage = () => { const a = activePath(); return !a || a === "app:start"; };
+
 export function PetCompanion() {
   return (
-    <Show when={pref("petFloating") && !studioOpen()}>
+    <Show when={pref("petFloating") && !studioOpen() && !onStartPage()}>
       <div class="pet-float glass">
         <button class="pet-float-btn" aria-label={t("pet-open")} title={t("pet-open")} onClick={openPetStudio}>
           <PetViewport species={pet.state.species} activity={pet.state.activity} accessories={pet.state.equippedAccessories} customModelId={pet.state.customModelId} variant="mini" label={t("pet-label", { name: pet.state.name, mood: t(`pet-mood-${getPetMoodLabel(pet.state).toLowerCase()}` as "pet-mood-happy") })} />

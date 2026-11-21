@@ -57,6 +57,10 @@ export interface VaultBackend {
   /** Ask where to save and write text there. Returns false if cancelled. */
   saveText(defaultName: string, content: string, ext: string): Promise<boolean>;
   vaultBackup(): Promise<string>;
+  /** Show an entry in the system file manager (desktop only). */
+  revealInOs(path: string): Promise<void>;
+  /** Absolute path of an entry on disk (desktop) or its vault path (browser). */
+  absPath(path: string): Promise<string>;
   /** System shell (only when enabled in settings; the Rust side checks too). */
   terminalExec(command: string, shell: string, cwd: string): Promise<{ stdout: string; stderr: string; code: number }>;
   mcpStart(port: number, token: string): Promise<number>;
@@ -129,6 +133,8 @@ const tauriBackend: VaultBackend = {
     return true;
   },
   vaultBackup: () => invoke("vault_backup"),
+  revealInOs: (path) => invoke("reveal_in_os", { path }),
+  absPath: (path) => invoke("entry_abs_path", { path }),
   terminalExec: (command, shell, cwd) => invoke("terminal_exec", { command, shell, cwd }),
   mcpStart: (port, token) => invoke("mcp_start", { port, token }),
   mcpStop: () => invoke("mcp_stop"),
