@@ -15,6 +15,8 @@ use crate::modules::{self, ExperienceLevel, ModuleId};
 pub const CONFIG_FILE: &str = "config.json";
 pub const CONFIG_SCHEMA_VERSION: u32 = 1;
 pub const MAX_RECENT_VAULTS: usize = 12;
+/// Guard against a runaway prefs blob.
+pub const MAX_PREFS_BYTES: usize = 256 * 1024;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
@@ -154,6 +156,10 @@ pub struct AppConfig {
     pub module_overrides: BTreeMap<ModuleId, bool>,
     pub active_vault: Option<PathBuf>,
     pub recent_vaults: Vec<VaultRef>,
+    /// UI preferences owned by the frontend (editor, daily notes, hotkeys,
+    /// files, startup). Kept as free-form JSON so new options need no
+    /// migration; the UI fills in defaults for missing keys.
+    pub prefs: serde_json::Map<String, serde_json::Value>,
 }
 
 impl Default for AppConfig {
@@ -171,6 +177,7 @@ impl Default for AppConfig {
             module_overrides: BTreeMap::new(),
             active_vault: None,
             recent_vaults: Vec::new(),
+            prefs: serde_json::Map::new(),
         }
     }
 }
@@ -188,6 +195,9 @@ impl AppConfig {
             }
         }
         self.recent_vaults.truncate(MAX_RECENT_VAULTS);
+        if serde_json::to_vec(&self.prefs).map_or(true, |b| b.len() > MAX_PREFS_BYTES) {
+            self.prefs.clear();
+        }
     }
 
     pub fn enabled_modules(&self) -> std::collections::BTreeSet<ModuleId> {
@@ -309,6 +319,18 @@ mod tests {
         let cfg = ConfigStore::new(dir.path()).load().unwrap();
         assert_eq!(cfg.language.as_deref(), Some("de"));
         assert_eq!(cfg.appearance, Appearance::default());
+        assert!(cfg.prefs.is_empty());
+    }
+
+    #[test]
+    fn prefs_round_trip() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = ConfigStore::new(dir.path());
+        let mut cfg = AppConfig::default();
+        cfg.prefs.insert("dailyFolder".into(), serde_json::json!("Journal"));
+        store.save(&cfg).unwrap();
+        let back = store.load().unwrap();
+        assert_eq!(back.prefs.get("dailyFolder"), Some(&serde_json::json!("Journal")));
     }
 
     #[test]

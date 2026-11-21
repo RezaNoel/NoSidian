@@ -17,3 +17,4 @@ pt-BR:mode-editor
 de:ribbon-mindmap
 *:ribbon-kanban
 es:use-case-general
+es:settings-tab-general

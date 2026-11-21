@@ -107,9 +107,9 @@ marked.use({
 });
 
 /** Render Markdown to sanitized HTML. Rich blocks (math, Mermaid, callouts) arrive in Phase 3. */
-export function renderMarkdown(src: string): string {
+export function renderMarkdown(src: string, opts: { breaks?: boolean } = {}): string {
   const [, body] = splitFrontMatter(src);
   const withMarks = body.replace(/==([^=\n]+)==/g, "<mark>$1</mark>").replace(/\+\+([^+\n]+)\+\+/g, "<u>$1</u>");
-  const html = marked.parse(withMarks, { async: false }) as string;
+  const html = marked.parse(withMarks, { async: false, breaks: opts.breaks ?? false }) as string;
   return DOMPurify.sanitize(html, { ADD_ATTR: ["data-target", "dir"] });
 }

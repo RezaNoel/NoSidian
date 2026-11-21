@@ -17,8 +17,10 @@ const v = createRoot(() => {
   const [contents, setContents] = createStore<Record<string, string>>({});
   const [saving, setSaving] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+  // Bumped after every change on disk so index-backed views refetch.
+  const [rev, setRev] = createSignal(0);
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
-  return { vault, setVault, tree, setTree, contents, setContents, saving, setSaving, error, setError, timers };
+  return { vault, setVault, tree, setTree, contents, setContents, saving, setSaving, error, setError, timers, rev, setRev };
 });
 
 export const vault = v.vault;
@@ -26,6 +28,13 @@ export const tree = v.tree;
 export const contents = v.contents;
 export const saving = v.saving;
 export const vaultError = v.error;
+/** Index revision: read it inside a resource source to refetch after edits. */
+export const indexRev = v.rev;
+let revTimer: ReturnType<typeof setTimeout> | undefined;
+export function bumpIndex(delay = 0) {
+  clearTimeout(revTimer);
+  revTimer = setTimeout(() => v.setRev((n) => n + 1), delay);
+}
 
 export const activePath = () => profile.activeTab;
 export const markdownPaths = () => tree.notes.filter((n) => n.kind === "markdown").map((n) => n.path);
@@ -44,10 +53,14 @@ function reportError(e: unknown) {
 export async function refresh(): Promise<void> {
   const next = await backend.scan();
   v.setTree(reconcile(next));
-  // Load Markdown contents for links, tags and search (indexing moves to Rust in Phase 2).
-  const missing = next.notes.filter((n) => n.kind === "markdown" && v.contents[n.path] === undefined);
-  const loaded = await Promise.all(missing.map(async (n) => [n.path, await backend.read(n.path).catch(() => "")] as const));
-  v.setContents(produce((c) => { for (const [p, s] of loaded) c[p] = s; }));
+  bumpIndex();
+}
+
+/** Load a note's text into memory (the editor, reader and outline use it). */
+export async function ensureLoaded(path: string): Promise<void> {
+  if (v.contents[path] !== undefined || !path.toLowerCase().endsWith(".md")) return;
+  const text = await backend.read(path).catch(() => "");
+  if (v.contents[path] === undefined) v.setContents(path, text);
 }
 
 /** Switch to a vault: load its profile, files and last open tabs. */
@@ -67,9 +80,11 @@ export async function enterVault(next: Vault): Promise<void> {
       p.activeTab = "Welcome to NoSidian.md";
     }
   });
+  await Promise.all(profile.openTabs.map(ensureLoaded));
 }
 
 export function openNote(path: string): void {
+  void ensureLoaded(path);
   updateProfile((p) => {
     if (!p.openTabs.includes(path)) p.openTabs.push(path);
     p.activeTab = path;
@@ -99,6 +114,7 @@ export function setContent(path: string, text: string): void {
         await backend.write(path, text);
         const now = Date.now();
         v.setTree("notes", (n) => n.path === path, "modified", now);
+        bumpIndex(400);
       } catch (e) {
         reportError(e);
       } finally {
@@ -110,13 +126,15 @@ export function setContent(path: string, text: string): void {
 
 const joinPath = (folder: string | undefined, name: string) => (folder ? `${folder}/${name}` : name);
 
-export async function createNote(name: string, folder?: string): Promise<string | null> {
+export async function createNote(name: string, folder?: string, body?: string): Promise<string | null> {
   const clean = name.trim().replace(/\.md$/i, "");
   if (!clean) return null;
   const path = joinPath(folder, `${clean}.md`);
+  const text = body ?? `# ${clean}\n\n`;
   try {
-    await backend.createNote(path, `# ${clean}\n\n`);
-    v.setContents(path, `# ${clean}\n\n`);
+    if (folder && !tree.folders.includes(folder)) await backend.createFolder(folder).catch(() => undefined);
+    await backend.createNote(path, text);
+    v.setContents(path, text);
     await refresh();
     openNote(path);
     return path;
@@ -137,15 +155,9 @@ export async function createFolder(name: string, parent?: string): Promise<void>
   }
 }
 
-/** Rename a note or folder; keeps tabs, stars and recents pointing at it. */
-export async function renameEntry(from: string, newName: string): Promise<void> {
-  const isNote = tree.notes.some((n) => n.path === from);
-  const parent = from.includes("/") ? from.slice(0, from.lastIndexOf("/")) : undefined;
-  const ext = isNote ? (from.match(/\.[^./]+$/)?.[0] ?? "") : "";
-  const clean = newName.trim().replace(new RegExp(`${ext.replace(".", "\\.")}$`, "i"), "");
-  if (!clean) return;
-  const to = joinPath(parent, clean + ext);
-  if (to === from) return;
+/** Move or rename `from` to `to`, keeping tabs, stars and recents pointing at it. */
+async function relocate(from: string, to: string): Promise<boolean> {
+  if (to === from) return false;
   try {
     await backend.rename(from, to);
     const move = (p: string) => (p === from ? to : p.startsWith(from + "/") ? to + p.slice(from.length) : p);
@@ -158,11 +170,40 @@ export async function renameEntry(from: string, newName: string): Promise<void> 
         p.activeTab = p.activeTab && move(p.activeTab);
         p.starred = p.starred.map(move);
         p.recent = p.recent.map((r) => ({ ...r, path: move(r.path) }));
+        p.collapsedFolders = p.collapsedFolders.map(move);
+        p.noteModes = Object.fromEntries(Object.entries(p.noteModes).map(([k, m]) => [move(k), m]));
       });
     });
     await refresh();
+    return true;
   } catch (e) {
     reportError(e);
+    return false;
+  }
+}
+
+/** Rename a note or folder in place. */
+export async function renameEntry(from: string, newName: string): Promise<void> {
+  const isNote = tree.notes.some((n) => n.path === from);
+  const parent = from.includes("/") ? from.slice(0, from.lastIndexOf("/")) : undefined;
+  const ext = isNote ? (from.match(/\.[^./]+$/)?.[0] ?? "") : "";
+  const clean = newName.trim().replace(new RegExp(`${ext.replace(".", "\\.")}$`, "i"), "");
+  if (!clean) return;
+  await relocate(from, joinPath(parent, clean + ext));
+}
+
+/** Can `from` be moved into `folder` ("" is the vault root)? */
+export function canMoveInto(from: string, folder: string): boolean {
+  const parent = from.includes("/") ? from.slice(0, from.lastIndexOf("/")) : "";
+  return parent !== folder && folder !== from && !folder.startsWith(from + "/");
+}
+
+/** Move a note or folder into another folder ("" is the vault root). */
+export async function moveEntry(from: string, folder: string): Promise<void> {
+  if (!canMoveInto(from, folder)) return;
+  const name = from.slice(from.lastIndexOf("/") + 1);
+  if (await relocate(from, joinPath(folder || undefined, name))) {
+    announce(t("announce-moved", { name: noteTitle(name), path: folder || "/" }));
   }
 }
 

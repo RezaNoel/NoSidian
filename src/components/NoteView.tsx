@@ -12,8 +12,10 @@ import { Editor } from "./Editor";
 import { Reader } from "./Reader";
 import { promptNewNote } from "./FileTree";
 import { Logo } from "./Logo";
+import { hasTitleBar } from "./TitleBar";
 import { setNoteSource } from "../a11y/voice";
 import { contents } from "../state/vault";
+import { pref } from "../state/prefs";
 
 setNoteSource(() => (activePath() ? contents[activePath()!] ?? null : null));
 
@@ -25,9 +27,26 @@ const MODES: { id: PaneMode; icon: typeof BookOpen }[] = [
 ];
 
 export function modeOf(path: string): PaneMode {
-  const m: ViewMode = profile.noteModes[path] ?? profile.viewMode;
+  const m: ViewMode = profile.noteModes[path] ?? pref("editorDefaultMode");
   const pane: PaneMode = m === "editor" || m === "reader" || m === "split" ? m : "split";
   return pane === "split" && isMobile() ? "editor" : pane;
+}
+
+/** Editor / split / reader switch for a note (in the title bar on desktop). */
+export function ModeSwitch(props: { path: string; compact?: boolean }) {
+  const mode = () => modeOf(props.path);
+  const setMode = (m: PaneMode) => updateProfile((p) => { p.noteModes[props.path] = m; });
+  return (
+    <div class="segmented" classList={{ compact: props.compact }} role="radiogroup" aria-label={t("view-mode-label")} onKeyDown={rovingKeydown("[role=radio]", "horizontal")}>
+      <For each={MODES.filter((m) => !(isMobile() && m.id === "split"))}>
+        {(m) => (
+          <button role="radio" aria-checked={mode() === m.id} tabIndex={mode() === m.id ? 0 : -1} title={t(`mode-${m.id}`)} aria-label={t(`mode-${m.id}`)} onClick={() => setMode(m.id)}>
+            <m.icon aria-hidden="true" /><Show when={!props.compact}><span class="seg-label">{t(`mode-${m.id}`)}</span></Show>
+          </button>
+        )}
+      </For>
+    </div>
+  );
 }
 
 function EmptyState() {
@@ -55,7 +74,6 @@ export function NoteView() {
           const folder = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
           const starred = () => profile.starred.includes(path);
           const mode = () => modeOf(path);
-          const setMode = (m: PaneMode) => updateProfile((p) => { p.noteModes[path] = m; p.viewMode = m; });
           return (
             <>
               <header class="note-header">
@@ -66,15 +84,7 @@ export function NoteView() {
                 <button class="icon-btn" aria-pressed={starred()} title={starred() ? t("action-unstar") : t("action-star")} aria-label={starred() ? t("action-unstar") : t("action-star")} onClick={() => toggleStar(path)}>
                   <Star class={starred() ? "filled" : ""} />
                 </button>
-                <div class="segmented" role="radiogroup" aria-label={t("view-mode-label")} onKeyDown={rovingKeydown("[role=radio]", "horizontal")}>
-                  <For each={MODES.filter((m) => !(isMobile() && m.id === "split"))}>
-                    {(m) => (
-                      <button role="radio" aria-checked={mode() === m.id} tabIndex={mode() === m.id ? 0 : -1} title={t(`mode-${m.id}`)} onClick={() => setMode(m.id)}>
-                        <m.icon aria-hidden="true" /><span class="seg-label">{t(`mode-${m.id}`)}</span>
-                      </button>
-                    )}
-                  </For>
-                </div>
+                <Show when={!hasTitleBar()}><ModeSwitch path={path} /></Show>
               </header>
               <div class="panes" data-mode={mode()}>
                 <Switch>

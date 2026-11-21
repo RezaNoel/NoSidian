@@ -135,6 +135,15 @@ pub fn scan(root: &Path) -> CoreResult<VaultTree> {
     Ok(tree)
 }
 
+/// Metadata for one file, or `None` if it is missing or not a note/PDF.
+pub fn meta_of(root: &Path, rel: &str) -> Option<NoteMeta> {
+    let p = resolve(root, rel).ok()?;
+    let kind = EntryKind::from_path(&p)?;
+    let md = fs::metadata(&p).ok().filter(|m| m.is_file())?;
+    let modified = ms(md.modified()).unwrap_or(0);
+    Some(NoteMeta { path: rel.to_string(), kind, size: md.len(), modified, created: ms(md.created()).unwrap_or(modified) })
+}
+
 pub fn read_text(root: &Path, rel: &str) -> CoreResult<String> {
     let p = resolve(root, rel)?;
     fs::read_to_string(&p).map_err(|e| match e.kind() {

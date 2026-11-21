@@ -31,3 +31,14 @@ describe("code is ignored", () => {
     expect(backlinks("B.md", c, Object.keys(c))).toEqual([]);
   });
 });
+
+describe("linkMention", () => {
+  it("links the first plain mention, keeping existing links and code", async () => {
+    const { linkMention } = await import("./links");
+    const src = "a\n`Rust` and [[Rust]] then rust here and Rust again";
+    expect(linkMention(src, 1, "Rust")).toBe("a\n`Rust` and [[Rust]] then [[Rust|rust]] here and Rust again");
+    expect(linkMention("Rustacean only", 0, "Rust")).toBeNull();
+    expect(linkMention("x", 5, "Rust")).toBeNull();
+    expect(linkMention("درباره‌ی پایتون است", 0, "پایتون")).toBe("درباره‌ی [[پایتون]] است");
+  });
+});

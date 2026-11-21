@@ -54,6 +54,8 @@ export interface AppConfig {
   moduleOverrides: Partial<Record<ModuleId, boolean>>;
   activeVault: string | null;
   recentVaults: VaultRef[];
+  /** Free-form UI preferences; see state/prefs.ts for keys and defaults. */
+  prefs: Record<string, unknown>;
 }
 
 export interface VaultMeta { id: string; name: string; createdAt: number; formatVersion: number }
@@ -84,6 +86,7 @@ export function defaultConfig(): AppConfig {
     moduleOverrides: {},
     activeVault: null,
     recentVaults: [],
+    prefs: {},
   };
 }
 
@@ -147,3 +150,14 @@ export function defaultProfile(): WorkspaceProfile {
     banner: { enabled: false, image: "carbon", height: 96, posY: 50, opacity: 90 },
   };
 }
+
+// ---------- Index (mirrors crates/nosidian-core/src/index.rs) ----------
+export type SearchSort = "relevance" | "title" | "modified";
+export interface LineMatch { line: number; text: string }
+export interface SearchHit { path: string; title: string; score: number; matches: LineMatch[] }
+export interface Mention { path: string; line: number; snippet: string }
+export interface OutgoingLink { target: string; path: string | null }
+export interface NoteLinks { backlinks: Mention[]; outgoing: OutgoingLink[]; unlinked: Mention[] }
+export interface TagCount { tag: string; count: number; paths: string[] }
+export interface IndexHeading { level: number; text: string; line: number }
+export interface NoteSummary { path: string; words: number; backlinks: number; tags: string[]; headings: IndexHeading[] }

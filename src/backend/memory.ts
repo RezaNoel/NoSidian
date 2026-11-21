@@ -2,6 +2,7 @@
 // screenshots; the real app always uses the Rust backend.
 import { defaultProfile, type Vault, type VaultTree, type WorkspaceProfile } from "../state/types";
 import type { VaultBackend } from "./index";
+import { memoryLinks, memorySearch, memorySummaries, memoryTags } from "./memoryIndex";
 
 const samples = import.meta.glob("../../sample-vault/**/*.md", {
   query: "?raw",
@@ -151,5 +152,20 @@ export const memoryBackend: VaultBackend = {
   },
   async assetDelete(name) {
     localStorage.removeItem(`${KEY}.asset.${name}`);
+  },
+  async search(query, sort, limit) {
+    return memorySearch(need().files, query, sort, limit);
+  },
+  async tags() {
+    return memoryTags(need().files);
+  },
+  async links(path) {
+    return memoryLinks(need().files, path);
+  },
+  async summaries() {
+    return memorySummaries(need().files);
+  },
+  async rebuildIndex() {
+    return Object.keys(need().files).length;
   },
 };

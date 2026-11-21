@@ -1,14 +1,17 @@
 // Left sidebar: six section tabs (files, recent, search, tags, starred, calendar).
-import { For, Match, Show, Switch, createMemo, createSignal } from "solid-js";
+import { For, Match, Show, Switch, createMemo, createResource, createSignal, onCleanup } from "solid-js";
 import { Calendar, Clock, Files, Hash, Search, Star, Tags } from "lucide-solid";
 import { locale, t } from "../i18n";
 import { rovingKeydown } from "../a11y/roving";
-import { noteTitle, splitFrontMatter, tagsOf } from "../lib/markdown";
+import { noteTitle } from "../lib/markdown";
+import { backend } from "../backend";
 import { relativeTime } from "../lib/tree";
-import { activePath, contents, markdownPaths, openNote } from "../state/vault";
+import { activePath, indexRev, openNote, tree } from "../state/vault";
 import { profile, updateProfile } from "../state/workspace";
 import { isMobile, setDrawer } from "../state/ui";
-import type { LeftTab } from "../state/types";
+import type { LeftTab, SearchHit, SearchSort, TagCount } from "../state/types";
+import { revealLine } from "./Editor";
+import { CalendarPanel } from "./Calendar";
 import { FileTree } from "./FileTree";
 import { VaultFooter } from "./VaultFooter";
 import { VaultBanner } from "./Banner";
@@ -40,7 +43,10 @@ function NoteLink(props: { path: string; meta?: string; snippet?: string }) {
 }
 
 function RecentPanel() {
-  const items = createMemo(() => profile.recent.filter((r) => contents[r.path] !== undefined));
+  const items = createMemo(() => {
+    const exists = new Set(tree.notes.map((n) => n.path));
+    return profile.recent.filter((r) => exists.has(r.path));
+  });
   return (
     <div class="panel">
       <div class="panel-head"><h2 class="section-title">{t("tab-recent")}</h2></div>
@@ -51,33 +57,91 @@ function RecentPanel() {
   );
 }
 
-function SearchPanel() {
-  const [q, setQ] = createSignal("");
-  const results = createMemo(() => {
-    const needle = q().trim().toLocaleLowerCase();
-    if (!needle) return [];
-    const out: { path: string; snippet: string; score: number }[] = [];
-    for (const path of markdownPaths()) {
-      const title = noteTitle(path).toLocaleLowerCase();
-      const [, body] = splitFrontMatter(contents[path] ?? "");
-      const lower = body.toLocaleLowerCase();
-      const at = lower.indexOf(needle);
-      if (!title.includes(needle) && at < 0) continue;
-      const snippet = at < 0 ? "" : body.slice(Math.max(0, at - 40), at + needle.length + 60).replace(/\s+/g, " ").trim();
-      out.push({ path, snippet, score: (title.includes(needle) ? 10 : 0) + (at >= 0 ? 1 : 0) });
-    }
-    return out.sort((a, b) => b.score - a.score).slice(0, 60);
+const SEARCH_SORTS: SearchSort[] = ["relevance", "title", "modified"];
+const [searchQuery, setSearchQuery] = createSignal("");
+const [searchSort, setSearchSort] = createSignal<SearchSort>("relevance");
+
+/** Highlight query terms inside a matched line. */
+function Highlighted(props: { text: string; terms: string[] }) {
+  const parts = createMemo(() => {
+    const terms = props.terms.filter(Boolean).map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    if (!terms.length) return [props.text];
+    // With one capture group, odd indices are the matches.
+    return props.text.split(new RegExp(`(${terms.join("|")})`, "iu"));
   });
+  return <For each={parts()}>{(p, i) => (i() % 2 ? <mark>{p}</mark> : <>{p}</>)}</For>;
+}
+
+/** Plain words of a query, for highlighting (operators and exclusions dropped). */
+function queryTerms(q: string): string[] {
+  const out: string[] = [];
+  for (const m of q.matchAll(/"([^"]+)"|(\S+)/g)) {
+    const raw = m[1] ?? m[2];
+    if (m[2] && (raw.startsWith("-") || raw.startsWith("#") || /^(tag|path):/i.test(raw))) continue;
+    out.push(raw.replace(/^title:/i, ""));
+  }
+  return out;
+}
+
+function SearchPanel() {
+  const [debounced, setDebounced] = createSignal(searchQuery());
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const onInput = (v: string) => {
+    setSearchQuery(v);
+    clearTimeout(timer);
+    timer = setTimeout(() => setDebounced(v), 140);
+  };
+  onCleanup(() => clearTimeout(timer));
+  const [results] = createResource(
+    () => ({ q: debounced().trim(), sort: searchSort(), rev: indexRev() }),
+    ({ q, sort }) => (q ? backend.search(q, sort, 100) : Promise.resolve([] as SearchHit[])),
+    { initialValue: [] },
+  );
+  const terms = createMemo(() => queryTerms(debounced()));
+  const go = (path: string, line?: number) => {
+    open(path);
+    if (line !== undefined) revealLine(path, line);
+  };
   return (
     <div class="panel">
       <div class="panel-head"><h2 class="section-title">{t("tab-search")}</h2></div>
-      <div class="panel-pad">
-        <input class="input" type="search" placeholder={t("search-placeholder")} aria-label={t("tab-search")} value={q()} onInput={(e) => setQ(e.currentTarget.value)} dir="auto" autofocus />
+      <div class="panel-pad search-bar">
+        <input id="search-input" class="input" type="search" placeholder={t("search-placeholder")} aria-label={t("tab-search")} aria-describedby="search-help"
+          value={searchQuery()} onInput={(e) => onInput(e.currentTarget.value)} dir="auto" autofocus />
+        <select class="input select-sm" aria-label={t("search-sort-label")} value={searchSort()} onChange={(e) => setSearchSort(e.currentTarget.value as SearchSort)}>
+          <For each={SEARCH_SORTS}>{(s) => <option value={s}>{t(`search-sort-${s}`)}</option>}</For>
+        </select>
       </div>
-      <Show when={q().trim()}>
-        <p class="sr-only" role="status">{results().length ? "" : t("no-results")}</p>
-        <Show when={results().length} fallback={<p class="empty">{t("no-results")}</p>}>
-          <ul class="list"><For each={results()}>{(r) => <NoteLink path={r.path} snippet={r.snippet} />}</For></ul>
+      <p id="search-help" class="hint panel-pad">{t("search-help")}</p>
+      <Show when={debounced().trim()}>
+        <p class="sr-only" role="status">{results.loading ? "" : results().length ? t("status-results", { count: results().length }) : t("no-results")}</p>
+        <Show when={results().length} fallback={<Show when={!results.loading}><p class="empty">{t("no-results")}</p></Show>}>
+          <ul class="list search-results">
+            <For each={results()}>
+              {(r) => (
+                <li class="search-hit">
+                  <button class="list-row" classList={{ active: activePath() === r.path }} onClick={() => go(r.path, r.matches[0]?.line)}>
+                    <span class="list-title" dir="auto"><Highlighted text={r.title} terms={terms()} /></span>
+                    <Show when={r.path.includes("/")}><span class="list-meta" dir="auto">{r.path.slice(0, r.path.lastIndexOf("/"))}</span></Show>
+                  </button>
+                  <Show when={r.matches.length}>
+                    <ul class="line-matches">
+                      <For each={r.matches.slice(0, 4)}>
+                        {(m) => (
+                          <li>
+                            <button class="line-match" onClick={() => go(r.path, m.line)}>
+                              <span class="line-no">{m.line + 1}</span>
+                              <span class="list-snippet" dir="auto"><Highlighted text={m.text} terms={terms()} /></span>
+                            </button>
+                          </li>
+                        )}
+                      </For>
+                    </ul>
+                  </Show>
+                </li>
+              )}
+            </For>
+          </ul>
         </Show>
       </Show>
     </div>
@@ -86,26 +150,22 @@ function SearchPanel() {
 
 function TagsPanel() {
   const [selected, setSelected] = createSignal<string | null>(null);
-  const index = createMemo(() => {
-    const m = new Map<string, string[]>();
-    for (const p of markdownPaths()) for (const tag of tagsOf(contents[p] ?? "")) m.set(tag, [...(m.get(tag) ?? []), p]);
-    return [...m.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
-  });
+  const [tags] = createResource(() => indexRev() + 1, () => backend.tags(), { initialValue: [] as TagCount[] });
   return (
     <div class="panel">
       <div class="panel-head"><h2 class="section-title">{t("tab-tags")}</h2></div>
-      <Show when={index().length} fallback={<p class="empty">{t("no-tags")}</p>}>
+      <Show when={tags().length} fallback={<p class="empty">{t("no-tags")}</p>}>
         <div class="tag-cloud">
-          <For each={index()}>
-            {([tag, notes]) => (
-              <button class="tag-chip" aria-pressed={selected() === tag} onClick={() => setSelected(selected() === tag ? null : tag)}>
-                <Hash aria-hidden="true" />{tag}<span class="count">{notes.length}</span>
+          <For each={tags()}>
+            {(tag) => (
+              <button class="tag-chip" aria-pressed={selected() === tag.tag} onClick={() => setSelected(selected() === tag.tag ? null : tag.tag)}>
+                <Hash aria-hidden="true" />{tag.tag}<span class="count">{tag.count}</span>
               </button>
             )}
           </For>
         </div>
         <Show when={selected()}>
-          <ul class="list"><For each={index().find(([tag]) => tag === selected())?.[1] ?? []}>{(p) => <NoteLink path={p} />}</For></ul>
+          <ul class="list"><For each={tags().find((x) => x.tag === selected())?.paths ?? []}>{(p) => <NoteLink path={p} />}</For></ul>
         </Show>
       </Show>
     </div>
@@ -119,15 +179,6 @@ function StarredPanel() {
       <Show when={profile.starred.length} fallback={<p class="empty">{t("no-starred")}</p>}>
         <ul class="list"><For each={profile.starred}>{(p) => <NoteLink path={p} />}</For></ul>
       </Show>
-    </div>
-  );
-}
-
-function CalendarPanel() {
-  return (
-    <div class="panel">
-      <div class="panel-head"><h2 class="section-title">{t("tab-calendar")}</h2></div>
-      <p class="empty">{t("panel-coming-soon")}</p>
     </div>
   );
 }

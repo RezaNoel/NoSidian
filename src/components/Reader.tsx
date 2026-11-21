@@ -2,6 +2,7 @@
 import { createMemo } from "solid-js";
 import { t } from "../i18n";
 import { renderMarkdown, resolveLink } from "../lib/markdown";
+import { pref } from "../state/prefs";
 import { contents, createNote, markdownPaths, openNote } from "../state/vault";
 
 export function scrollReaderTo(slug: string): boolean {
@@ -14,7 +15,7 @@ export function scrollReaderTo(slug: string): boolean {
 }
 
 export function Reader(props: { path: string }) {
-  const html = createMemo(() => renderMarkdown(contents[props.path] ?? ""));
+  const html = createMemo(() => renderMarkdown(contents[props.path] ?? "", { breaks: !pref("strictBreaks") }));
   const onClick = (e: MouseEvent) => {
     const a = (e.target as HTMLElement).closest("a");
     if (!a) return;

@@ -1,16 +1,18 @@
 // Context panel: links (backlinks, outgoing, unlinked), outline, and tabs for
 // focus, history and review stats that arrive in later phases.
-import { For, Match, Show, Switch, createMemo } from "solid-js";
+import { For, Match, Show, Switch, createMemo, createResource } from "solid-js";
 import { History, Link2, ListTree, Brain, Timer, ArrowUpRight, CircleDashed } from "lucide-solid";
 import { t } from "../i18n";
 import { rovingKeydown } from "../a11y/roving";
 import { headings, noteTitle } from "../lib/markdown";
-import { backlinks, outgoing, unlinkedMentions, type Mention } from "../lib/links";
-import { activePath, contents, createNote, markdownPaths, openNote } from "../state/vault";
+import { announce } from "../a11y/announcer";
+import { backend } from "../backend";
+import { linkMention } from "../lib/links";
+import { activePath, contents, createNote, ensureLoaded, indexRev, openNote, setContent } from "../state/vault";
 import { profile, updateProfile } from "../state/workspace";
 import { isMobile, setDrawer } from "../state/ui";
-import type { RightTab } from "../state/types";
-import { editorGotoLine } from "./Editor";
+import type { Mention, NoteLinks, RightTab } from "../state/types";
+import { editorGotoLine, revealLine } from "./Editor";
 import { modeOf } from "./NoteView";
 import { scrollReaderTo } from "./Reader";
 
@@ -22,12 +24,21 @@ const TABS: { id: RightTab; icon: typeof Link2; label: () => string }[] = [
   { id: "srs", icon: Brain, label: () => t("tab-srs") },
 ];
 
-const go = (path: string) => {
+const go = (path: string, line?: number) => {
   openNote(path);
+  if (line !== undefined) revealLine(path, line);
   if (isMobile()) setDrawer("none");
 };
 
-function MentionList(props: { title: string; items: Mention[] }) {
+async function linkIt(m: Mention, target: string) {
+  await ensureLoaded(m.path);
+  const next = linkMention(contents[m.path] ?? "", m.line, noteTitle(target));
+  if (next === null) return;
+  setContent(m.path, next);
+  announce(t("announce-linked", { name: noteTitle(m.path) }));
+}
+
+function MentionList(props: { title: string; items: Mention[]; linkTo?: string }) {
   return (
     <section class="ctx-section">
       <h3 class="section-title">{props.title} <span class="count">{props.items.length}</span></h3>
@@ -35,11 +46,16 @@ function MentionList(props: { title: string; items: Mention[] }) {
         <ul class="list">
           <For each={props.items}>
             {(m) => (
-              <li>
-                <button class="list-row" onClick={() => go(m.path)}>
+              <li class="mention">
+                <button class="list-row" onClick={() => go(m.path, m.line)}>
                   <span class="list-title" dir="auto">{noteTitle(m.path)}</span>
                   <span class="list-snippet" dir="auto">{m.snippet}</span>
                 </button>
+                <Show when={props.linkTo}>
+                  <button class="btn sm link-btn" title={t("action-link")} aria-label={`${t("action-link")}: ${noteTitle(m.path)}`} onClick={() => void linkIt(m, props.linkTo!)}>
+                    <Link2 aria-hidden="true" />{t("action-link")}
+                  </button>
+                </Show>
               </li>
             )}
           </For>
@@ -49,13 +65,14 @@ function MentionList(props: { title: string; items: Mention[] }) {
   );
 }
 
+const EMPTY_LINKS: NoteLinks = { backlinks: [], outgoing: [], unlinked: [] };
+
 function LinksPanel(props: { path: string }) {
-  const back = createMemo(() => backlinks(props.path, contents, markdownPaths()));
-  const out = createMemo(() => outgoing(props.path, contents, markdownPaths()));
-  const unlinked = createMemo(() => unlinkedMentions(props.path, contents, markdownPaths()));
+  const [links] = createResource(() => ({ path: props.path, rev: indexRev() }), ({ path }) => backend.links(path), { initialValue: EMPTY_LINKS });
+  const out = () => links().outgoing;
   return (
     <>
-      <MentionList title={t("links-backlinks")} items={back()} />
+      <MentionList title={t("links-backlinks")} items={links().backlinks} />
       <section class="ctx-section">
         <h3 class="section-title">{t("links-outgoing")} <span class="count">{out().length}</span></h3>
         <Show when={out().length} fallback={<p class="empty sm">{t("links-none")}</p>}>
@@ -73,7 +90,7 @@ function LinksPanel(props: { path: string }) {
           </ul>
         </Show>
       </section>
-      <MentionList title={t("links-unlinked")} items={unlinked()} />
+      <MentionList title={t("links-unlinked")} items={links().unlinked} linkTo={props.path} />
     </>
   );
 }

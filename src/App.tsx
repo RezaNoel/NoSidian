@@ -1,5 +1,5 @@
 // Root: boots into the first-launch wizard or straight into the last vault.
-import { For, Match, Show, Switch, createSignal, onMount } from "solid-js";
+import { For, Match, Show, Switch, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import { t } from "./i18n";
 import { LiveAnnouncer } from "./a11y/announcer";
 import { settings } from "./state/settings";
@@ -11,15 +11,24 @@ import { ContextMenu } from "./components/ContextMenu";
 import { Dialogs } from "./components/Dialogs";
 import { Modal } from "./components/Modal";
 import { Onboarding } from "./components/Onboarding";
-import { SettingsOverlay } from "./components/SettingsOverlay";
 import { VaultPicker } from "./components/VaultPicker";
 import { Workspace } from "./components/Workspace";
 import { TitleBar, hasTitleBar } from "./components/TitleBar";
+import { CommandPalette, QuickSwitcher } from "./components/Palette";
+import { SettingsWindow } from "./components/settings/SettingsWindow";
+import { promptNewFolder, promptNewNote } from "./components/FileTree";
+import { bindPrompts, installHotkeys } from "./state/commands";
+import { applyPrefsToDocument } from "./state/prefs";
+
+bindPrompts((folder) => promptNewNote(folder), () => promptNewFolder());
 
 type Phase = "loading" | "onboarding" | "pick-vault" | "workspace";
 
 export function App() {
   const [phase, setPhase] = createSignal<Phase>("loading");
+
+  createEffect(() => applyPrefsToDocument());
+  onCleanup(installHotkeys());
 
   onMount(async () => {
     if (!settings.onboarding.completed) return setPhase("onboarding");
@@ -44,7 +53,11 @@ export function App() {
         </Match>
         <Match when={phase() === "workspace" && vault()}><Workspace /></Match>
       </Switch>
-      <Show when={overlay() === "settings"}><SettingsOverlay /></Show>
+      <Show when={overlay() === "settings"}><SettingsWindow /></Show>
+      <Show when={phase() === "workspace" && vault()}>
+        <Show when={overlay() === "switcher"}><QuickSwitcher /></Show>
+        <Show when={overlay() === "palette"}><CommandPalette /></Show>
+      </Show>
       <Show when={overlay() === "vaults"}>
         <Modal title={t("vault-switcher-title")} onClose={() => setOverlay("none")} class="modal-lg">
           <VaultPicker onDone={() => { setOverlay("none"); setPhase("workspace"); }} showRecent />

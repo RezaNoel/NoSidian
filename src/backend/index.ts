@@ -4,6 +4,11 @@
 import { inTauri } from "../state/backend";
 import {
   defaultProfile,
+  type NoteLinks,
+  type NoteSummary,
+  type SearchHit,
+  type SearchSort,
+  type TagCount,
   type Vault,
   type VaultTree,
   type WorkspaceProfile,
@@ -29,6 +34,12 @@ export interface VaultBackend {
   assetWrite(name: string, base64: string): Promise<void>;
   assetRead(name: string): Promise<string>;
   assetDelete(name: string): Promise<void>;
+  /** Vault index (built in Rust). */
+  search(query: string, sort?: SearchSort, limit?: number): Promise<SearchHit[]>;
+  tags(): Promise<TagCount[]>;
+  links(path: string): Promise<NoteLinks>;
+  summaries(): Promise<NoteSummary[]>;
+  rebuildIndex(): Promise<number>;
 }
 
 async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
@@ -62,6 +73,11 @@ const tauriBackend: VaultBackend = {
   assetWrite: (name, data) => invoke("asset_write", { name, data }),
   assetRead: (name) => invoke("asset_read", { name }),
   assetDelete: (name) => invoke("asset_delete", { name }),
+  search: (query, sort = "relevance", limit = 100) => invoke("index_search", { query, sort, limit }),
+  tags: () => invoke("index_tags"),
+  links: (path) => invoke("index_links", { path }),
+  summaries: () => invoke("index_summaries"),
+  rebuildIndex: () => invoke("index_rebuild"),
 };
 
 export const backend: VaultBackend = inTauri() ? tauriBackend : memoryBackend;

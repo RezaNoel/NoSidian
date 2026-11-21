@@ -5,7 +5,7 @@ import { announce } from "../a11y/announcer";
 export const MOBILE_QUERY = "(max-width: 767px)";
 
 export type Drawer = "none" | "left" | "right" | "more";
-export type Overlay = "none" | "settings" | "vaults" | "banner";
+export type Overlay = "none" | "settings" | "vaults" | "banner" | "switcher" | "palette";
 
 export interface PromptRequest {
   kind: "prompt" | "confirm";

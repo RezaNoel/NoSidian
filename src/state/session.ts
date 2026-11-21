@@ -3,6 +3,7 @@
 // save of settings doesn't overwrite it with stale data.
 import { backend } from "../backend";
 import { enterVault, reportError } from "./vault";
+import { applyStartup } from "./daily";
 import { settings, updateSettings } from "./settings";
 import type { Vault } from "./types";
 
@@ -42,6 +43,7 @@ export async function restoreVault(): Promise<boolean> {
   if (!path) return false;
   try {
     await activate(await backend.openVault(path));
+    await applyStartup().catch(reportError);
     return true;
   } catch {
     return false;

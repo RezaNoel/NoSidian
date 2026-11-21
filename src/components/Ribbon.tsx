@@ -1,13 +1,15 @@
 // Narrow vertical tool ribbon on desktop. Tools from later phases show only
 // when their module is enabled for the user's experience level.
-import { For, createMemo } from "solid-js";
-import { Brain, CalendarDays, Command, Film, Kanban, LayoutDashboard, Network, PanelLeft, PanelRight, Presentation, Search, Terminal, Timer, Workflow } from "lucide-solid";
+import { For, Show, createMemo } from "solid-js";
+import { hasTitleBar } from "./TitleBar";
+import { Brain, CalendarDays, Command, FileSearch, Film, Kanban, LayoutDashboard, Network, PanelLeft, PanelRight, Presentation, Search, Terminal, Timer, Workflow } from "lucide-solid";
 import { t, type MessageKey } from "../i18n";
 import { rovingKeydown } from "../a11y/roving";
 import { enabledModules } from "../state/modules";
 import { settings } from "../state/settings";
 import { profile, updateProfile } from "../state/workspace";
-import { toast } from "../state/ui";
+import { setOverlay, toast } from "../state/ui";
+import { openDailyNote } from "../state/daily";
 import { Logo } from "./Logo";
 import type { ModuleId } from "../state/types";
 
@@ -18,13 +20,14 @@ export const later = () => toast(t("panel-coming-soon"));
 export const TOOLS: Tool[] = [
   { key: "ribbon-dashboard", icon: LayoutDashboard, module: "dashboard" },
   { key: "ribbon-search", icon: Search, run: () => updateProfile((p) => { p.leftTab = "search"; p.panels.left = true; }) },
-  { key: "ribbon-quick-switcher", icon: Command },
+  { key: "ribbon-quick-switcher", icon: FileSearch, run: () => setOverlay("switcher") },
+  { key: "ribbon-command-palette", icon: Command, run: () => setOverlay("palette") },
   { key: "ribbon-graph", icon: Network, module: "knowledge-graph" },
   { key: "ribbon-flashcards", icon: Brain, module: "flashcards" },
   { key: "ribbon-mindmap", icon: Workflow, module: "mindmap" },
   { key: "ribbon-kanban", icon: Kanban, module: "kanban" },
   { key: "ribbon-slides", icon: Presentation, module: "slides" },
-  { key: "ribbon-daily-note", icon: CalendarDays, module: "daily-calendar" },
+  { key: "ribbon-daily-note", icon: CalendarDays, module: "daily-calendar", run: () => void openDailyNote(new Date()) },
   { key: "ribbon-focus", icon: Timer, module: "zen-focus" },
   { key: "ribbon-media", icon: Film, module: "media-shelf" },
   { key: "ribbon-terminal", icon: Terminal, module: "integrated-terminal" },
@@ -37,22 +40,22 @@ export function Ribbon() {
     <nav class="ribbon glass" aria-label={t("shell-ribbon-label")}>
       <Logo size={30} class="ribbon-logo" />
       <div class="ribbon-group" role="toolbar" aria-orientation="vertical" aria-label={t("shell-ribbon-label")} onKeyDown={rovingKeydown("button", "vertical")}>
-        <button class="icon-btn" tabIndex={0} aria-pressed={profile.panels.left} title={t("ribbon-toggle-left")} aria-label={t("ribbon-toggle-left")} onClick={() => updateProfile((p) => { p.panels.left = !p.panels.left; })}>
+        <Show when={!hasTitleBar()}><button class="icon-btn" tabIndex={0} aria-pressed={profile.panels.left} title={t("ribbon-toggle-left")} aria-label={t("ribbon-toggle-left")} onClick={() => updateProfile((p) => { p.panels.left = !p.panels.left; })}>
           <PanelLeft class="flip-rtl" />
-        </button>
+        </button></Show>
         <For each={tools()}>
-          {(tool) => (
-            <button class="icon-btn" tabIndex={-1} title={t(tool.key)} aria-label={t(tool.key)} onClick={tool.run ?? later}>
+          {(tool, i) => (
+            <button class="icon-btn" tabIndex={i() === 0 && hasTitleBar() ? 0 : -1} title={t(tool.key)} aria-label={t(tool.key)} onClick={tool.run ?? later}>
               <tool.icon />
             </button>
           )}
         </For>
       </div>
-      <div class="ribbon-group end">
+      <Show when={!hasTitleBar()}><div class="ribbon-group end">
         <button class="icon-btn" aria-pressed={profile.panels.right} title={t("ribbon-toggle-right")} aria-label={t("ribbon-toggle-right")} onClick={() => updateProfile((p) => { p.panels.right = !p.panels.right; })}>
           <PanelRight class="flip-rtl" />
         </button>
-      </div>
+      </div></Show>
     </nav>
   );
 }

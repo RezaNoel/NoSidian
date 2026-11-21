@@ -122,12 +122,18 @@ pub fn note_read(state: State<'_, AppState>, path: String) -> CmdResult<String> 
 
 #[tauri::command]
 pub fn note_write(state: State<'_, AppState>, path: String, content: String) -> CmdResult<()> {
-    Ok(notes::write_text(&active_root(&state)?, &path, &content)?)
+    let root = active_root(&state)?;
+    notes::write_text(&root, &path, &content)?;
+    touch_index(&state, &root, &[&path]);
+    Ok(())
 }
 
 #[tauri::command]
 pub fn note_create(state: State<'_, AppState>, path: String, content: String) -> CmdResult<()> {
-    Ok(notes::create_note(&active_root(&state)?, &path, &content)?)
+    let root = active_root(&state)?;
+    notes::create_note(&root, &path, &content)?;
+    touch_index(&state, &root, &[&path]);
+    Ok(())
 }
 
 #[tauri::command]
@@ -137,12 +143,18 @@ pub fn folder_create(state: State<'_, AppState>, path: String) -> CmdResult<()> 
 
 #[tauri::command]
 pub fn entry_rename(state: State<'_, AppState>, from: String, to: String) -> CmdResult<()> {
-    Ok(notes::rename(&active_root(&state)?, &from, &to)?)
+    let root = active_root(&state)?;
+    notes::rename(&root, &from, &to)?;
+    touch_index(&state, &root, &[&from, &to]);
+    Ok(())
 }
 
 #[tauri::command]
 pub fn entry_trash(state: State<'_, AppState>, path: String) -> CmdResult<String> {
-    Ok(notes::trash(&active_root(&state)?, &path, now_ms())?)
+    let root = active_root(&state)?;
+    let moved = notes::trash(&root, &path, now_ms())?;
+    touch_index(&state, &root, &[&path]);
+    Ok(moved)
 }
 
 /// Create (or reopen) the sample vault in the Documents folder and fill it
@@ -177,4 +189,60 @@ pub fn asset_read(state: State<'_, AppState>, name: String) -> CmdResult<String>
 #[tauri::command]
 pub fn asset_delete(state: State<'_, AppState>, name: String) -> CmdResult<()> {
     Ok(nosidian_core::assets::delete_asset(&active_root(&state)?, &name)?)
+}
+
+// ---------- Index: search, tags, links ----------
+
+use nosidian_core::index::{NoteLinks, NoteSummary, SearchHit, SearchSort, TagCount, VaultIndex};
+
+/// Run `f` on the active vault's index, building it first if needed.
+fn with_index<T>(state: &State<'_, AppState>, f: impl FnOnce(&VaultIndex) -> T) -> CmdResult<T> {
+    let root = active_root(state)?;
+    let mut guard = state.index.lock().map_err(internal)?;
+    if guard.as_ref().map(|(r, _)| r != &root).unwrap_or(true) {
+        *guard = Some((root.clone(), VaultIndex::build(&root)?));
+    }
+    Ok(f(&guard.as_ref().expect("index just built").1))
+}
+
+/// Update the index for changed paths (no-op if it hasn't been built yet).
+fn touch_index(state: &State<'_, AppState>, root: &std::path::Path, paths: &[&str]) {
+    if let Ok(mut guard) = state.index.lock() {
+        if let Some((r, idx)) = guard.as_mut() {
+            if r == root {
+                for p in paths {
+                    idx.refresh_path(root, p);
+                }
+            }
+        }
+    }
+}
+
+#[tauri::command]
+pub fn index_rebuild(state: State<'_, AppState>) -> CmdResult<usize> {
+    let root = active_root(&state)?;
+    let idx = VaultIndex::build(&root)?;
+    let n = idx.len();
+    *state.index.lock().map_err(internal)? = Some((root, idx));
+    Ok(n)
+}
+
+#[tauri::command]
+pub fn index_search(state: State<'_, AppState>, query: String, sort: Option<SearchSort>, limit: Option<usize>) -> CmdResult<Vec<SearchHit>> {
+    with_index(&state, |i| i.search(&query, sort.unwrap_or_default(), limit.unwrap_or(100)))
+}
+
+#[tauri::command]
+pub fn index_tags(state: State<'_, AppState>) -> CmdResult<Vec<TagCount>> {
+    with_index(&state, |i| i.tags())
+}
+
+#[tauri::command]
+pub fn index_links(state: State<'_, AppState>, path: String) -> CmdResult<NoteLinks> {
+    with_index(&state, |i| i.links(&path))
+}
+
+#[tauri::command]
+pub fn index_summaries(state: State<'_, AppState>) -> CmdResult<Vec<NoteSummary>> {
+    with_index(&state, |i| i.summaries())
 }

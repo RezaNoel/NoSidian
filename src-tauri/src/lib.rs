@@ -5,11 +5,16 @@ mod commands;
 
 use std::sync::Mutex;
 
+use std::path::PathBuf;
+
+use nosidian_core::index::VaultIndex;
 use nosidian_core::ConfigStore;
 use tauri::Manager;
 
 pub struct AppState {
     pub config: Mutex<ConfigStore>,
+    /// Search/link index of the active vault, built on first use.
+    pub index: Mutex<Option<(PathBuf, VaultIndex)>>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -20,6 +25,7 @@ pub fn run() {
             let dir = app.path().app_config_dir()?;
             app.manage(AppState {
                 config: Mutex::new(ConfigStore::new(dir)),
+                index: Mutex::new(None),
             });
             Ok(())
         })
@@ -43,6 +49,11 @@ pub fn run() {
             commands::asset_write,
             commands::asset_read,
             commands::asset_delete,
+            commands::index_rebuild,
+            commands::index_search,
+            commands::index_tags,
+            commands::index_links,
+            commands::index_summaries,
         ])
         .run(tauri::generate_context!())
         .expect("error while running NoSidian");
