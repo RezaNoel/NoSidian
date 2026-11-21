@@ -1086,6 +1086,58 @@ export interface MessageArgs {
   "srs-no-limit": undefined;
   "srs-pick-deck": undefined;
   "srs-study-all": undefined;
+  "proj-tab-list": undefined;
+  "proj-tab-automation": undefined;
+  "proj-add-blocker": undefined;
+  "proj-all-planned": undefined;
+  "proj-assignee": undefined;
+  "proj-change-deadline": undefined;
+  "proj-clear-filters": undefined;
+  "proj-color-n": { n: string | number };
+  "proj-day": undefined;
+  "proj-empty": undefined;
+  "proj-filter-keyword": undefined;
+  "proj-filter-recent": undefined;
+  "proj-filter-source": undefined;
+  "proj-from-note": undefined;
+  "proj-from-note-help": undefined;
+  "proj-from-rule": undefined;
+  "proj-inject-daily-help": undefined;
+  "proj-log-15": undefined;
+  "proj-minutes": { minutes: string | number };
+  "proj-next-day": undefined;
+  "proj-prev-day": undefined;
+  "proj-no-sprint": undefined;
+  "proj-no-tasks": undefined;
+  "proj-note-converted": { name: string | number };
+  "proj-note-missing": { name: string | number };
+  "proj-open-beside": undefined;
+  "proj-open-editor": undefined;
+  "proj-open-folder-note": undefined;
+  "proj-quick-add": undefined;
+  "proj-recent-all": undefined;
+  "proj-recent-24h": undefined;
+  "proj-recent-7d": undefined;
+  "proj-review-note": undefined;
+  "proj-rule-on": undefined;
+  "proj-schedule-at": { title: string | number };
+  "proj-show-deadline": undefined;
+  "proj-source-all": undefined;
+  "proj-source-manual": undefined;
+  "proj-source-notes": undefined;
+  "proj-sprints": undefined;
+  "proj-tasks-count": { count: string | number };
+  "proj-templates": undefined;
+  "proj-time-blocks": undefined;
+  "proj-time-this-task": undefined;
+  "proj-timer-start": undefined;
+  "proj-timer-stop": undefined;
+  "proj-timer-task": undefined;
+  "proj-unscheduled": undefined;
+  "proj-reopen": undefined;
+  "proj-mark-complete": undefined;
+  "proj-plan-at": undefined;
+  "proj-primary-project": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2175,5 +2227,57 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "srs-session-limit",
   "srs-no-limit",
   "srs-pick-deck",
-  "srs-study-all"
+  "srs-study-all",
+  "proj-tab-list",
+  "proj-tab-automation",
+  "proj-add-blocker",
+  "proj-all-planned",
+  "proj-assignee",
+  "proj-change-deadline",
+  "proj-clear-filters",
+  "proj-color-n",
+  "proj-day",
+  "proj-empty",
+  "proj-filter-keyword",
+  "proj-filter-recent",
+  "proj-filter-source",
+  "proj-from-note",
+  "proj-from-note-help",
+  "proj-from-rule",
+  "proj-inject-daily-help",
+  "proj-log-15",
+  "proj-minutes",
+  "proj-next-day",
+  "proj-prev-day",
+  "proj-no-sprint",
+  "proj-no-tasks",
+  "proj-note-converted",
+  "proj-note-missing",
+  "proj-open-beside",
+  "proj-open-editor",
+  "proj-open-folder-note",
+  "proj-quick-add",
+  "proj-recent-all",
+  "proj-recent-24h",
+  "proj-recent-7d",
+  "proj-review-note",
+  "proj-rule-on",
+  "proj-schedule-at",
+  "proj-show-deadline",
+  "proj-source-all",
+  "proj-source-manual",
+  "proj-source-notes",
+  "proj-sprints",
+  "proj-tasks-count",
+  "proj-templates",
+  "proj-time-blocks",
+  "proj-time-this-task",
+  "proj-timer-start",
+  "proj-timer-stop",
+  "proj-timer-task",
+  "proj-unscheduled",
+  "proj-reopen",
+  "proj-mark-complete",
+  "proj-plan-at",
+  "proj-primary-project"
 ];
