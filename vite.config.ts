@@ -19,6 +19,8 @@ export default defineConfig({
   build: {
     target: ["es2021", "chrome105", "safari15"],
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
+    // Desktop/mobile app loaded from disk: one ~900 kB bundle (CodeMirror, marked) is fine.
+    chunkSizeWarningLimit: 1200,
   },
   test: {
     environment: "jsdom",

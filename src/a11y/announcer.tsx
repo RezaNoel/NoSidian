@@ -11,7 +11,15 @@ const regions = createRoot(() => {
   return { polite, setPolite, assertive, setAssertive };
 });
 
+type Listener = (message: string, politeness: Politeness) => void;
+let listener: Listener | null = null;
+/** The built-in voice registers here to speak announcements too. */
+export function onAnnounce(fn: Listener | null): void {
+  listener = fn;
+}
+
 export function announce(message: string, politeness: Politeness = "polite"): void {
+  listener?.(message, politeness);
   const set = politeness === "assertive" ? regions.setAssertive : regions.setPolite;
   // Clear first so repeating the same text is announced again.
   set("");

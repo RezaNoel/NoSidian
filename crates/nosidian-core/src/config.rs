@@ -102,14 +102,22 @@ fn is_hex_color(s: &str) -> bool {
     (h.len() == 6 || h.len() == 3) && h.chars().all(|c| c.is_ascii_hexdigit())
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Accessibility {
-    /// Screen reader / accessibility mode.
+    /// Screen reader / accessibility mode: the app speaks with offline system voices.
     pub screen_reader_mode: bool,
     pub reduce_motion: bool,
     pub speech_cues: bool,
     pub sound_cues: bool,
+    /// Speech rate multiplier for the built-in voice (0.5 to 2.0).
+    pub speech_rate: f32,
+}
+
+impl Default for Accessibility {
+    fn default() -> Self {
+        Self { screen_reader_mode: false, reduce_motion: false, speech_cues: false, sound_cues: false, speech_rate: 1.0 }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
@@ -172,6 +180,8 @@ impl AppConfig {
     pub fn normalize(&mut self) {
         self.schema_version = CONFIG_SCHEMA_VERSION;
         self.appearance.clamp();
+        let r = self.accessibility.speech_rate;
+        self.accessibility.speech_rate = if r.is_finite() { r.clamp(0.5, 2.0) } else { 1.0 };
         if let Some(lang) = &self.language {
             if !crate_supported_language(lang) {
                 self.language = None;

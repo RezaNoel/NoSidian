@@ -64,6 +64,166 @@ export interface MessageArgs {
   "error-not-found": undefined;
   "error-not-a-folder": undefined;
   "error-unknown": { detail: string | number };
+  "tab-files": undefined;
+  "tab-recent": undefined;
+  "tab-search": undefined;
+  "tab-tags": undefined;
+  "tab-starred": undefined;
+  "tab-calendar": undefined;
+  "tab-links": undefined;
+  "tab-outline": undefined;
+  "tab-focus": undefined;
+  "tab-history": undefined;
+  "action-new-note": undefined;
+  "action-new-folder": undefined;
+  "action-delete": undefined;
+  "action-cancel": undefined;
+  "action-close": undefined;
+  "mode-editor": undefined;
+  "mode-split": undefined;
+  "mode-reader": undefined;
+  "status-saved": undefined;
+  "status-saving": undefined;
+  "links-backlinks": undefined;
+  "links-outgoing": undefined;
+  "links-unlinked": undefined;
+  "empty-title": undefined;
+  "empty-subtitle": undefined;
+  "vault-welcome-title": undefined;
+  "vault-open-default": undefined;
+  "vault-create-new": undefined;
+  "vault-load-existing": undefined;
+  "vault-switcher-title": undefined;
+  "footer-ambient": undefined;
+  "ribbon-quick-switcher": undefined;
+  "ribbon-command-palette": undefined;
+  "ribbon-mindmap": undefined;
+  "ribbon-kanban": undefined;
+  "ribbon-slides": undefined;
+  "ribbon-daily-note": undefined;
+  "ribbon-projects": undefined;
+  "confirm-delete-title": undefined;
+  "no-starred": undefined;
+  "no-tags": undefined;
+  "search-placeholder": undefined;
+  "no-results": undefined;
+  "tab-srs": undefined;
+  "left-tabs-label": undefined;
+  "action-sort": undefined;
+  "action-reveal-active": undefined;
+  "action-collapse-all": undefined;
+  "action-rename": undefined;
+  "action-open": undefined;
+  "action-create": undefined;
+  "action-star": undefined;
+  "action-unstar": undefined;
+  "action-close-tab": undefined;
+  "sort-name-asc": undefined;
+  "sort-name-desc": undefined;
+  "sort-modified-new": undefined;
+  "sort-modified-old": undefined;
+  "sort-created-new": undefined;
+  "sort-created-old": undefined;
+  "status-words": { count: string | number };
+  "status-chars": { count: string | number };
+  "status-read-time": { minutes: string | number };
+  "status-backlinks": { count: string | number };
+  "outline-empty": undefined;
+  "links-none": undefined;
+  "panel-coming-soon": undefined;
+  "vault-create-new-desc": undefined;
+  "vault-load-existing-desc": undefined;
+  "vault-welcome-subtitle": undefined;
+  "vault-open-default-desc": undefined;
+  "vault-name-placeholder": undefined;
+  "vault-create-btn": undefined;
+  "vault-pick-folder": undefined;
+  "vault-choose-location": { path: string | number };
+  "vault-change-location": undefined;
+  "footer-terminal": undefined;
+  "footer-settings": undefined;
+  "ribbon-media": undefined;
+  "ribbon-terminal": undefined;
+  "ribbon-toggle-left": undefined;
+  "ribbon-toggle-right": undefined;
+  "ribbon-more": undefined;
+  "nav-files": undefined;
+  "nav-workspace": undefined;
+  "nav-new": undefined;
+  "nav-context": undefined;
+  "nav-more": undefined;
+  "nav-label": undefined;
+  "untitled-note": undefined;
+  "prompt-note-name": undefined;
+  "prompt-folder-name": undefined;
+  "confirm-delete-body": { name: string | number };
+  "resize-left": undefined;
+  "resize-right": undefined;
+  "announce-opened": { name: string | number };
+  "announce-saved": undefined;
+  "editor-label": undefined;
+  "view-mode-label": undefined;
+  "tabs-label": undefined;
+  "onboarding-step": { current: string | number; total: string | number };
+  "onboarding-language-title": undefined;
+  "onboarding-language-hint": undefined;
+  "onboarding-experience-title": undefined;
+  "onboarding-experience-hint": undefined;
+  "experience-beginner-desc": undefined;
+  "experience-intermediate-desc": undefined;
+  "experience-advanced-desc": undefined;
+  "onboarding-personal-title": undefined;
+  "onboarding-use-case": undefined;
+  "use-case-study": undefined;
+  "use-case-writing": undefined;
+  "use-case-projects": undefined;
+  "use-case-general": undefined;
+  "onboarding-pet": undefined;
+  "onboarding-ambient": undefined;
+  "onboarding-vault-title": undefined;
+  "action-next": undefined;
+  "action-back": undefined;
+  "error-invalid-path": undefined;
+  "error-no-vault": undefined;
+  "vault-recent": undefined;
+  "win-minimize": undefined;
+  "win-maximize": undefined;
+  "win-restore": undefined;
+  "win-close": undefined;
+  "banner-title": undefined;
+  "banner-toggle": undefined;
+  "banner-height": undefined;
+  "banner-position": undefined;
+  "banner-opacity": undefined;
+  "banner-upload": undefined;
+  "banner-remove": undefined;
+  "banner-preset-carbon": undefined;
+  "banner-preset-language": undefined;
+  "banner-preset-writer": undefined;
+  "banner-preset-observatory": undefined;
+  "glass-preview-label": undefined;
+  "speech-no-voice": { language: string | number };
+  "speech-read-note": undefined;
+  "speech-stop": undefined;
+  "speech-shortcuts": undefined;
+  "speech-rate": undefined;
+  "role-button": undefined;
+  "role-tab": undefined;
+  "role-checkbox": undefined;
+  "role-switch": undefined;
+  "role-radio": undefined;
+  "role-treeitem": undefined;
+  "role-link": undefined;
+  "role-textbox": undefined;
+  "role-slider": undefined;
+  "role-menuitem": undefined;
+  "role-dialog": undefined;
+  "state-checked": undefined;
+  "state-unchecked": undefined;
+  "state-expanded": undefined;
+  "state-collapsed": undefined;
+  "state-selected": undefined;
+  "state-pressed": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -131,5 +291,165 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "error-already-exists",
   "error-not-found",
   "error-not-a-folder",
-  "error-unknown"
+  "error-unknown",
+  "tab-files",
+  "tab-recent",
+  "tab-search",
+  "tab-tags",
+  "tab-starred",
+  "tab-calendar",
+  "tab-links",
+  "tab-outline",
+  "tab-focus",
+  "tab-history",
+  "action-new-note",
+  "action-new-folder",
+  "action-delete",
+  "action-cancel",
+  "action-close",
+  "mode-editor",
+  "mode-split",
+  "mode-reader",
+  "status-saved",
+  "status-saving",
+  "links-backlinks",
+  "links-outgoing",
+  "links-unlinked",
+  "empty-title",
+  "empty-subtitle",
+  "vault-welcome-title",
+  "vault-open-default",
+  "vault-create-new",
+  "vault-load-existing",
+  "vault-switcher-title",
+  "footer-ambient",
+  "ribbon-quick-switcher",
+  "ribbon-command-palette",
+  "ribbon-mindmap",
+  "ribbon-kanban",
+  "ribbon-slides",
+  "ribbon-daily-note",
+  "ribbon-projects",
+  "confirm-delete-title",
+  "no-starred",
+  "no-tags",
+  "search-placeholder",
+  "no-results",
+  "tab-srs",
+  "left-tabs-label",
+  "action-sort",
+  "action-reveal-active",
+  "action-collapse-all",
+  "action-rename",
+  "action-open",
+  "action-create",
+  "action-star",
+  "action-unstar",
+  "action-close-tab",
+  "sort-name-asc",
+  "sort-name-desc",
+  "sort-modified-new",
+  "sort-modified-old",
+  "sort-created-new",
+  "sort-created-old",
+  "status-words",
+  "status-chars",
+  "status-read-time",
+  "status-backlinks",
+  "outline-empty",
+  "links-none",
+  "panel-coming-soon",
+  "vault-create-new-desc",
+  "vault-load-existing-desc",
+  "vault-welcome-subtitle",
+  "vault-open-default-desc",
+  "vault-name-placeholder",
+  "vault-create-btn",
+  "vault-pick-folder",
+  "vault-choose-location",
+  "vault-change-location",
+  "footer-terminal",
+  "footer-settings",
+  "ribbon-media",
+  "ribbon-terminal",
+  "ribbon-toggle-left",
+  "ribbon-toggle-right",
+  "ribbon-more",
+  "nav-files",
+  "nav-workspace",
+  "nav-new",
+  "nav-context",
+  "nav-more",
+  "nav-label",
+  "untitled-note",
+  "prompt-note-name",
+  "prompt-folder-name",
+  "confirm-delete-body",
+  "resize-left",
+  "resize-right",
+  "announce-opened",
+  "announce-saved",
+  "editor-label",
+  "view-mode-label",
+  "tabs-label",
+  "onboarding-step",
+  "onboarding-language-title",
+  "onboarding-language-hint",
+  "onboarding-experience-title",
+  "onboarding-experience-hint",
+  "experience-beginner-desc",
+  "experience-intermediate-desc",
+  "experience-advanced-desc",
+  "onboarding-personal-title",
+  "onboarding-use-case",
+  "use-case-study",
+  "use-case-writing",
+  "use-case-projects",
+  "use-case-general",
+  "onboarding-pet",
+  "onboarding-ambient",
+  "onboarding-vault-title",
+  "action-next",
+  "action-back",
+  "error-invalid-path",
+  "error-no-vault",
+  "vault-recent",
+  "win-minimize",
+  "win-maximize",
+  "win-restore",
+  "win-close",
+  "banner-title",
+  "banner-toggle",
+  "banner-height",
+  "banner-position",
+  "banner-opacity",
+  "banner-upload",
+  "banner-remove",
+  "banner-preset-carbon",
+  "banner-preset-language",
+  "banner-preset-writer",
+  "banner-preset-observatory",
+  "glass-preview-label",
+  "speech-no-voice",
+  "speech-read-note",
+  "speech-stop",
+  "speech-shortcuts",
+  "speech-rate",
+  "role-button",
+  "role-tab",
+  "role-checkbox",
+  "role-switch",
+  "role-radio",
+  "role-treeitem",
+  "role-link",
+  "role-textbox",
+  "role-slider",
+  "role-menuitem",
+  "role-dialog",
+  "state-checked",
+  "state-unchecked",
+  "state-expanded",
+  "state-collapsed",
+  "state-selected",
+  "state-pressed"
 ];

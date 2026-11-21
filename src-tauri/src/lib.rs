@@ -32,6 +32,17 @@ pub fn run() {
             commands::open_vault,
             commands::load_profile,
             commands::save_profile,
+            commands::vault_scan,
+            commands::note_read,
+            commands::note_write,
+            commands::note_create,
+            commands::folder_create,
+            commands::entry_rename,
+            commands::entry_trash,
+            commands::open_sample_vault,
+            commands::asset_write,
+            commands::asset_read,
+            commands::asset_delete,
         ])
         .run(tauri::generate_context!())
         .expect("error while running NoSidian");

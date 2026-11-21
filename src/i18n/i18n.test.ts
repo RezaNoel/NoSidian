@@ -11,7 +11,7 @@ describe("i18n runtime", () => {
         const msg = bundle.getMessage(key);
         expect(msg?.value, `${code}/${key}`).toBeTruthy();
         const errors: Error[] = [];
-        const out = bundle.formatPattern(msg!.value!, { count: 3, language: "x", theme: "y", detail: "z" }, errors);
+        const out = bundle.formatPattern(msg!.value!, { count: 3, language: "x", theme: "y", detail: "z", minutes: 2, name: "n", path: "p", current: 1, total: 4 }, errors);
         expect(errors, `${code}/${key}`).toEqual([]);
         expect(out.trim().length, `${code}/${key}`).toBeGreaterThan(0);
       }
