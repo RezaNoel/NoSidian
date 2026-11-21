@@ -12,8 +12,8 @@ use crate::AppState;
 
 #[derive(Debug, Serialize)]
 pub struct CommandError {
-    code: &'static str,
-    detail: String,
+    pub(crate) code: &'static str,
+    pub(crate) detail: String,
 }
 
 impl From<CoreError> for CommandError {
@@ -25,14 +25,14 @@ impl From<CoreError> for CommandError {
     }
 }
 
-fn internal(detail: impl ToString) -> CommandError {
+pub(crate) fn internal(detail: impl ToString) -> CommandError {
     CommandError {
         code: "unknown",
         detail: detail.to_string(),
     }
 }
 
-type CmdResult<T> = Result<T, CommandError>;
+pub(crate) type CmdResult<T> = Result<T, CommandError>;
 
 #[tauri::command]
 pub fn get_config(state: State<'_, AppState>) -> CmdResult<AppConfig> {
@@ -102,7 +102,7 @@ pub fn save_profile(
 
 use nosidian_core::notes::{self, VaultTree};
 
-fn active_root(state: &State<'_, AppState>) -> CmdResult<PathBuf> {
+pub(crate) fn active_root(state: &State<'_, AppState>) -> CmdResult<PathBuf> {
     let store = state.config.lock().map_err(internal)?;
     store
         .load()?
@@ -245,4 +245,91 @@ pub fn index_links(state: State<'_, AppState>, path: String) -> CmdResult<NoteLi
 #[tauri::command]
 pub fn index_summaries(state: State<'_, AppState>) -> CmdResult<Vec<NoteSummary>> {
     with_index(&state, |i| i.summaries())
+}
+
+// ---------- Feature data stores ----------
+
+use nosidian_core::{files, history, store};
+
+/// Read a vault document (`.nosidian/<name>.json`); `null` when missing.
+#[tauri::command]
+pub fn store_read(state: State<'_, AppState>, name: String) -> CmdResult<serde_json::Value> {
+    Ok(store::read_doc(&store::vault_dir(&active_root(&state)?), &name)?)
+}
+
+#[tauri::command]
+pub fn store_write(state: State<'_, AppState>, name: String, value: serde_json::Value) -> CmdResult<()> {
+    Ok(store::write_doc(&store::vault_dir(&active_root(&state)?), &name, &value)?)
+}
+
+/// App-wide documents (the companion pet, plugins) in the OS config folder.
+#[tauri::command]
+pub fn app_store_read(app: tauri::AppHandle, name: String) -> CmdResult<serde_json::Value> {
+    let dir = app.path().app_config_dir().map_err(internal)?;
+    Ok(store::read_doc(&dir, &name)?)
+}
+
+#[tauri::command]
+pub fn app_store_write(app: tauri::AppHandle, name: String, value: serde_json::Value) -> CmdResult<()> {
+    let dir = app.path().app_config_dir().map_err(internal)?;
+    Ok(store::write_doc(&dir, &name, &value)?)
+}
+
+// ---------- Note history ----------
+
+#[tauri::command]
+pub fn history_list(state: State<'_, AppState>, path: String) -> CmdResult<Vec<history::Snapshot>> {
+    Ok(history::list(&active_root(&state)?, &path)?)
+}
+
+#[tauri::command]
+pub fn history_snapshot(state: State<'_, AppState>, path: String, content: String) -> CmdResult<Option<history::Snapshot>> {
+    Ok(history::snapshot(&active_root(&state)?, &path, &content, now_ms())?)
+}
+
+#[tauri::command]
+pub fn history_read(state: State<'_, AppState>, path: String, ts: u64) -> CmdResult<String> {
+    Ok(history::read(&active_root(&state)?, &path, ts)?)
+}
+
+// ---------- Attachments, import and export ----------
+
+#[tauri::command]
+pub fn attachments_list(state: State<'_, AppState>) -> CmdResult<Vec<String>> {
+    Ok(files::attachments(&active_root(&state)?)?)
+}
+
+/// Raw bytes of a vault file (images, audio, PDFs), sent as binary.
+#[tauri::command]
+pub fn file_read(state: State<'_, AppState>, path: String) -> CmdResult<tauri::ipc::Response> {
+    Ok(tauri::ipc::Response::new(files::read_file(&active_root(&state)?, &path)?))
+}
+
+/// Write base64 data into the vault (pasted images, uploaded 3D models).
+#[tauri::command]
+pub fn file_write(state: State<'_, AppState>, path: String, data: String) -> CmdResult<()> {
+    use base64::Engine;
+    let bytes = base64::engine::general_purpose::STANDARD.decode(data.trim()).map_err(|_| CommandError { code: "invalid-path", detail: path.clone() })?;
+    Ok(files::write_file(&active_root(&state)?, &path, &bytes)?)
+}
+
+#[tauri::command]
+pub fn files_import(state: State<'_, AppState>, sources: Vec<PathBuf>, folder: String) -> CmdResult<Vec<String>> {
+    let root = active_root(&state)?;
+    let added = files::import(&root, &sources, &folder)?;
+    let refs: Vec<&str> = added.iter().map(String::as_str).collect();
+    touch_index(&state, &root, &refs);
+    Ok(added)
+}
+
+/// Write text to a path the user picked in a save dialog.
+#[tauri::command]
+pub fn export_text(path: PathBuf, content: String) -> CmdResult<()> {
+    std::fs::write(&path, content).map_err(|e| CoreError::Io { path, source: e }.into())
+}
+
+#[tauri::command]
+pub fn vault_backup(state: State<'_, AppState>) -> CmdResult<String> {
+    let b = files::backup(&active_root(&state)?, now_ms())?;
+    serde_json::to_string_pretty(&b).map_err(internal)
 }

@@ -316,6 +316,571 @@ export interface MessageArgs {
   "announce-moved": { name: string | number; path: string | number };
   "settings-rerun-onboarding": undefined;
   "settings-rerun-onboarding-hint": undefined;
+  "action-copy": undefined;
+  "copied": undefined;
+  "embed-missing": { name: string | number };
+  "image-zoom": undefined;
+  "note-dir-label": undefined;
+  "note-dir-auto": undefined;
+  "note-dir-ltr": undefined;
+  "note-dir-rtl": undefined;
+  "props-title": undefined;
+  "props-add": undefined;
+  "props-key": undefined;
+  "props-value": undefined;
+  "props-remove": { name: string | number };
+  "props-list-hint": undefined;
+  "pdf-label": { name: string | number };
+  "pdf-prev": undefined;
+  "pdf-next": undefined;
+  "pdf-page": undefined;
+  "pdf-page-of": { page: string | number; total: string | number };
+  "pdf-zoom-in": undefined;
+  "pdf-zoom-out": undefined;
+  "pdf-fit-width": undefined;
+  "pdf-sidebar": undefined;
+  "pdf-thumbs": undefined;
+  "pdf-outline": undefined;
+  "pdf-outline-empty": undefined;
+  "pdf-tint": undefined;
+  "pdf-tint-none": undefined;
+  "pdf-tint-dark": undefined;
+  "pdf-tint-sepia": undefined;
+  "pdf-search": undefined;
+  "pdf-matches": { count: string | number };
+  "pdf-no-matches": undefined;
+  "pdf-extract": undefined;
+  "pdf-to-card": undefined;
+  "pdf-copy-link": undefined;
+  "pdf-select-first": undefined;
+  "pdf-extracted": { name: string | number };
+  "pdf-card-added": { name: string | number };
+  "pdf-card-question": { page: string | number };
+  "pdf-loading": undefined;
+  "pdf-error": undefined;
+  "pdf-notes-suffix": undefined;
+  "kanban-label": undefined;
+  "kanban-hint": undefined;
+  "kanban-moved": { card: string | number; column: string | number };
+  "kanban-new-column": undefined;
+  "kanban-todo": undefined;
+  "kanban-doing": undefined;
+  "kanban-done": undefined;
+  "kanban-empty": undefined;
+  "kanban-template": undefined;
+  "kanban-column-name": undefined;
+  "kanban-delete-column": undefined;
+  "kanban-card-done": undefined;
+  "kanban-delete-card": undefined;
+  "kanban-add-card": undefined;
+  "kanban-add-column": undefined;
+  "mindmap-label": undefined;
+  "mindmap-fit": undefined;
+  "slides-label": undefined;
+  "slides-prev": undefined;
+  "slides-next": undefined;
+  "slides-count": { current: string | number; total: string | number };
+  "slides-present": undefined;
+  "export-done": undefined;
+  "import-done": { count: string | number };
+  "export-md": undefined;
+  "export-html": undefined;
+  "export-print": undefined;
+  "export-backup": undefined;
+  "export-standalone": undefined;
+  "import-files": undefined;
+  "note-more": undefined;
+  "mode-mindmap": undefined;
+  "mode-kanban": undefined;
+  "slash-h1": undefined;
+  "slash-h2": undefined;
+  "slash-h3": undefined;
+  "slash-list": undefined;
+  "slash-numbered": undefined;
+  "slash-task": undefined;
+  "slash-quote": undefined;
+  "slash-callout": undefined;
+  "slash-code": undefined;
+  "slash-math": undefined;
+  "slash-mermaid": undefined;
+  "slash-table": undefined;
+  "slash-divider": undefined;
+  "slash-card": undefined;
+  "slash-cloze": undefined;
+  "slash-date": undefined;
+  "fmt-label": undefined;
+  "fmt-bold": undefined;
+  "fmt-italic": undefined;
+  "fmt-strike": undefined;
+  "fmt-highlight": undefined;
+  "fmt-code": undefined;
+  "fmt-link": undefined;
+  "fmt-wikilink": undefined;
+  "fmt-h1": undefined;
+  "fmt-h2": undefined;
+  "fmt-h3": undefined;
+  "fmt-list": undefined;
+  "fmt-numbered": undefined;
+  "fmt-task": undefined;
+  "fmt-quote": undefined;
+  "fmt-codeblock": undefined;
+  "fmt-math": undefined;
+  "fmt-table": undefined;
+  "fmt-callout": undefined;
+  "fmt-divider": undefined;
+  "history-saved": undefined;
+  "history-unchanged": undefined;
+  "history-restore": undefined;
+  "history-restore-confirm": { date: string | number };
+  "history-restored": undefined;
+  "history-compare": { date: string | number };
+  "history-current": undefined;
+  "history-snapshot": undefined;
+  "history-empty": undefined;
+  "history-size": { size: string | number };
+  "action-add": undefined;
+  "view-dashboard": undefined;
+  "view-graph": undefined;
+  "view-flashcards": undefined;
+  "view-projects": undefined;
+  "view-media": undefined;
+  "view-zen": undefined;
+  "hub-study": undefined;
+  "hub-writer": undefined;
+  "hub-developer": undefined;
+  "hub-study-desc": undefined;
+  "hub-writer-desc": undefined;
+  "hub-developer-desc": undefined;
+  "widget-cover": undefined;
+  "widget-deadline-hero": undefined;
+  "widget-stats": undefined;
+  "widget-recent-notes": undefined;
+  "widget-todos": undefined;
+  "widget-calendar": undefined;
+  "widget-shortcuts": undefined;
+  "widget-scratchpad": undefined;
+  "widget-project-spotlight": undefined;
+  "widget-pet-home": undefined;
+  "widget-flashcard-queue": undefined;
+  "widget-pomodoro-timer": undefined;
+  "widget-starred-notes": undefined;
+  "widget-tag-explorer": undefined;
+  "widget-reading-shelf": undefined;
+  "widget-watchlist": undefined;
+  "widget-writing-goal": undefined;
+  "widget-quick-capture": undefined;
+  "widget-cat-core": undefined;
+  "widget-cat-study": undefined;
+  "widget-cat-writing": undefined;
+  "widget-cat-projects": undefined;
+  "widget-cat-media": undefined;
+  "dash-cover-subtitle": undefined;
+  "dash-subtitle": undefined;
+  "dash-cover-image": undefined;
+  "dash-stat-notes": undefined;
+  "dash-stat-words": undefined;
+  "dash-stat-tags": undefined;
+  "dash-stat-due": undefined;
+  "dash-todo-add": undefined;
+  "dash-sc-note": undefined;
+  "dash-sc-folder": undefined;
+  "dash-sc-daily": undefined;
+  "dash-sc-new-note": undefined;
+  "dash-sc-flashcards": undefined;
+  "dash-sc-graph": undefined;
+  "dash-sc-projects": undefined;
+  "dash-sc-media": undefined;
+  "dash-sc-terminal": undefined;
+  "dash-sc-add": undefined;
+  "dash-sc-note-path": undefined;
+  "dash-scratch-placeholder": undefined;
+  "dash-capture-placeholder": undefined;
+  "dash-capture-save": undefined;
+  "dash-captured": { name: string | number };
+  "dash-queue-detail": { due: string | number; fresh: string | number };
+  "dash-no-project": undefined;
+  "dash-overdue": { days: string | number };
+  "dash-countdown": { days: string | number; hours: string | number };
+  "dash-goal-target": undefined;
+  "dash-nothing": undefined;
+  "dash-new-hub": undefined;
+  "dash-hub-name": undefined;
+  "dash-template": undefined;
+  "dash-rename-hub": undefined;
+  "dash-delete-hub": undefined;
+  "dash-delete-hub-confirm": { name: string | number };
+  "dash-export": undefined;
+  "dash-import": undefined;
+  "dash-import-failed": undefined;
+  "dash-add-widget": undefined;
+  "dash-done": undefined;
+  "dash-edit": undefined;
+  "dash-widget-title": undefined;
+  "dash-move-back": undefined;
+  "dash-move-forward": undefined;
+  "dash-width": { span: string | number };
+  "dash-remove-widget": undefined;
+  "srs-study": undefined;
+  "media-none-reading": undefined;
+  "media-none-watchlist": undefined;
+  "media-status-watchlist": undefined;
+  "media-status-watching": undefined;
+  "media-status-watched": undefined;
+  "tags-empty": undefined;
+  "focus-session-done": { coins: string | number };
+  "focus-break-start": { name: string | number };
+  "focus-block-start": { name: string | number };
+  "focus-one-minute": undefined;
+  "focus-break": undefined;
+  "focus-focus": undefined;
+  "focus-start": undefined;
+  "focus-pause": undefined;
+  "focus-skip": undefined;
+  "focus-reset": undefined;
+  "focus-zen-mode": undefined;
+  "focus-sounds": undefined;
+  "focus-plan": undefined;
+  "focus-goal": undefined;
+  "focus-reward": undefined;
+  "focus-block-name": undefined;
+  "focus-minutes": undefined;
+  "focus-min": undefined;
+  "focus-add-break": undefined;
+  "focus-add-focus": undefined;
+  "focus-total": { minutes: string | number };
+  "focus-one-minute-warning": undefined;
+  "focus-reward-ready": { reward: string | number };
+  "focus-claim": undefined;
+  "focus-sessions": { count: string | number };
+  "focus-music": undefined;
+  "focus-music-none": undefined;
+  "focus-volume": undefined;
+  "focus-effect": undefined;
+  "focus-density": undefined;
+  "focus-wind": undefined;
+  "sound-rain": undefined;
+  "sound-brown": undefined;
+  "sound-wind": undefined;
+  "sound-fireplace": undefined;
+  "sound-waves": undefined;
+  "sound-cafe": undefined;
+  "sound-birds": undefined;
+  "music-lofi": undefined;
+  "music-piano": undefined;
+  "music-forest": undefined;
+  "music-cosmos": undefined;
+  "music-binaural": undefined;
+  "music-rainy-jazz": undefined;
+  "music-synthwave": undefined;
+  "music-zen-bells": undefined;
+  "effect-none": undefined;
+  "effect-snow": undefined;
+  "effect-autumn": undefined;
+  "effect-sakura": undefined;
+  "effect-fireflies": undefined;
+  "effect-rain": undefined;
+  "effect-starfield": undefined;
+  "effect-embers": undefined;
+  "effect-aurora": undefined;
+  "pet-no-coins": undefined;
+  "pet-fed": { name: string | number };
+  "pet-sleeping": undefined;
+  "pet-tired": undefined;
+  "pet-cooldown": undefined;
+  "pet-play-coins": { coins: string | number };
+  "pet-label": { mood: string | number; name: string | number };
+  "pet-level": { level: string | number };
+  "pet-open": undefined;
+  "pet-model-failed": undefined;
+  "pet-studio": undefined;
+  "pet-stage-hint": undefined;
+  "pet-rename": undefined;
+  "pet-xp": { next: string | number; xp: string | number };
+  "pet-health": undefined;
+  "pet-hunger": undefined;
+  "pet-happiness": undefined;
+  "pet-energy": undefined;
+  "pet-play": undefined;
+  "pet-wake": undefined;
+  "pet-sleep": undefined;
+  "pet-food": undefined;
+  "pet-shop": undefined;
+  "pet-equipped": undefined;
+  "pet-owned": undefined;
+  "pet-species": undefined;
+  "pet-model-upload": undefined;
+  "pet-model-remove": undefined;
+  "pet-mood-ecstatic": undefined;
+  "pet-mood-happy": undefined;
+  "pet-mood-hungry": undefined;
+  "pet-mood-sleepy": undefined;
+  "pet-food-blueberry-tart": undefined;
+  "pet-food-honey-matcha": undefined;
+  "pet-food-starlight-seed": undefined;
+  "pet-food-bamboo-mochi": undefined;
+  "pet-food-warm-ramen": undefined;
+  "pet-acc-carbon-cap": undefined;
+  "pet-acc-scholar-glasses": undefined;
+  "pet-acc-cozy-scarf": undefined;
+  "pet-acc-star-lantern": undefined;
+  "pet-acc-headphones": undefined;
+  "pet-species-fox": undefined;
+  "pet-species-owl": undefined;
+  "pet-species-cat": undefined;
+  "pet-species-panda": undefined;
+  "srs-note-counts": { due: string | number; fresh: string | number; total: string | number };
+  "srs-study-note": undefined;
+  "srs-note-empty": undefined;
+  "srs-next-due": { date: string | number };
+  "srs-new": undefined;
+  "srs-all-cards": undefined;
+  "srs-root-deck": undefined;
+  "srs-cram": undefined;
+  "srs-progress": { done: string | number; left: string | number };
+  "srs-end-session": undefined;
+  "srs-session-done": undefined;
+  "srs-session-done-detail": { count: string | number };
+  "srs-back-to-decks": undefined;
+  "srs-hint": undefined;
+  "srs-type-answer": undefined;
+  "srs-show-answer": undefined;
+  "srs-accuracy": { pct: string | number };
+  "srs-rate": undefined;
+  "srs-rating-1": undefined;
+  "srs-rating-2": undefined;
+  "srs-rating-3": undefined;
+  "srs-rating-4": undefined;
+  "srs-open-source": undefined;
+  "srs-bury": undefined;
+  "srs-suspend": undefined;
+  "srs-search": undefined;
+  "srs-question": undefined;
+  "srs-answer": undefined;
+  "srs-due": undefined;
+  "srs-actions": undefined;
+  "srs-suspended": undefined;
+  "srs-reset": undefined;
+  "srs-stat-today": undefined;
+  "srs-stat-streak": undefined;
+  "srs-stat-longest": undefined;
+  "srs-stat-retention": undefined;
+  "srs-heatmap": undefined;
+  "srs-forecast": undefined;
+  "srs-import-failed": undefined;
+  "srs-default-preset": undefined;
+  "srs-deck-presets": undefined;
+  "srs-use-default": undefined;
+  "srs-daily-goal": undefined;
+  "srs-cards-note": undefined;
+  "srs-type-answers": undefined;
+  "srs-extract": undefined;
+  "srs-extract-headers": undefined;
+  "srs-extract-bullets": undefined;
+  "srs-extract-tables": undefined;
+  "srs-syntax-help": undefined;
+  "srs-import-export": undefined;
+  "srs-import-csv": undefined;
+  "srs-import-apkg": undefined;
+  "srs-tab-decks": undefined;
+  "srs-tab-study": undefined;
+  "srs-tab-browse": undefined;
+  "srs-tab-stats": undefined;
+  "srs-tab-settings": undefined;
+  "srs-no-cards": undefined;
+  "srs-deck-counts": { due: string | number; fresh: string | number; total: string | number };
+  "srs-preset-default": undefined;
+  "srs-preset-medical-intensive": undefined;
+  "srs-preset-language-classic": undefined;
+  "graph-filter": undefined;
+  "graph-local": undefined;
+  "graph-count": { links: string | number; nodes: string | number };
+  "graph-timelapse": undefined;
+  "graph-settings": undefined;
+  "graph-links": { count: string | number };
+  "graph-orphans": undefined;
+  "graph-tags": undefined;
+  "graph-scale-degree": undefined;
+  "graph-group": undefined;
+  "graph-group-none": undefined;
+  "graph-group-folder": undefined;
+  "graph-group-tag": undefined;
+  "graph-group-degree": undefined;
+  "graph-group-created": undefined;
+  "graph-color": undefined;
+  "graph-color-group": undefined;
+  "graph-color-heatmap": undefined;
+  "graph-color-age": undefined;
+  "graph-color-monochrome": undefined;
+  "graph-color-custom": undefined;
+  "graph-shape": undefined;
+  "graph-shape-circle": undefined;
+  "graph-shape-square": undefined;
+  "graph-shape-diamond": undefined;
+  "graph-shape-hexagon": undefined;
+  "graph-shape-triangle": undefined;
+  "graph-repulsion": undefined;
+  "graph-linkdistance": undefined;
+  "graph-nodesize": undefined;
+  "graph-edgewidth": undefined;
+  "graph-edgeopacity": undefined;
+  "graph-labelfontsize": undefined;
+  "action-save": undefined;
+  "proj-new": undefined;
+  "proj-name": undefined;
+  "proj-deadline": undefined;
+  "proj-color": undefined;
+  "proj-tpl-software-sprint": undefined;
+  "proj-tpl-software-sprint-desc": undefined;
+  "proj-tpl-research-paper": undefined;
+  "proj-tpl-research-paper-desc": undefined;
+  "proj-tpl-product-launch": undefined;
+  "proj-tpl-product-launch-desc": undefined;
+  "proj-tpl-blank": undefined;
+  "proj-tpl-blank-desc": undefined;
+  "proj-edit-task": undefined;
+  "proj-md-task-hint": undefined;
+  "proj-task-title": undefined;
+  "proj-task-desc": undefined;
+  "proj-project": undefined;
+  "proj-priority": undefined;
+  "proj-pri-low": undefined;
+  "proj-pri-medium": undefined;
+  "proj-pri-high": undefined;
+  "proj-due": undefined;
+  "proj-sprint": undefined;
+  "proj-tags": undefined;
+  "proj-blocked-by": undefined;
+  "proj-log-time": undefined;
+  "proj-logged": { minutes: string | number };
+  "proj-schedule": undefined;
+  "proj-add-task": undefined;
+  "proj-filter": undefined;
+  "proj-blocked": undefined;
+  "proj-col-inbox": undefined;
+  "proj-col-backlog": undefined;
+  "proj-col-todo": undefined;
+  "proj-col-in-progress": undefined;
+  "proj-col-done": undefined;
+  "proj-new-sprint": undefined;
+  "proj-sprint-default": { n: string | number };
+  "proj-weekly-review": undefined;
+  "proj-no-sprints": undefined;
+  "proj-start": undefined;
+  "proj-end": undefined;
+  "proj-status": undefined;
+  "proj-sprint-planned": undefined;
+  "proj-sprint-active": undefined;
+  "proj-sprint-done": undefined;
+  "proj-sprint-review": undefined;
+  "proj-sprint-goal": undefined;
+  "proj-progress": { done: string | number; total: string | number };
+  "proj-today": undefined;
+  "proj-injected": { count: string | number };
+  "proj-inject-daily": undefined;
+  "proj-tab-board": undefined;
+  "proj-tab-sprints": undefined;
+  "proj-tab-timeline": undefined;
+  "proj-tab-graph": undefined;
+  "proj-tab-rules": undefined;
+  "proj-rules-help": undefined;
+  "proj-add-rule": undefined;
+  "proj-all": undefined;
+  "proj-primary": undefined;
+  "proj-make-primary": undefined;
+  "proj-remove": undefined;
+  "media-add-movie": undefined;
+  "media-add-book": undefined;
+  "media-title": undefined;
+  "media-type": undefined;
+  "media-movie": undefined;
+  "media-series": undefined;
+  "media-status": undefined;
+  "media-year": undefined;
+  "media-director": undefined;
+  "media-genre": undefined;
+  "media-episodes-total": undefined;
+  "media-rating": undefined;
+  "media-quotes": undefined;
+  "media-notes": undefined;
+  "media-author": undefined;
+  "media-pages": undefined;
+  "media-page": { page: string | number };
+  "media-book-to-read": undefined;
+  "media-book-reading": undefined;
+  "media-book-finished": undefined;
+  "media-movies": undefined;
+  "media-books": undefined;
+  "media-all": undefined;
+  "media-empty": undefined;
+  "media-page-label": undefined;
+  "media-add-highlight": undefined;
+  "media-open-note": undefined;
+  "media-episode-back": undefined;
+  "media-episode-next": undefined;
+  "media-episodes": { total: string | number; watched: string | number };
+  "loading": undefined;
+  "term-welcome": undefined;
+  "term-exit": { code: string | number };
+  "term-mode": undefined;
+  "term-vault": undefined;
+  "term-system": undefined;
+  "term-system-off": undefined;
+  "term-shell": undefined;
+  "term-clear": undefined;
+  "term-input": undefined;
+  "plugin-timeout": undefined;
+  "mcp-applied": { path: string | number };
+  "mcp-rejected": { path: string | number };
+  "mcp-proposal": { path: string | number };
+  "select-note-first": undefined;
+  "pet-economy-hint": undefined;
+  "mcp-desktop-only": undefined;
+  "mcp-enable": undefined;
+  "mcp-enable-hint": undefined;
+  "mcp-running": { url: string | number };
+  "mcp-error": { detail: string | number };
+  "mcp-stopped": undefined;
+  "mcp-access": undefined;
+  "mcp-read-only": undefined;
+  "mcp-read-write": undefined;
+  "mcp-auto-apply": undefined;
+  "mcp-auto-apply-hint": undefined;
+  "mcp-port": undefined;
+  "mcp-copy-token": undefined;
+  "mcp-new-token": undefined;
+  "mcp-copy-desktop": undefined;
+  "mcp-copy-http": undefined;
+  "mcp-pending": undefined;
+  "mcp-action-create": undefined;
+  "mcp-action-update": undefined;
+  "mcp-action-delete": undefined;
+  "mcp-approve": undefined;
+  "mcp-reject": undefined;
+  "mcp-activity": undefined;
+  "dev-css-enable": undefined;
+  "dev-css": undefined;
+  "dev-plugins": undefined;
+  "dev-plugins-hint": undefined;
+  "dev-plugin-name": undefined;
+  "dev-plugin-enabled": undefined;
+  "dev-plugin-startup": undefined;
+  "dev-plugin-run": undefined;
+  "dev-plugin-code": undefined;
+  "dev-plugin-new": undefined;
+  "dev-plugin-add": undefined;
+  "dev-system-shell": undefined;
+  "dev-system-shell-hint": undefined;
+  "pref-format-bar": undefined;
+  "pref-show-properties": undefined;
+  "pref-props-reader": undefined;
+  "pref-scroll-sync": undefined;
+  "pref-fold-headings": undefined;
+  "pref-autopair-md": undefined;
+  "pref-autopair-md-hint": undefined;
+  "pref-history-auto": undefined;
+  "pref-history-auto-hint": undefined;
+  "pet-hide": undefined;
+  "pet-floating": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -635,5 +1200,570 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "action-move-to",
   "announce-moved",
   "settings-rerun-onboarding",
-  "settings-rerun-onboarding-hint"
+  "settings-rerun-onboarding-hint",
+  "action-copy",
+  "copied",
+  "embed-missing",
+  "image-zoom",
+  "note-dir-label",
+  "note-dir-auto",
+  "note-dir-ltr",
+  "note-dir-rtl",
+  "props-title",
+  "props-add",
+  "props-key",
+  "props-value",
+  "props-remove",
+  "props-list-hint",
+  "pdf-label",
+  "pdf-prev",
+  "pdf-next",
+  "pdf-page",
+  "pdf-page-of",
+  "pdf-zoom-in",
+  "pdf-zoom-out",
+  "pdf-fit-width",
+  "pdf-sidebar",
+  "pdf-thumbs",
+  "pdf-outline",
+  "pdf-outline-empty",
+  "pdf-tint",
+  "pdf-tint-none",
+  "pdf-tint-dark",
+  "pdf-tint-sepia",
+  "pdf-search",
+  "pdf-matches",
+  "pdf-no-matches",
+  "pdf-extract",
+  "pdf-to-card",
+  "pdf-copy-link",
+  "pdf-select-first",
+  "pdf-extracted",
+  "pdf-card-added",
+  "pdf-card-question",
+  "pdf-loading",
+  "pdf-error",
+  "pdf-notes-suffix",
+  "kanban-label",
+  "kanban-hint",
+  "kanban-moved",
+  "kanban-new-column",
+  "kanban-todo",
+  "kanban-doing",
+  "kanban-done",
+  "kanban-empty",
+  "kanban-template",
+  "kanban-column-name",
+  "kanban-delete-column",
+  "kanban-card-done",
+  "kanban-delete-card",
+  "kanban-add-card",
+  "kanban-add-column",
+  "mindmap-label",
+  "mindmap-fit",
+  "slides-label",
+  "slides-prev",
+  "slides-next",
+  "slides-count",
+  "slides-present",
+  "export-done",
+  "import-done",
+  "export-md",
+  "export-html",
+  "export-print",
+  "export-backup",
+  "export-standalone",
+  "import-files",
+  "note-more",
+  "mode-mindmap",
+  "mode-kanban",
+  "slash-h1",
+  "slash-h2",
+  "slash-h3",
+  "slash-list",
+  "slash-numbered",
+  "slash-task",
+  "slash-quote",
+  "slash-callout",
+  "slash-code",
+  "slash-math",
+  "slash-mermaid",
+  "slash-table",
+  "slash-divider",
+  "slash-card",
+  "slash-cloze",
+  "slash-date",
+  "fmt-label",
+  "fmt-bold",
+  "fmt-italic",
+  "fmt-strike",
+  "fmt-highlight",
+  "fmt-code",
+  "fmt-link",
+  "fmt-wikilink",
+  "fmt-h1",
+  "fmt-h2",
+  "fmt-h3",
+  "fmt-list",
+  "fmt-numbered",
+  "fmt-task",
+  "fmt-quote",
+  "fmt-codeblock",
+  "fmt-math",
+  "fmt-table",
+  "fmt-callout",
+  "fmt-divider",
+  "history-saved",
+  "history-unchanged",
+  "history-restore",
+  "history-restore-confirm",
+  "history-restored",
+  "history-compare",
+  "history-current",
+  "history-snapshot",
+  "history-empty",
+  "history-size",
+  "action-add",
+  "view-dashboard",
+  "view-graph",
+  "view-flashcards",
+  "view-projects",
+  "view-media",
+  "view-zen",
+  "hub-study",
+  "hub-writer",
+  "hub-developer",
+  "hub-study-desc",
+  "hub-writer-desc",
+  "hub-developer-desc",
+  "widget-cover",
+  "widget-deadline-hero",
+  "widget-stats",
+  "widget-recent-notes",
+  "widget-todos",
+  "widget-calendar",
+  "widget-shortcuts",
+  "widget-scratchpad",
+  "widget-project-spotlight",
+  "widget-pet-home",
+  "widget-flashcard-queue",
+  "widget-pomodoro-timer",
+  "widget-starred-notes",
+  "widget-tag-explorer",
+  "widget-reading-shelf",
+  "widget-watchlist",
+  "widget-writing-goal",
+  "widget-quick-capture",
+  "widget-cat-core",
+  "widget-cat-study",
+  "widget-cat-writing",
+  "widget-cat-projects",
+  "widget-cat-media",
+  "dash-cover-subtitle",
+  "dash-subtitle",
+  "dash-cover-image",
+  "dash-stat-notes",
+  "dash-stat-words",
+  "dash-stat-tags",
+  "dash-stat-due",
+  "dash-todo-add",
+  "dash-sc-note",
+  "dash-sc-folder",
+  "dash-sc-daily",
+  "dash-sc-new-note",
+  "dash-sc-flashcards",
+  "dash-sc-graph",
+  "dash-sc-projects",
+  "dash-sc-media",
+  "dash-sc-terminal",
+  "dash-sc-add",
+  "dash-sc-note-path",
+  "dash-scratch-placeholder",
+  "dash-capture-placeholder",
+  "dash-capture-save",
+  "dash-captured",
+  "dash-queue-detail",
+  "dash-no-project",
+  "dash-overdue",
+  "dash-countdown",
+  "dash-goal-target",
+  "dash-nothing",
+  "dash-new-hub",
+  "dash-hub-name",
+  "dash-template",
+  "dash-rename-hub",
+  "dash-delete-hub",
+  "dash-delete-hub-confirm",
+  "dash-export",
+  "dash-import",
+  "dash-import-failed",
+  "dash-add-widget",
+  "dash-done",
+  "dash-edit",
+  "dash-widget-title",
+  "dash-move-back",
+  "dash-move-forward",
+  "dash-width",
+  "dash-remove-widget",
+  "srs-study",
+  "media-none-reading",
+  "media-none-watchlist",
+  "media-status-watchlist",
+  "media-status-watching",
+  "media-status-watched",
+  "tags-empty",
+  "focus-session-done",
+  "focus-break-start",
+  "focus-block-start",
+  "focus-one-minute",
+  "focus-break",
+  "focus-focus",
+  "focus-start",
+  "focus-pause",
+  "focus-skip",
+  "focus-reset",
+  "focus-zen-mode",
+  "focus-sounds",
+  "focus-plan",
+  "focus-goal",
+  "focus-reward",
+  "focus-block-name",
+  "focus-minutes",
+  "focus-min",
+  "focus-add-break",
+  "focus-add-focus",
+  "focus-total",
+  "focus-one-minute-warning",
+  "focus-reward-ready",
+  "focus-claim",
+  "focus-sessions",
+  "focus-music",
+  "focus-music-none",
+  "focus-volume",
+  "focus-effect",
+  "focus-density",
+  "focus-wind",
+  "sound-rain",
+  "sound-brown",
+  "sound-wind",
+  "sound-fireplace",
+  "sound-waves",
+  "sound-cafe",
+  "sound-birds",
+  "music-lofi",
+  "music-piano",
+  "music-forest",
+  "music-cosmos",
+  "music-binaural",
+  "music-rainy-jazz",
+  "music-synthwave",
+  "music-zen-bells",
+  "effect-none",
+  "effect-snow",
+  "effect-autumn",
+  "effect-sakura",
+  "effect-fireflies",
+  "effect-rain",
+  "effect-starfield",
+  "effect-embers",
+  "effect-aurora",
+  "pet-no-coins",
+  "pet-fed",
+  "pet-sleeping",
+  "pet-tired",
+  "pet-cooldown",
+  "pet-play-coins",
+  "pet-label",
+  "pet-level",
+  "pet-open",
+  "pet-model-failed",
+  "pet-studio",
+  "pet-stage-hint",
+  "pet-rename",
+  "pet-xp",
+  "pet-health",
+  "pet-hunger",
+  "pet-happiness",
+  "pet-energy",
+  "pet-play",
+  "pet-wake",
+  "pet-sleep",
+  "pet-food",
+  "pet-shop",
+  "pet-equipped",
+  "pet-owned",
+  "pet-species",
+  "pet-model-upload",
+  "pet-model-remove",
+  "pet-mood-ecstatic",
+  "pet-mood-happy",
+  "pet-mood-hungry",
+  "pet-mood-sleepy",
+  "pet-food-blueberry-tart",
+  "pet-food-honey-matcha",
+  "pet-food-starlight-seed",
+  "pet-food-bamboo-mochi",
+  "pet-food-warm-ramen",
+  "pet-acc-carbon-cap",
+  "pet-acc-scholar-glasses",
+  "pet-acc-cozy-scarf",
+  "pet-acc-star-lantern",
+  "pet-acc-headphones",
+  "pet-species-fox",
+  "pet-species-owl",
+  "pet-species-cat",
+  "pet-species-panda",
+  "srs-note-counts",
+  "srs-study-note",
+  "srs-note-empty",
+  "srs-next-due",
+  "srs-new",
+  "srs-all-cards",
+  "srs-root-deck",
+  "srs-cram",
+  "srs-progress",
+  "srs-end-session",
+  "srs-session-done",
+  "srs-session-done-detail",
+  "srs-back-to-decks",
+  "srs-hint",
+  "srs-type-answer",
+  "srs-show-answer",
+  "srs-accuracy",
+  "srs-rate",
+  "srs-rating-1",
+  "srs-rating-2",
+  "srs-rating-3",
+  "srs-rating-4",
+  "srs-open-source",
+  "srs-bury",
+  "srs-suspend",
+  "srs-search",
+  "srs-question",
+  "srs-answer",
+  "srs-due",
+  "srs-actions",
+  "srs-suspended",
+  "srs-reset",
+  "srs-stat-today",
+  "srs-stat-streak",
+  "srs-stat-longest",
+  "srs-stat-retention",
+  "srs-heatmap",
+  "srs-forecast",
+  "srs-import-failed",
+  "srs-default-preset",
+  "srs-deck-presets",
+  "srs-use-default",
+  "srs-daily-goal",
+  "srs-cards-note",
+  "srs-type-answers",
+  "srs-extract",
+  "srs-extract-headers",
+  "srs-extract-bullets",
+  "srs-extract-tables",
+  "srs-syntax-help",
+  "srs-import-export",
+  "srs-import-csv",
+  "srs-import-apkg",
+  "srs-tab-decks",
+  "srs-tab-study",
+  "srs-tab-browse",
+  "srs-tab-stats",
+  "srs-tab-settings",
+  "srs-no-cards",
+  "srs-deck-counts",
+  "srs-preset-default",
+  "srs-preset-medical-intensive",
+  "srs-preset-language-classic",
+  "graph-filter",
+  "graph-local",
+  "graph-count",
+  "graph-timelapse",
+  "graph-settings",
+  "graph-links",
+  "graph-orphans",
+  "graph-tags",
+  "graph-scale-degree",
+  "graph-group",
+  "graph-group-none",
+  "graph-group-folder",
+  "graph-group-tag",
+  "graph-group-degree",
+  "graph-group-created",
+  "graph-color",
+  "graph-color-group",
+  "graph-color-heatmap",
+  "graph-color-age",
+  "graph-color-monochrome",
+  "graph-color-custom",
+  "graph-shape",
+  "graph-shape-circle",
+  "graph-shape-square",
+  "graph-shape-diamond",
+  "graph-shape-hexagon",
+  "graph-shape-triangle",
+  "graph-repulsion",
+  "graph-linkdistance",
+  "graph-nodesize",
+  "graph-edgewidth",
+  "graph-edgeopacity",
+  "graph-labelfontsize",
+  "action-save",
+  "proj-new",
+  "proj-name",
+  "proj-deadline",
+  "proj-color",
+  "proj-tpl-software-sprint",
+  "proj-tpl-software-sprint-desc",
+  "proj-tpl-research-paper",
+  "proj-tpl-research-paper-desc",
+  "proj-tpl-product-launch",
+  "proj-tpl-product-launch-desc",
+  "proj-tpl-blank",
+  "proj-tpl-blank-desc",
+  "proj-edit-task",
+  "proj-md-task-hint",
+  "proj-task-title",
+  "proj-task-desc",
+  "proj-project",
+  "proj-priority",
+  "proj-pri-low",
+  "proj-pri-medium",
+  "proj-pri-high",
+  "proj-due",
+  "proj-sprint",
+  "proj-tags",
+  "proj-blocked-by",
+  "proj-log-time",
+  "proj-logged",
+  "proj-schedule",
+  "proj-add-task",
+  "proj-filter",
+  "proj-blocked",
+  "proj-col-inbox",
+  "proj-col-backlog",
+  "proj-col-todo",
+  "proj-col-in-progress",
+  "proj-col-done",
+  "proj-new-sprint",
+  "proj-sprint-default",
+  "proj-weekly-review",
+  "proj-no-sprints",
+  "proj-start",
+  "proj-end",
+  "proj-status",
+  "proj-sprint-planned",
+  "proj-sprint-active",
+  "proj-sprint-done",
+  "proj-sprint-review",
+  "proj-sprint-goal",
+  "proj-progress",
+  "proj-today",
+  "proj-injected",
+  "proj-inject-daily",
+  "proj-tab-board",
+  "proj-tab-sprints",
+  "proj-tab-timeline",
+  "proj-tab-graph",
+  "proj-tab-rules",
+  "proj-rules-help",
+  "proj-add-rule",
+  "proj-all",
+  "proj-primary",
+  "proj-make-primary",
+  "proj-remove",
+  "media-add-movie",
+  "media-add-book",
+  "media-title",
+  "media-type",
+  "media-movie",
+  "media-series",
+  "media-status",
+  "media-year",
+  "media-director",
+  "media-genre",
+  "media-episodes-total",
+  "media-rating",
+  "media-quotes",
+  "media-notes",
+  "media-author",
+  "media-pages",
+  "media-page",
+  "media-book-to-read",
+  "media-book-reading",
+  "media-book-finished",
+  "media-movies",
+  "media-books",
+  "media-all",
+  "media-empty",
+  "media-page-label",
+  "media-add-highlight",
+  "media-open-note",
+  "media-episode-back",
+  "media-episode-next",
+  "media-episodes",
+  "loading",
+  "term-welcome",
+  "term-exit",
+  "term-mode",
+  "term-vault",
+  "term-system",
+  "term-system-off",
+  "term-shell",
+  "term-clear",
+  "term-input",
+  "plugin-timeout",
+  "mcp-applied",
+  "mcp-rejected",
+  "mcp-proposal",
+  "select-note-first",
+  "pet-economy-hint",
+  "mcp-desktop-only",
+  "mcp-enable",
+  "mcp-enable-hint",
+  "mcp-running",
+  "mcp-error",
+  "mcp-stopped",
+  "mcp-access",
+  "mcp-read-only",
+  "mcp-read-write",
+  "mcp-auto-apply",
+  "mcp-auto-apply-hint",
+  "mcp-port",
+  "mcp-copy-token",
+  "mcp-new-token",
+  "mcp-copy-desktop",
+  "mcp-copy-http",
+  "mcp-pending",
+  "mcp-action-create",
+  "mcp-action-update",
+  "mcp-action-delete",
+  "mcp-approve",
+  "mcp-reject",
+  "mcp-activity",
+  "dev-css-enable",
+  "dev-css",
+  "dev-plugins",
+  "dev-plugins-hint",
+  "dev-plugin-name",
+  "dev-plugin-enabled",
+  "dev-plugin-startup",
+  "dev-plugin-run",
+  "dev-plugin-code",
+  "dev-plugin-new",
+  "dev-plugin-add",
+  "dev-system-shell",
+  "dev-system-shell-hint",
+  "pref-format-bar",
+  "pref-show-properties",
+  "pref-props-reader",
+  "pref-scroll-sync",
+  "pref-fold-headings",
+  "pref-autopair-md",
+  "pref-autopair-md-hint",
+  "pref-history-auto",
+  "pref-history-auto-hint",
+  "pet-hide",
+  "pet-floating"
 ];

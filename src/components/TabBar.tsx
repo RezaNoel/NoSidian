@@ -3,7 +3,7 @@ import { For } from "solid-js";
 import { FileText, X } from "lucide-solid";
 import { t } from "../i18n";
 import { rovingKeydown } from "../a11y/roving";
-import { noteTitle } from "../lib/markdown";
+import { tabTitle as noteTitle } from "../state/views";
 import { activePath, closeTab, openNote } from "../state/vault";
 import { profile } from "../state/workspace";
 

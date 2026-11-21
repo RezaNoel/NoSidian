@@ -13,7 +13,7 @@ import observatory from "../assets/banners/observatory.webp";
 import { Modal } from "./Modal";
 import { Toggle } from "./controls";
 
-const PRESET_SRC: Record<BannerPreset, string> = { carbon, language, writer, observatory };
+export const PRESET_SRC: Record<BannerPreset, string> = { carbon, language, writer, observatory };
 const MAX_WIDTH = 1600;
 
 /** Resolves the current banner image to a URL (preset file or uploaded asset). */

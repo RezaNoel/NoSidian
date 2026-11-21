@@ -108,6 +108,10 @@ pub struct VaultWorkspaceProfile {
     pub note_modes: BTreeMap<String, ViewMode>,
     /// Image banner above the file explorer.
     pub banner: BannerConfig,
+    /// Settings added by newer UI versions (note directions, icons...), kept
+    /// as-is so saving never drops them.
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, serde_json::Value>,
 }
 
 /// Banner above the explorer. `image` is a preset id (`carbon`, `language`,
@@ -173,6 +177,7 @@ impl Default for VaultWorkspaceProfile {
             sort: SortMode::default(),
             note_modes: BTreeMap::new(),
             banner: BannerConfig::default(),
+            extra: serde_json::Map::new(),
         }
     }
 }

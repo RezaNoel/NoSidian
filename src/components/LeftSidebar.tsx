@@ -60,6 +60,11 @@ function RecentPanel() {
 const SEARCH_SORTS: SearchSort[] = ["relevance", "title", "modified"];
 const [searchQuery, setSearchQuery] = createSignal("");
 const [searchSort, setSearchSort] = createSignal<SearchSort>("relevance");
+// Tag clicks in notes, the dashboard and the graph search the vault for that tag.
+if (typeof window !== "undefined") window.addEventListener("nosidian:search", (e) => {
+  setSearchQuery((e as CustomEvent<string>).detail);
+  updateProfile((p) => { p.panels.left = true; p.leftTab = "search"; });
+});
 
 /** Highlight query terms inside a matched line. */
 function Highlighted(props: { text: string; terms: string[] }) {

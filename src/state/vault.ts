@@ -8,6 +8,9 @@ import { noteTitle } from "../lib/markdown";
 import { loadProfile, profile, updateProfile } from "./workspace";
 import { toast } from "./ui";
 import type { Vault, VaultTree } from "./types";
+import { loadVaultDocs } from "./persist";
+import { pref } from "./prefs";
+import { isAppView, tabTitle } from "./views";
 
 const SAVE_DELAY_MS = 500;
 
@@ -69,12 +72,12 @@ export async function enterVault(next: Vault): Promise<void> {
     v.setVault(next);
     v.setContents(reconcile({}));
   });
-  await loadProfile();
+  await Promise.all([loadProfile(), loadVaultDocs()]);
   await refresh();
   const existing = new Set(tree.notes.map((n) => n.path));
   updateProfile((p) => {
-    p.openTabs = p.openTabs.filter((x) => existing.has(x));
-    if (!p.activeTab || !existing.has(p.activeTab)) p.activeTab = p.openTabs[0] ?? null;
+    p.openTabs = p.openTabs.filter((x) => existing.has(x) || isAppView(x));
+    if (!p.activeTab || !(existing.has(p.activeTab) || isAppView(p.activeTab))) p.activeTab = p.openTabs[0] ?? null;
     if (!p.activeTab && existing.has("Welcome to NoSidian.md")) {
       p.openTabs = ["Welcome to NoSidian.md"];
       p.activeTab = "Welcome to NoSidian.md";
@@ -88,9 +91,9 @@ export function openNote(path: string): void {
   updateProfile((p) => {
     if (!p.openTabs.includes(path)) p.openTabs.push(path);
     p.activeTab = path;
-    p.recent = [{ path, openedAt: Date.now() }, ...p.recent.filter((r) => r.path !== path)].slice(0, 50);
+    if (!isAppView(path)) p.recent = [{ path, openedAt: Date.now() }, ...p.recent.filter((r) => r.path !== path)].slice(0, 50);
   });
-  announce(t("announce-opened", { name: noteTitle(path) }));
+  announce(t("announce-opened", { name: tabTitle(path) }));
 }
 
 export function closeTab(path: string): void {
@@ -115,6 +118,7 @@ export function setContent(path: string, text: string): void {
         const now = Date.now();
         v.setTree("notes", (n) => n.path === path, "modified", now);
         bumpIndex(400);
+        autoSnapshot(path, text, now);
       } catch (e) {
         reportError(e);
       } finally {
@@ -124,9 +128,18 @@ export function setContent(path: string, text: string): void {
   );
 }
 
+const lastSnap = new Map<string, number>();
+const SNAP_EVERY_MS = 5 * 60_000;
+function autoSnapshot(path: string, text: string, now: number) {
+  if (!path.toLowerCase().endsWith(".md") || !pref("historyAuto")) return;
+  if (now - (lastSnap.get(path) ?? 0) < SNAP_EVERY_MS) return;
+  lastSnap.set(path, now);
+  void backend.historySnapshot(path, text).catch(() => undefined);
+}
+
 const joinPath = (folder: string | undefined, name: string) => (folder ? `${folder}/${name}` : name);
 
-export async function createNote(name: string, folder?: string, body?: string): Promise<string | null> {
+export async function createNote(name: string, folder?: string, body?: string, open = true): Promise<string | null> {
   const clean = name.trim().replace(/\.md$/i, "");
   if (!clean) return null;
   const path = joinPath(folder, `${clean}.md`);
@@ -136,7 +149,8 @@ export async function createNote(name: string, folder?: string, body?: string): 
     await backend.createNote(path, text);
     v.setContents(path, text);
     await refresh();
-    openNote(path);
+    if (open) openNote(path);
+    window.dispatchEvent(new CustomEvent("nosidian:activity", { detail: "create-note" }));
     return path;
   } catch (e) {
     reportError(e);
@@ -231,3 +245,15 @@ export function toggleStar(path: string): void {
 }
 
 export { reportError };
+
+/** Append a block of text to a note, creating the note when it doesn't exist. */
+export async function appendToNote(path: string, block: string): Promise<void> {
+  if (!markdownPaths().includes(path)) {
+    const folder = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : undefined;
+    await createNote(path.split("/").pop()!.replace(/\.md$/i, ""), folder, `${block}\n`, false);
+    return;
+  }
+  await ensureLoaded(path);
+  const cur = v.contents[path] ?? "";
+  setContent(path, `${cur}${cur && !cur.endsWith("\n") ? "\n" : ""}\n${block}\n`);
+}

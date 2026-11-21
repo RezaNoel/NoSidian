@@ -16,6 +16,7 @@ import { setOverlay } from "../../state/ui";
 import { tree } from "../../state/vault";
 import { THEMES, type Density, type ExperienceLevel, type FocusProfile, type ModuleId, type RadiusScale, type SortMode, type ThemeId } from "../../state/types";
 import { Choice, Field, GlassPreview, Toggle, changeLanguage, changeTheme } from "../controls";
+import { CssSettings, McpSettings, PetSettings, PluginSettings, PrefToggle, ShellSettings, VaultTools } from "./advanced";
 
 export type TabId =
   | "general" | "workspace" | "editor" | "files" | "appearance" | "daily" | "hotkeys"
@@ -290,16 +291,24 @@ export const ENTRIES: Entry[] = [
   )),
   e("daily", ["daily-open-startup"], () => <Toggle label={t("daily-open-startup")} checked={pref("dailyOnStartup")} onChange={(v) => setPref("dailyOnStartup", v)} />),
 
+  // Editor extras
+  e("editor", ["pref-format-bar"], () => <PrefToggle k="formatBar" label={t("pref-format-bar")} />),
+  e("editor", ["pref-show-properties"], () => <PrefToggle k="showProperties" label={t("pref-show-properties")} />),
+  e("editor", ["pref-props-reader"], () => <PrefToggle k="propsInReader" label={t("pref-props-reader")} />),
+  e("editor", ["pref-scroll-sync"], () => <PrefToggle k="scrollSync" label={t("pref-scroll-sync")} />),
+  e("editor", ["pref-fold-headings"], () => <PrefToggle k="foldHeadings" label={t("pref-fold-headings")} />),
+  e("editor", ["pref-autopair-md"], () => <PrefToggle k="autopairMarkdown" label={t("pref-autopair-md")} hint={t("pref-autopair-md-hint")} />),
+  e("files", ["pref-history-auto"], () => <PrefToggle k="historyAuto" label={t("pref-history-auto")} hint={t("pref-history-auto-hint")} />),
+
   // Hotkeys
   e("hotkeys", ["settings-tab-hotkeys", "hotkeys-filter", ...COMMANDS.map((c) => c.label)], () => <Hotkeys />),
 
   // Pet
-  e("pet", ["onboarding-pet"], () => <Toggle label={t("onboarding-pet")} checked={settings.petEnabled} onChange={(v) => updateSettings((c) => { c.petEnabled = v; })} />),
-  e("pet", ["module-companion-pet"], () => <SoonCard title={t("module-companion-pet")} />),
+  e("pet", ["onboarding-pet", "pet-open", "pet-economy-hint"], () => <PetSettings />),
 
   // MCP
   moduleEntry("mcp", "mcp-bridge"),
-  e("mcp", ["settings-tab-mcp"], () => <SoonCard title={t("settings-tab-mcp")} />),
+  e("mcp", ["settings-tab-mcp", "mcp-enable", "mcp-access", "mcp-port", "mcp-copy-token", "mcp-pending"], () => <McpSettings />),
 
   // Modules and accessibility
   e("modules", ["field-screen-reader", "field-screen-reader-hint", "speech-rate", "speech-read-note"], () => (
@@ -324,12 +333,16 @@ export const ENTRIES: Entry[] = [
   moduleEntry("developer", "developer-extensions"),
   moduleEntry("developer", "integrated-terminal"),
   moduleEntry("developer", "advanced-ribbon-tools"),
+  e("developer", ["dev-system-shell", "dev-system-shell-hint"], () => <ShellSettings />),
+  e("developer", ["dev-css", "dev-css-enable"], () => <CssSettings />),
+  e("developer", ["dev-plugins", "dev-plugins-hint", "dev-plugin-add"], () => <PluginSettings />),
   e("developer", ["cmd-rebuild-index"], () => <RebuildButton />),
 
   // Vault and backup
   e("vault", ["vault-switcher-title"], () => <button class="btn" onClick={() => setOverlay("vaults")}><VaultIcon aria-hidden="true" />{t("vault-switcher-title")}</button>),
   e("vault", ["banner-title"], () => <button class="btn" onClick={() => setOverlay("banner")}><Image aria-hidden="true" />{t("banner-title")}</button>),
   e("vault", ["cmd-rebuild-index"], () => <RebuildButton />),
+  e("vault", ["import-files", "export-backup", "export-standalone"], () => <VaultTools />),
 
   // Device sync
   e("sync", ["settings-tab-sync", "sync-desc"], () => <SoonCard title={t("settings-tab-sync")} desc={t("sync-desc")} />),

@@ -1,6 +1,7 @@
 //! Tauri entry point: wires the platform-independent core to the UI through
 //! a small set of commands. Shared by desktop (`main.rs`) and mobile.
 
+mod bridge;
 mod commands;
 
 use std::sync::Mutex;
@@ -21,6 +22,7 @@ pub struct AppState {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .manage(bridge::McpBridge::default())
         .setup(|app| {
             let dir = app.path().app_config_dir()?;
             app.manage(AppState {
@@ -54,6 +56,23 @@ pub fn run() {
             commands::index_tags,
             commands::index_links,
             commands::index_summaries,
+            commands::store_read,
+            commands::store_write,
+            commands::app_store_read,
+            commands::app_store_write,
+            commands::history_list,
+            commands::history_snapshot,
+            commands::history_read,
+            commands::attachments_list,
+            commands::file_read,
+            commands::file_write,
+            commands::files_import,
+            commands::export_text,
+            commands::vault_backup,
+            bridge::terminal_exec,
+            bridge::mcp_start,
+            bridge::mcp_stop,
+            bridge::mcp_respond,
         ])
         .run(tauri::generate_context!())
         .expect("error while running NoSidian");

@@ -6,11 +6,14 @@
 pub mod assets;
 pub mod config;
 pub mod error;
+pub mod files;
 pub mod fsutil;
+pub mod history;
 pub mod index;
 pub mod modules;
 pub mod notes;
 pub mod profile;
+pub mod store;
 pub mod vault;
 
 pub use config::{AppConfig, ConfigStore};
