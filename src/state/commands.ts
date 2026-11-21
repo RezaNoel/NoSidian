@@ -90,7 +90,7 @@ export const COMMANDS: Command[] = [
   { id: "open-zen", label: "view-zen", run: () => void openView("zen") },
   { id: "zen-mode", label: "focus-zen-mode", defaultKey: "Mod+Shift+Z", run: () => setZenOpen(true) },
   { id: "present", label: "slides-present", defaultKey: "Mod+Shift+S", when: hasNote, run: () => setSlidesFor(activePath()!) },
-  { id: "terminal", label: "ribbon-terminal", defaultKey: "Ctrl+`", run: () => window.dispatchEvent(new CustomEvent("nosidian:terminal")) },
+  { id: "terminal", label: "ribbon-terminal", defaultKey: "Mod+`", run: () => window.dispatchEvent(new CustomEvent("nosidian:terminal")) },
   { id: "companion", label: "pet-studio", run: () => window.dispatchEvent(new CustomEvent("nosidian:pet")) },
   { id: "import-files", label: "import-files", run: () => void importIntoVault() },
   { id: "export-backup", label: "export-backup", run: () => void exportBackup() },
@@ -109,7 +109,9 @@ const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(n
 /** The shortcut currently bound to a command ("" when unbound). */
 export function keyFor(id: string): string {
   const custom = pref("hotkeys")[id];
-  return custom !== undefined ? custom : (commandById(id)?.defaultKey ?? "");
+  const key = custom !== undefined ? custom : (commandById(id)?.defaultKey ?? "");
+  // Off macOS the Ctrl key is reported as "Mod".
+  return isMac() ? key : key.replace(/^Ctrl\+/, "Mod+");
 }
 
 export function setKey(id: string, combo: string): void {
@@ -145,6 +147,7 @@ export function comboOf(e: Pick<KeyboardEvent, "key" | "code" | "ctrlKey" | "met
   else if (e.code === "Comma") key = ",";
   else if (e.code === "Period") key = ".";
   else if (e.code === "Slash") key = "/";
+  else if (e.code === "Backquote") key = "`";
   else key = NAMED[e.key] ?? (e.key.length === 1 ? e.key.toUpperCase() : e.key);
   parts.push(key);
   return parts.join("+");

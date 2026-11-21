@@ -318,7 +318,7 @@ export default function Dashboard() {
       <div class="dash-grid" classList={{ editing: edit() }}>
         <For each={activeHub()?.widgets ?? []}>
           {(w, i) => (
-            <section class={`widget glass-soft w-${w.type}`} style={{ "--span": w.span }} aria-label={widgetTitle(w)}
+            <section class={`widget glass-soft wt-${w.type}`} style={{ "--span": w.span }} aria-label={widgetTitle(w)}
               draggable={edit()} onDragStart={() => setDrag(i())} onDragOver={(e) => { if (drag() !== null) e.preventDefault(); }}
               onDrop={(e) => { e.preventDefault(); const d = drag(); setDrag(null); if (d !== null && d !== i()) move(d, i()); }}>
               <Show when={w.type !== "cover" || edit()}>

@@ -229,7 +229,7 @@ marked.use({
     },
     blockquote({ tokens }) {
       const inner = this.parser.parse(tokens);
-      const m = /^<p dir="auto">\[!([\w-]+)\]([+-]?)[ \t]*([^\n<]*)(?:\n|(?=<\/p>))/.exec(inner);
+      const m = /^<p dir="auto">\[!([\w-]+)\]([+-]?)[ \t]*([^\n<]*)(?:<br>\n?|\n|(?=<\/p>))/.exec(inner);
       if (!m) return `<blockquote dir="auto">${inner}</blockquote>\n`;
       const raw = m[1].toLowerCase();
       const type = (CALLOUTS as readonly string[]).includes(raw) ? raw : CALLOUT_ALIAS[raw] ?? "note";
