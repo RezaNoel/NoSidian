@@ -1028,6 +1028,64 @@ export interface MessageArgs {
   "music-add-failed": undefined;
   "music-link-unsupported": undefined;
   "amb-sounds": undefined;
+  "more-actions": undefined;
+  "srs-new-card": undefined;
+  "srs-edit-card": undefined;
+  "srs-card-type": undefined;
+  "srs-kind-basic": undefined;
+  "srs-kind-both": undefined;
+  "srs-kind-cloze": undefined;
+  "srs-front": undefined;
+  "srs-back": undefined;
+  "srs-cloze-text": undefined;
+  "srs-make-cloze": undefined;
+  "srs-cloze-help": undefined;
+  "srs-save-in": undefined;
+  "srs-save-add-another": undefined;
+  "srs-card-added": undefined;
+  "srs-card-saved": undefined;
+  "srs-card-edit-source": undefined;
+  "srs-mode-review": undefined;
+  "srs-mode-cram": undefined;
+  "srs-mode-reverse": undefined;
+  "srs-mode-quiz": undefined;
+  "srs-practice": undefined;
+  "srs-pick-answer": undefined;
+  "srs-next-card": undefined;
+  "srs-undo": undefined;
+  "srs-undone": undefined;
+  "srs-read-aloud": undefined;
+  "srs-read-aloud-auto": undefined;
+  "srs-leech": undefined;
+  "srs-leech-hint": undefined;
+  "srs-nothing-due": undefined;
+  "srs-sum-cards": undefined;
+  "srs-sum-accuracy": undefined;
+  "srs-sum-time": undefined;
+  "srs-sum-again": undefined;
+  "srs-deck": undefined;
+  "srs-filter": undefined;
+  "srs-filter-all": undefined;
+  "srs-filter-due": undefined;
+  "srs-filter-new": undefined;
+  "srs-filter-learning": undefined;
+  "srs-filter-young": undefined;
+  "srs-filter-mature": undefined;
+  "srs-filter-suspended": undefined;
+  "srs-filter-leech": undefined;
+  "srs-browse-count": { count: string | number };
+  "srs-card-stats": { lapses: string | number; reps: string | number };
+  "srs-unsuspend": undefined;
+  "srs-stat-avg-time": undefined;
+  "srs-seconds": { n: string | number };
+  "srs-stat-stages": undefined;
+  "srs-stat-answers": undefined;
+  "srs-total": undefined;
+  "srs-goal-today": { done: string | number; goal: string | number };
+  "srs-session-limit": undefined;
+  "srs-no-limit": undefined;
+  "srs-pick-deck": undefined;
+  "srs-study-all": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2059,5 +2117,63 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "music-radio-offline",
   "music-add-failed",
   "music-link-unsupported",
-  "amb-sounds"
+  "amb-sounds",
+  "more-actions",
+  "srs-new-card",
+  "srs-edit-card",
+  "srs-card-type",
+  "srs-kind-basic",
+  "srs-kind-both",
+  "srs-kind-cloze",
+  "srs-front",
+  "srs-back",
+  "srs-cloze-text",
+  "srs-make-cloze",
+  "srs-cloze-help",
+  "srs-save-in",
+  "srs-save-add-another",
+  "srs-card-added",
+  "srs-card-saved",
+  "srs-card-edit-source",
+  "srs-mode-review",
+  "srs-mode-cram",
+  "srs-mode-reverse",
+  "srs-mode-quiz",
+  "srs-practice",
+  "srs-pick-answer",
+  "srs-next-card",
+  "srs-undo",
+  "srs-undone",
+  "srs-read-aloud",
+  "srs-read-aloud-auto",
+  "srs-leech",
+  "srs-leech-hint",
+  "srs-nothing-due",
+  "srs-sum-cards",
+  "srs-sum-accuracy",
+  "srs-sum-time",
+  "srs-sum-again",
+  "srs-deck",
+  "srs-filter",
+  "srs-filter-all",
+  "srs-filter-due",
+  "srs-filter-new",
+  "srs-filter-learning",
+  "srs-filter-young",
+  "srs-filter-mature",
+  "srs-filter-suspended",
+  "srs-filter-leech",
+  "srs-browse-count",
+  "srs-card-stats",
+  "srs-unsuspend",
+  "srs-stat-avg-time",
+  "srs-seconds",
+  "srs-stat-stages",
+  "srs-stat-answers",
+  "srs-total",
+  "srs-goal-today",
+  "srs-session-limit",
+  "srs-no-limit",
+  "srs-pick-deck",
+  "srs-study-all"
 ];

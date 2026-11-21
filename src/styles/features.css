@@ -681,3 +681,77 @@ details.callout[open] > summary::after { transform: rotate(90deg); }
 .music-dock.k-soundcloud .music-dock-frame { block-size: 166px; background: transparent; }
 /* Smaller, but still loaded so the music keeps playing. */
 .music-dock.small .music-dock-frame { block-size: 0; opacity: 0; }
+
+/* Flashcards, review 3 */
+.flashcards .page-head { flex-wrap: wrap; }
+.goal-strip { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-block-end: 12px; font-size: 0.9em; }
+.goal-strip svg { inline-size: 18px; block-size: 18px; color: var(--accent); flex: none; }
+.goal-strip .meter { flex: 1; max-inline-size: 260px; margin-inline-start: auto; }
+.deck-head { display: flex; align-items: center; gap: 8px; min-inline-size: 0; }
+.deck-head svg { inline-size: 18px; block-size: 18px; color: var(--text-muted); flex: none; }
+.deck-head h3 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.deck-counts { display: flex; gap: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.deck-counts .dc { display: inline-flex; align-items: center; gap: 4px; font-size: 0.92em; }
+.deck-counts .dc svg { inline-size: 14px; block-size: 14px; }
+.deck-counts .dc.due { color: var(--accent); font-weight: 600; }
+.deck-counts .dc.fresh { color: #3f9d6b; font-weight: 600; }
+.study-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.study-title { display: flex; flex-direction: column; min-inline-size: 0; }
+.study-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.study-title span { font-size: 0.8em; }
+.study-progress { flex: 1; min-inline-size: 80px; block-size: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.study-progress span { display: block; block-size: 100%; background: var(--accent); transition: width 200ms; }
+.study-card-top { display: flex; align-items: center; gap: 4px; min-inline-size: 0; }
+.study-card-top p { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge.warn { color: #b7791f; border-color: rgb(183 121 31 / 0.4); }
+.study-card .btn.block kbd { margin-inline-start: 8px; font-size: 0.75em; opacity: 0.7; }
+.quiz-options { display: grid; gap: 8px; }
+.quiz-option { display: flex; align-items: center; gap: 10px; padding: 10px 12px; text-align: start; border: 1px solid var(--border); border-radius: var(--radius-md); background: transparent; color: var(--text-primary); cursor: pointer; }
+.quiz-option:hover:not(:disabled) { background: var(--hover); }
+.quiz-option kbd { flex: none; }
+.quiz-option .markdown-body { flex: 1; min-inline-size: 0; }
+.quiz-option .markdown-body p { margin: 0; }
+.quiz-option svg { inline-size: 18px; block-size: 18px; flex: none; }
+.quiz-option.correct { border-color: #3f9d6b; background: rgb(63 157 107 / 0.12); }
+.quiz-option.correct svg { color: #3f9d6b; }
+.quiz-option.wrong { border-color: #d9534f; background: rgb(217 83 79 / 0.12); }
+.quiz-option.wrong svg { color: #d9534f; }
+.quiz-option:disabled { cursor: default; }
+.study-summary { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px; text-align: center; }
+.study-summary-icon { inline-size: 40px; block-size: 40px; color: #3f9d6b; }
+.study-summary .w-stats { inline-size: min(100%, 360px); }
+.row.center { justify-content: center; }
+.browse-bar { display: grid; grid-template-columns: 1fr minmax(140px, 220px); gap: 8px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-row .chip[aria-checked="true"] { border-color: var(--accent-border); background: var(--accent-soft); color: var(--text-primary); }
+.card-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.card-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-md); min-inline-size: 0; }
+.card-row-text { flex: 1; min-inline-size: 0; display: flex; flex-direction: column; }
+.card-row-q, .card-row-a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-row-a { font-size: 0.86em; color: var(--text-muted); }
+.card-row-meta { font-size: 0.8em; color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.stage-dot { inline-size: 8px; block-size: 8px; border-radius: 50%; flex: none; background: var(--text-muted); display: inline-block; }
+.st-new { background: #3f9d6b; }
+.st-learning { background: #d98a3a; }
+.st-young { background: #7fa9e8; }
+.st-mature { background: var(--accent); }
+.st-suspended { background: var(--border-strong); }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.stats-wide { grid-column: 1 / -1; }
+.stats-grid > .w-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.stats-grid > .w-stats > div { flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.stats-grid > .w-stats dt { display: flex; align-items: center; gap: 6px; }
+.stats-grid > .w-stats dt svg { inline-size: 14px; block-size: 14px; color: var(--accent); }
+.stage-bar { display: flex; block-size: 12px; border-radius: 6px; overflow: hidden; background: var(--border); }
+.stage-bar span { display: block; block-size: 100%; }
+.stage-legend { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.86em; color: var(--text-secondary); }
+.stage-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.rating-bars { display: grid; gap: 8px; }
+.rating-bar { display: grid; grid-template-columns: 70px 1fr 40px; align-items: center; gap: 10px; font-size: 0.88em; }
+.rating-bar strong { text-align: end; font-variant-numeric: tabular-nums; }
+.rate-1 .meter > span { background: #d9534f; }
+.rate-2 .meter > span { background: #d98a3a; }
+.rate-3 .meter > span { background: #3f9d6b; }
+.rate-4 .meter > span { background: var(--accent); }
+.card-editor { inline-size: min(100%, 560px); }
+@media (max-width: 640px) { .browse-bar { grid-template-columns: 1fr; } .flashcards .seg-label { display: none; } }
