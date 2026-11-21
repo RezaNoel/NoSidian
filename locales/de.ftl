@@ -326,3 +326,7 @@ modules-hint = Deine Erfahrungsstufe legt die Standardwerte fest. Schalte hier j
 index-rebuilt = Suchindex neu aufgebaut: { $count } Notizen
 status-results = Ergebnisse: { $count }
 hotkeys-record-hint = Klicke auf ein Tastenkürzel und drücke dann die neuen Tasten. Esc bricht ab, Rücktaste entfernt das Kürzel.
+action-move-to = Verschieben nach…
+announce-moved = „{ $name }“ nach { $path } verschoben
+settings-rerun-onboarding = Einrichtungsassistent erneut starten
+settings-rerun-onboarding-hint = Fragt erneut nach Sprache, Erfahrungsstufe und Personalisierung. Deine Notizen und Tresore bleiben erhalten.

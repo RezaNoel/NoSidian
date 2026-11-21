@@ -7,14 +7,14 @@ import { noteTitle } from "../lib/markdown";
 import { activePath, closeTab, openNote } from "../state/vault";
 import { profile } from "../state/workspace";
 
-export function TabBar() {
+export function TabBar(props: { inline?: boolean }) {
   return (
-    <div class="tabbar" role="tablist" aria-label={t("tabs-label")} onKeyDown={rovingKeydown("[role=tab]", "horizontal")}>
+    <div class="tabbar" classList={{ inline: props.inline }} role="tablist" aria-label={t("tabs-label")} onKeyDown={rovingKeydown("[role=tab]", "horizontal")}>
       <For each={profile.openTabs}>
         {(path) => {
           const active = () => activePath() === path;
           return (
-            <div class="tab" classList={{ active: active() }} onAuxClick={(e) => e.button === 1 && closeTab(path)}>
+            <div class="tab" classList={{ active: active() }} title={path} onAuxClick={(e) => e.button === 1 && closeTab(path)}>
               <button
                 role="tab"
                 aria-selected={active()}

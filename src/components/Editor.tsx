@@ -82,6 +82,7 @@ export function Editor(props: { path: string }) {
   let host!: HTMLDivElement;
   let view: EditorView | undefined;
   const prefsSlot = new Compartment();
+  let syncing = false;
 
   onMount(() => {
     view = new EditorView({
@@ -104,7 +105,7 @@ export function Editor(props: { path: string }) {
           theme,
           prefsSlot.of(prefExtensions()),
           EditorView.updateListener.of((u) => {
-            if (u.docChanged) setContent(props.path, u.state.doc.toString());
+            if (u.docChanged && !syncing) setContent(props.path, u.state.doc.toString());
             if (u.focusChanged && u.view.hasFocus) { activeView = u.view; activeViewPath = props.path; }
           }),
         ],
@@ -133,7 +134,10 @@ export function Editor(props: { path: string }) {
   createEffect(() => {
     const text = contents[props.path] ?? "";
     if (view && text !== view.state.doc.toString()) {
+      // Text loaded or changed elsewhere: don't write it back to disk.
+      syncing = true;
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+      syncing = false;
     }
     takePending();
   });

@@ -322,3 +322,7 @@ modules-hint = 経験レベルで既定値が決まります。各モジュー�
 index-rebuilt = 検索インデックスを再構築しました：{ $count } 件のノート
 status-results = 結果：{ $count } 件
 hotkeys-record-hint = ショートカットをクリックしてから新しいキーを押してください。Esc でキャンセル、Backspace で削除します。
+action-move-to = 移動先…
+announce-moved = 「{ $name }」を { $path } に移動しました
+settings-rerun-onboarding = セットアップウィザードを再実行
+settings-rerun-onboarding-hint = 言語、経験レベル、カスタマイズをもう一度確認します。ノートと保管庫はそのまま残ります。

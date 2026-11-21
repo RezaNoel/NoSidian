@@ -189,6 +189,13 @@ export const ENTRIES: Entry[] = [
       onChange={(v) => setPref("startup", v)} />
   )),
 
+  e("general", ["settings-rerun-onboarding", "settings-rerun-onboarding-hint"], () => (
+    <div class="field">
+      <button class="btn" onClick={rerunOnboarding}><RotateCcw aria-hidden="true" />{t("settings-rerun-onboarding")}</button>
+      <span class="hint">{t("settings-rerun-onboarding-hint")}</span>
+    </div>
+  )),
+
   // Workspace
   e("workspace", ["focus-profile", "focus-clean-minimal", "focus-deep-writing", "focus-review-quiz", "focus-full-studio"], () => (
     <Choice<FocusProfile> legend={t("focus-profile")} value={profile.focusProfile}
@@ -334,6 +341,13 @@ function RebuildButton() {
       <RefreshCw aria-hidden="true" />{t("cmd-rebuild-index")}
     </button>
   );
+}
+
+/** Reset onboarding and reload into the wizard (vaults and notes stay). */
+function rerunOnboarding(): void {
+  updateSettings((c) => { c.onboarding = { completed: false, step: 0 }; });
+  // Settings save after a short debounce; reload once it has been written.
+  setTimeout(() => location.reload(), 600);
 }
 
 /** Focus profiles show or hide panels to fit the kind of work. */

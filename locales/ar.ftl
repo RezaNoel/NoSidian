@@ -330,3 +330,7 @@ modules-hint = مستوى خبرتك يحدد الإعدادات الافترا�
 index-rebuilt = أعيد بناء فهرس البحث: { $count } ملاحظة
 status-results = النتائج: { $count }
 hotkeys-record-hint = انقر على اختصار ثم اضغط المفاتيح الجديدة. ‏Esc للإلغاء، وBackspace لإزالة الاختصار.
+action-move-to = نقل إلى…
+announce-moved = تم نقل «{ $name }» إلى { $path }
+settings-rerun-onboarding = تشغيل معالج الإعداد مجددًا
+settings-rerun-onboarding-hint = يسأل مجددًا عن اللغة ومستوى الخبرة والتخصيص. تبقى ملاحظاتك وخزائنك كما هي.

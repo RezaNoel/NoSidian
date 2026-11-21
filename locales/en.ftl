@@ -336,3 +336,7 @@ modules-hint = Your experience level sets the defaults. Turn any module on or of
 index-rebuilt = Search index rebuilt: { $count } notes
 status-results = Results: { $count }
 hotkeys-record-hint = Click a shortcut, then press the new keys. Esc cancels, Backspace removes the shortcut.
+action-move-to = Move to…
+announce-moved = Moved “{ $name }” to { $path }
+settings-rerun-onboarding = Run the setup wizard again
+settings-rerun-onboarding-hint = Asks for language, experience level and personalization again. Your notes and vaults are kept.

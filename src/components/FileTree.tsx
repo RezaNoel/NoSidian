@@ -3,13 +3,13 @@
 import { For, Show, createMemo, createResource, createSignal } from "solid-js";
 import {
   ArrowUpDown, ChevronDown, ChevronRight, ChevronsDownUp, Crosshair, FilePlus, FileText, FileType,
-  Folder, FolderOpen, FolderPlus, Image, Pencil, SlidersHorizontal, Star, Trash2,
+  Folder, FolderInput, FolderOpen, FolderPlus, Image, Pencil, SlidersHorizontal, Star, Trash2,
 } from "lucide-solid";
 import { locale, t } from "../i18n";
 import { buildTree, relativeTime, visibleNodes, type TreeNode } from "../lib/tree";
 import { noteTitle } from "../lib/markdown";
 import { backend } from "../backend";
-import { activePath, indexRev, createFolder, createNote, openNote, renameEntry, toggleStar, trashEntry, tree } from "../state/vault";
+import { activePath, canMoveInto, indexRev, moveEntry, createFolder, createNote, openNote, renameEntry, toggleStar, trashEntry, tree } from "../state/vault";
 import { profile, updateProfile } from "../state/workspace";
 import { askConfirm, askText, isMobile, setDrawer, setOverlay } from "../state/ui";
 import type { NoteSummary, SortMode } from "../state/types";
@@ -95,6 +95,7 @@ export function FileTree() {
       case "Enter": case " ": activate(n); break;
       case "F2": void promptRename(n); break;
       case "Delete": void confirmTrash(n); break;
+      case "F10": if (e.shiftKey) { const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); menuFor({ clientX: r.left + 24, clientY: r.bottom }, n); } else return; break;
       default: return;
     }
     e.preventDefault();
@@ -111,6 +112,7 @@ export function FileTree() {
           ]
         : [{ label: starred ? t("action-unstar") : t("action-star"), icon: <Star />, run: () => toggleStar(n.path) }]),
       { label: t("action-rename"), icon: <Pencil />, run: () => void promptRename(n) },
+      { label: t("action-move-to"), icon: <FolderInput />, run: () => queueMicrotask(() => moveMenu(e, n)) },
       { label: t("action-delete"), icon: <Trash2 />, danger: true, run: () => void confirmTrash(n) },
     ]);
   };
@@ -157,6 +159,44 @@ export function FileTree() {
       run: () => updateProfile((p) => { p.uiButtons[`explorer.${k}`] = !show(k); }),
     })));
 
+  // Drag and drop: drag a note or folder onto a folder (or empty space for the root).
+  const [dragging, setDragging] = createSignal<string | null>(null);
+  const [dropOn, setDropOn] = createSignal<string | null>(null);
+  const DRAG_TYPE = "application/x-nosidian-path";
+  const folderFor = (n: TreeNode) => (n.kind === "folder" ? n.path : n.path.includes("/") ? n.path.slice(0, n.path.lastIndexOf("/")) : "");
+  const onDragStart = (e: DragEvent, n: TreeNode) => {
+    e.dataTransfer?.setData(DRAG_TYPE, n.path);
+    e.dataTransfer?.setData("text/plain", n.path);
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+    setDragging(n.path);
+  };
+  const onDragOver = (e: DragEvent, folder: string) => {
+    const from = dragging();
+    if (!from || !canMoveInto(from, folder)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    setDropOn(folder);
+  };
+  const onDrop = (e: DragEvent, folder: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const from = e.dataTransfer?.getData(DRAG_TYPE) || dragging();
+    setDropOn(null);
+    setDragging(null);
+    if (from && canMoveInto(from, folder)) {
+      void moveEntry(from, folder);
+      if (folder) toggle(folder, true);
+    }
+  };
+  const endDrag = () => { setDragging(null); setDropOn(null); };
+  const moveMenu = (e: { clientX: number; clientY: number }, n: TreeNode) =>
+    openMenu(e, ["", ...[...tree.folders].sort()].filter((f) => canMoveInto(n.path, f)).map((f) => ({
+      label: f || `/ ${t("files-root")}`,
+      icon: <Folder />,
+      run: () => void moveEntry(n.path, f),
+    })));
+
   const cycleSort = (e: MouseEvent) =>
     openMenu(e.currentTarget instanceof HTMLElement ? rectPoint(e.currentTarget) : e, SORTS.map((s) => ({
       label: (profile.sort === s ? "✓ " : "") + t(`sort-${s}`),
@@ -178,7 +218,8 @@ export function FileTree() {
         </div>
       </div>
       <Show when={visible().length} fallback={<p class="empty">{t("links-none")}</p>}>
-        <ul ref={list} class="tree" role="tree" aria-label={t("tab-files")}>
+        <ul ref={list} class="tree" classList={{ "drop-root": dropOn() === "" }} role="tree" aria-label={t("tab-files")}
+          onDragOver={(e) => onDragOver(e, "")} onDragLeave={(e) => { if (e.target === e.currentTarget) setDropOn(null); }} onDrop={(e) => onDrop(e, "")}>
           <For each={visible()}>
             {(n) => {
               const isFolder = n.kind === "folder";
@@ -193,7 +234,12 @@ export function FileTree() {
                   aria-selected={active()}
                   tabIndex={current() === n.path ? 0 : -1}
                   class="tree-row"
-                  classList={{ active: active(), folder: isFolder }}
+                  classList={{ active: active(), folder: isFolder, "drop-target": isFolder && dropOn() === n.path, dragging: dragging() === n.path }}
+                  draggable={true}
+                  onDragStart={(e) => onDragStart(e, n)}
+                  onDragEnd={endDrag}
+                  onDragOver={(e) => onDragOver(e, folderFor(n))}
+                  onDrop={(e) => onDrop(e, folderFor(n))}
                   style={{ "--depth": n.depth }}
                   onClick={() => { setFocused(n.path); activate(n); }}
                   onKeyDown={(e) => onKey(e, n)}

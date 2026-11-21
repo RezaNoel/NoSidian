@@ -326,3 +326,7 @@ modules-hint = आपका अनुभव स्तर डिफ़ॉल्�
 index-rebuilt = खोज इंडेक्स फिर से बनाया गया: { $count } नोट
 status-results = परिणाम: { $count }
 hotkeys-record-hint = किसी शॉर्टकट पर क्लिक करें, फिर नई कुंजियाँ दबाएँ। Esc रद्द करता है, Backspace शॉर्टकट हटाता है।
+action-move-to = यहाँ ले जाएँ…
+announce-moved = “{ $name }” को { $path } में ले जाया गया
+settings-rerun-onboarding = सेटअप विज़ार्ड फिर से चलाएँ
+settings-rerun-onboarding-hint = भाषा, अनुभव स्तर और निजीकरण फिर से पूछता है। आपके नोट्स और वॉल्ट सुरक्षित रहते हैं।

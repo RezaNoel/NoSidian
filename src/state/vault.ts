@@ -155,15 +155,9 @@ export async function createFolder(name: string, parent?: string): Promise<void>
   }
 }
 
-/** Rename a note or folder; keeps tabs, stars and recents pointing at it. */
-export async function renameEntry(from: string, newName: string): Promise<void> {
-  const isNote = tree.notes.some((n) => n.path === from);
-  const parent = from.includes("/") ? from.slice(0, from.lastIndexOf("/")) : undefined;
-  const ext = isNote ? (from.match(/\.[^./]+$/)?.[0] ?? "") : "";
-  const clean = newName.trim().replace(new RegExp(`${ext.replace(".", "\\.")}$`, "i"), "");
-  if (!clean) return;
-  const to = joinPath(parent, clean + ext);
-  if (to === from) return;
+/** Move or rename `from` to `to`, keeping tabs, stars and recents pointing at it. */
+async function relocate(from: string, to: string): Promise<boolean> {
+  if (to === from) return false;
   try {
     await backend.rename(from, to);
     const move = (p: string) => (p === from ? to : p.startsWith(from + "/") ? to + p.slice(from.length) : p);
@@ -176,11 +170,40 @@ export async function renameEntry(from: string, newName: string): Promise<void> 
         p.activeTab = p.activeTab && move(p.activeTab);
         p.starred = p.starred.map(move);
         p.recent = p.recent.map((r) => ({ ...r, path: move(r.path) }));
+        p.collapsedFolders = p.collapsedFolders.map(move);
+        p.noteModes = Object.fromEntries(Object.entries(p.noteModes).map(([k, m]) => [move(k), m]));
       });
     });
     await refresh();
+    return true;
   } catch (e) {
     reportError(e);
+    return false;
+  }
+}
+
+/** Rename a note or folder in place. */
+export async function renameEntry(from: string, newName: string): Promise<void> {
+  const isNote = tree.notes.some((n) => n.path === from);
+  const parent = from.includes("/") ? from.slice(0, from.lastIndexOf("/")) : undefined;
+  const ext = isNote ? (from.match(/\.[^./]+$/)?.[0] ?? "") : "";
+  const clean = newName.trim().replace(new RegExp(`${ext.replace(".", "\\.")}$`, "i"), "");
+  if (!clean) return;
+  await relocate(from, joinPath(parent, clean + ext));
+}
+
+/** Can `from` be moved into `folder` ("" is the vault root)? */
+export function canMoveInto(from: string, folder: string): boolean {
+  const parent = from.includes("/") ? from.slice(0, from.lastIndexOf("/")) : "";
+  return parent !== folder && folder !== from && !folder.startsWith(from + "/");
+}
+
+/** Move a note or folder into another folder ("" is the vault root). */
+export async function moveEntry(from: string, folder: string): Promise<void> {
+  if (!canMoveInto(from, folder)) return;
+  const name = from.slice(from.lastIndexOf("/") + 1);
+  if (await relocate(from, joinPath(folder || undefined, name))) {
+    announce(t("announce-moved", { name: noteTitle(name), path: folder || "/" }));
   }
 }
 

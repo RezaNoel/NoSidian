@@ -328,3 +328,7 @@ modules-hint = Уровень опыта задаёт значения по ум
 index-rebuilt = Поисковый индекс перестроен: заметок — { $count }
 status-results = Результатов: { $count }
 hotkeys-record-hint = Нажмите на сочетание, затем нажмите новые клавиши. Esc отменяет, Backspace удаляет сочетание.
+action-move-to = Переместить в…
+announce-moved = «{ $name }» перемещено в { $path }
+settings-rerun-onboarding = Запустить мастер настройки снова
+settings-rerun-onboarding-hint = Снова спросит язык, уровень опыта и персонализацию. Заметки и хранилища сохранятся.

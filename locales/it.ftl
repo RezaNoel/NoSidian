@@ -326,3 +326,7 @@ modules-hint = Il tuo livello di esperienza imposta i valori predefiniti. Attiva
 index-rebuilt = Indice di ricerca ricostruito: { $count } note
 status-results = Risultati: { $count }
 hotkeys-record-hint = Fai clic su una scorciatoia, poi premi i nuovi tasti. Esc annulla, Backspace rimuove la scorciatoia.
+action-move-to = Sposta in…
+announce-moved = “{ $name }” spostato in { $path }
+settings-rerun-onboarding = Riesegui la configurazione guidata
+settings-rerun-onboarding-hint = Chiede di nuovo lingua, livello di esperienza e personalizzazione. Note e vault restano intatti.

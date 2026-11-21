@@ -326,3 +326,7 @@ modules-hint = Seu nível de experiência define os padrões. Ative ou desative 
 index-rebuilt = Índice de busca reconstruído: { $count } notas
 status-results = Resultados: { $count }
 hotkeys-record-hint = Clique em um atalho e pressione as novas teclas. Esc cancela e Backspace remove o atalho.
+action-move-to = Mover para…
+announce-moved = “{ $name }” movido para { $path }
+settings-rerun-onboarding = Executar o assistente de configuração novamente
+settings-rerun-onboarding-hint = Pergunta de novo idioma, nível de experiência e personalização. Suas notas e cofres são mantidos.

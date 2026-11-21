@@ -326,3 +326,7 @@ modules-hint = سطح تجربه‌تان پیش‌فرض‌ها را تعیین
 index-rebuilt = فهرست جستجو بازسازی شد: { $count } یادداشت
 status-results = نتیجه‌ها: { $count }
 hotkeys-record-hint = روی یک میانبر کلیک کن و کلیدهای جدید را بزن. Esc لغو می‌کند و Backspace میانبر را حذف می‌کند.
+action-move-to = انتقال به…
+announce-moved = «{ $name }» به { $path } منتقل شد
+settings-rerun-onboarding = اجرای دوباره‌ی راه‌اندازی اولیه
+settings-rerun-onboarding-hint = دوباره زبان، سطح تجربه و شخصی‌سازی را می‌پرسد. یادداشت‌ها و گنجینه‌هایت حفظ می‌شوند.

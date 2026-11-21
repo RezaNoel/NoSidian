@@ -326,3 +326,7 @@ modules-hint = Deneyim seviyeniz varsayılanları belirler. Herhangi bir modül�
 index-rebuilt = Arama dizini yeniden oluşturuldu: { $count } not
 status-results = Sonuç: { $count }
 hotkeys-record-hint = Bir kısayola tıklayın, sonra yeni tuşlara basın. Esc iptal eder, Backspace kısayolu kaldırır.
+action-move-to = Şuraya taşı…
+announce-moved = “{ $name }” { $path } konumuna taşındı
+settings-rerun-onboarding = Kurulum sihirbazını yeniden çalıştır
+settings-rerun-onboarding-hint = Dil, deneyim düzeyi ve kişiselleştirmeyi yeniden sorar. Notların ve kasaların korunur.

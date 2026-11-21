@@ -326,3 +326,7 @@ modules-hint = Tu nivel de experiencia define los valores predeterminados. Activ
 index-rebuilt = Índice de búsqueda reconstruido: { $count } notas
 status-results = Resultados: { $count }
 hotkeys-record-hint = Haz clic en un atajo y pulsa las teclas nuevas. Esc cancela y Retroceso elimina el atajo.
+action-move-to = Mover a…
+announce-moved = «{ $name }» movido a { $path }
+settings-rerun-onboarding = Volver a ejecutar el asistente de configuración
+settings-rerun-onboarding-hint = Vuelve a preguntar idioma, nivel de experiencia y personalización. Tus notas y bóvedas se conservan.

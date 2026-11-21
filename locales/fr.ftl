@@ -326,3 +326,7 @@ modules-hint = Votre niveau d’expérience définit les valeurs par défaut. Ac
 index-rebuilt = Index de recherche reconstruit : { $count } notes
 status-results = Résultats : { $count }
 hotkeys-record-hint = Cliquez sur un raccourci, puis appuyez sur les nouvelles touches. Échap annule, Retour arrière supprime le raccourci.
+action-move-to = Déplacer vers…
+announce-moved = « { $name } » déplacé vers { $path }
+settings-rerun-onboarding = Relancer l’assistant de configuration
+settings-rerun-onboarding-hint = Redemande la langue, le niveau d’expérience et la personnalisation. Vos notes et coffres sont conservés.

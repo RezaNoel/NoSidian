@@ -322,3 +322,7 @@ modules-hint = 경험 수준에 따라 기본값이 정해집니다. 여기서 �
 index-rebuilt = 검색 색인을 다시 만들었습니다: 노트 { $count }개
 status-results = 결과: { $count }개
 hotkeys-record-hint = 단축키를 클릭한 다음 새 키를 누르세요. Esc는 취소, Backspace는 단축키를 지웁니다.
+action-move-to = 다음으로 이동…
+announce-moved = “{ $name }”을(를) { $path }(으)로 옮겼습니다
+settings-rerun-onboarding = 설정 마법사 다시 실행
+settings-rerun-onboarding-hint = 언어, 경험 수준, 개인 설정을 다시 묻습니다. 노트와 보관함은 그대로 유지됩니다.

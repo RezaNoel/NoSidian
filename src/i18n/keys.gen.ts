@@ -312,6 +312,10 @@ export interface MessageArgs {
   "index-rebuilt": { count: string | number };
   "status-results": { count: string | number };
   "hotkeys-record-hint": undefined;
+  "action-move-to": undefined;
+  "announce-moved": { name: string | number; path: string | number };
+  "settings-rerun-onboarding": undefined;
+  "settings-rerun-onboarding-hint": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -627,5 +631,9 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "modules-hint",
   "index-rebuilt",
   "status-results",
-  "hotkeys-record-hint"
+  "hotkeys-record-hint",
+  "action-move-to",
+  "announce-moved",
+  "settings-rerun-onboarding",
+  "settings-rerun-onboarding-hint"
 ];

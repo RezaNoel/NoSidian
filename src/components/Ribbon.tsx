@@ -1,6 +1,7 @@
 // Narrow vertical tool ribbon on desktop. Tools from later phases show only
 // when their module is enabled for the user's experience level.
-import { For, createMemo } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
+import { hasTitleBar } from "./TitleBar";
 import { Brain, CalendarDays, Command, FileSearch, Film, Kanban, LayoutDashboard, Network, PanelLeft, PanelRight, Presentation, Search, Terminal, Timer, Workflow } from "lucide-solid";
 import { t, type MessageKey } from "../i18n";
 import { rovingKeydown } from "../a11y/roving";
@@ -39,22 +40,22 @@ export function Ribbon() {
     <nav class="ribbon glass" aria-label={t("shell-ribbon-label")}>
       <Logo size={30} class="ribbon-logo" />
       <div class="ribbon-group" role="toolbar" aria-orientation="vertical" aria-label={t("shell-ribbon-label")} onKeyDown={rovingKeydown("button", "vertical")}>
-        <button class="icon-btn" tabIndex={0} aria-pressed={profile.panels.left} title={t("ribbon-toggle-left")} aria-label={t("ribbon-toggle-left")} onClick={() => updateProfile((p) => { p.panels.left = !p.panels.left; })}>
+        <Show when={!hasTitleBar()}><button class="icon-btn" tabIndex={0} aria-pressed={profile.panels.left} title={t("ribbon-toggle-left")} aria-label={t("ribbon-toggle-left")} onClick={() => updateProfile((p) => { p.panels.left = !p.panels.left; })}>
           <PanelLeft class="flip-rtl" />
-        </button>
+        </button></Show>
         <For each={tools()}>
-          {(tool) => (
-            <button class="icon-btn" tabIndex={-1} title={t(tool.key)} aria-label={t(tool.key)} onClick={tool.run ?? later}>
+          {(tool, i) => (
+            <button class="icon-btn" tabIndex={i() === 0 && hasTitleBar() ? 0 : -1} title={t(tool.key)} aria-label={t(tool.key)} onClick={tool.run ?? later}>
               <tool.icon />
             </button>
           )}
         </For>
       </div>
-      <div class="ribbon-group end">
+      <Show when={!hasTitleBar()}><div class="ribbon-group end">
         <button class="icon-btn" aria-pressed={profile.panels.right} title={t("ribbon-toggle-right")} aria-label={t("ribbon-toggle-right")} onClick={() => updateProfile((p) => { p.panels.right = !p.panels.right; })}>
           <PanelRight class="flip-rtl" />
         </button>
-      </div>
+      </div></Show>
     </nav>
   );
 }

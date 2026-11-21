@@ -15,6 +15,7 @@ import { Ribbon, TOOLS, later } from "./Ribbon";
 import { RightSidebar } from "./RightSidebar";
 import { StatusBar } from "./StatusBar";
 import { TabBar } from "./TabBar";
+import { hasTitleBar } from "./TitleBar";
 
 function MoreSheet() {
   const mods = createMemo(() => enabledModules(settings.experienceLevel, settings.moduleOverrides));
@@ -50,7 +51,7 @@ export function Workspace() {
         </div>
       </Show>
       <main class="main glass" id="main" aria-label={t("shell-workspace-label")}>
-        <TabBar />
+        <Show when={!hasTitleBar() || isMobile()}><TabBar /></Show>
         <NoteView />
       </main>
       <Show when={showRight()}>

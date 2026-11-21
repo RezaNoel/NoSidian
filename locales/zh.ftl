@@ -322,3 +322,7 @@ modules-hint = 你的经验等级决定默认设置。可在此开启或关闭�
 index-rebuilt = 搜索索引已重建：{ $count } 篇笔记
 status-results = 结果：{ $count }
 hotkeys-record-hint = 点击一个快捷键，然后按下新的按键。Esc 取消，Backspace 删除该快捷键。
+action-move-to = 移动到…
+announce-moved = 已将“{ $name }”移动到 { $path }
+settings-rerun-onboarding = 重新运行设置向导
+settings-rerun-onboarding-hint = 重新询问语言、经验水平和个性化设置。你的笔记和库会保留。
