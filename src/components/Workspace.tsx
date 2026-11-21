@@ -1,25 +1,22 @@
 // The main workspace: ribbon | left sidebar | note area | context panel, with a
 // status bar. On phones the sidebars become drawers and a bottom bar appears.
-import { For, Show, createMemo } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
 import { Settings, Vault as VaultIcon, X } from "lucide-solid";
 import { t } from "../i18n";
-import { enabledModules } from "../state/modules";
-import { settings } from "../state/settings";
-import { profile } from "../state/workspace";
+import { profile, updateProfile } from "../state/workspace";
 import { drawer, isMobile, setDrawer, setOverlay } from "../state/ui";
 import { LeftSidebar } from "./LeftSidebar";
 import { MobileNav } from "./MobileNav";
 import { NoteView } from "./NoteView";
 import { ResizeHandle } from "./ResizeHandle";
-import { Ribbon, TOOLS, later } from "./Ribbon";
+import { Ribbon, availableTools, later } from "./Ribbon";
 import { RightSidebar } from "./RightSidebar";
 import { StatusBar } from "./StatusBar";
 import { TabBar } from "./TabBar";
 import { hasTitleBar } from "./TitleBar";
 
 function MoreSheet() {
-  const mods = createMemo(() => enabledModules(settings.experienceLevel, settings.moduleOverrides));
-  const tools = createMemo(() => TOOLS.filter((x) => (!x.module || mods().has(x.module)) && x.key !== "ribbon-search"));
+  const tools = createMemo(availableTools);
   const pick = (fn: () => void) => { setDrawer("none"); fn(); };
   return (
     <div class="sheet glass-modal" role="dialog" aria-label={t("nav-more")}>
@@ -33,13 +30,26 @@ function MoreSheet() {
   );
 }
 
+/** Below these widths the desktop app closes the side panels; opening one again lays it over the note. */
+const NARROW_RIGHT = 1100;
+const NARROW_LEFT = 820;
+
 export function Workspace() {
+  const [width, setWidth] = createSignal(window.innerWidth);
+  const onResize = () => setWidth(window.innerWidth);
+  window.addEventListener("resize", onResize);
+  onCleanup(() => window.removeEventListener("resize", onResize));
+  const narrowRight = () => !isMobile() && width() < NARROW_RIGHT;
+  const narrowLeft = () => !isMobile() && width() < NARROW_LEFT;
+  // Close a panel when the window shrinks past its width, once per crossing.
+  createEffect(on(narrowRight, (n, was) => { if (n && !was) updateProfile((p) => { p.panels.right = false; }); }));
+  createEffect(on(narrowLeft, (n, was) => { if (n && !was) updateProfile((p) => { p.panels.left = false; }); }));
   const showLeft = () => (isMobile() ? drawer() === "left" : profile.panels.left);
   const showRight = () => (isMobile() ? drawer() === "right" : profile.panels.right);
   return (
     <div
       class="workspace"
-      classList={{ mobile: isMobile(), "no-left": !showLeft(), "no-right": !showRight() }}
+      classList={{ mobile: isMobile(), "no-left": !showLeft(), "no-right": !showRight(), "float-left": narrowLeft(), "float-right": narrowRight() }}
       style={{ "--left-width": `${profile.leftWidth}px`, "--right-width": `${profile.rightWidth}px` }}
       onKeyDown={(e) => { if (e.key === "Escape" && isMobile() && drawer() !== "none") setDrawer("none"); }}
     >

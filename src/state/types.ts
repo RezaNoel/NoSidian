@@ -124,6 +124,8 @@ export interface WorkspaceProfile {
   fileStyles: Record<string, { icon?: string; color?: string; tags?: string[] }>;
   /** Ribbon tool order (tool keys); unknown tools are appended. */
   ribbonOrder: string[];
+  /** Ribbon tools the user hid with the right-click menu. */
+  ribbonHidden: string[];
   /** Folders that are opened as projects. */
   projectFolders: string[];
 }
@@ -159,6 +161,7 @@ export function defaultProfile(): WorkspaceProfile {
     noteDirs: {},
     fileStyles: {},
     ribbonOrder: [],
+    ribbonHidden: [],
     projectFolders: [],
   };
 }

@@ -56,7 +56,13 @@ export interface VaultBackend {
   importFiles(folder: string): Promise<string[]>;
   /** Ask where to save and write text there. Returns false if cancelled. */
   saveText(defaultName: string, content: string, ext: string): Promise<boolean>;
+  /** Ask where to save and write binary data there. Returns false if cancelled. */
+  saveBytes(defaultName: string, bytes: Uint8Array, ext: string): Promise<boolean>;
   vaultBackup(): Promise<string>;
+  /** Show an entry in the system file manager (desktop only). */
+  revealInOs(path: string): Promise<void>;
+  /** Absolute path of an entry on disk (desktop) or its vault path (browser). */
+  absPath(path: string): Promise<string>;
   /** System shell (only when enabled in settings; the Rust side checks too). */
   terminalExec(command: string, shell: string, cwd: string): Promise<{ stdout: string; stderr: string; code: number }>;
   mcpStart(port: number, token: string): Promise<number>;
@@ -128,7 +134,16 @@ const tauriBackend: VaultBackend = {
     await invoke("export_text", { path, content });
     return true;
   },
+  async saveBytes(defaultName, bytes, ext) {
+    const { save } = await import("@tauri-apps/plugin-dialog");
+    const path = await save({ defaultPath: defaultName, filters: [{ name: ext.toUpperCase(), extensions: [ext] }] });
+    if (!path) return false;
+    await invoke("export_bytes", { path, bytes: Array.from(bytes) });
+    return true;
+  },
   vaultBackup: () => invoke("vault_backup"),
+  revealInOs: (path) => invoke("reveal_in_os", { path }),
+  absPath: (path) => invoke("entry_abs_path", { path }),
   terminalExec: (command, shell, cwd) => invoke("terminal_exec", { command, shell, cwd }),
   mcpStart: (port, token) => invoke("mcp_start", { port, token }),
   mcpStop: () => invoke("mcp_stop"),

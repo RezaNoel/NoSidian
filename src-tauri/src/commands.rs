@@ -328,8 +328,41 @@ pub fn export_text(path: PathBuf, content: String) -> CmdResult<()> {
     std::fs::write(&path, content).map_err(|e| CoreError::Io { path, source: e }.into())
 }
 
+/// Write binary data (an image, for example) to a path the user picked.
+#[tauri::command]
+pub fn export_bytes(path: PathBuf, bytes: Vec<u8>) -> CmdResult<()> {
+    std::fs::write(&path, bytes).map_err(|e| CoreError::Io { path, source: e }.into())
+}
+
 #[tauri::command]
 pub fn vault_backup(state: State<'_, AppState>) -> CmdResult<String> {
     let b = files::backup(&active_root(&state)?, now_ms())?;
     serde_json::to_string_pretty(&b).map_err(internal)
+}
+
+/// Show a vault entry (or the vault itself when `path` is empty) in the
+/// system file manager, with the entry selected where the OS supports it.
+#[tauri::command]
+pub fn reveal_in_os(state: State<'_, AppState>, path: String) -> CmdResult<()> {
+    let root = active_root(&state)?;
+    let target = if path.trim().is_empty() { root } else { notes::resolve(&root, &path)? };
+    #[cfg(target_os = "windows")]
+    let r = {
+        let mut arg = std::ffi::OsString::from("/select,");
+        arg.push(&target);
+        std::process::Command::new("explorer").arg(arg).spawn()
+    };
+    #[cfg(target_os = "macos")]
+    let r = std::process::Command::new("open").arg("-R").arg(&target).spawn();
+    #[cfg(all(unix, not(target_os = "macos")))]
+    let r = std::process::Command::new("xdg-open").arg(target.parent().unwrap_or(&target)).spawn();
+    r.map(|_| ()).map_err(internal)
+}
+
+/// Absolute filesystem path of a vault entry, for "copy location".
+#[tauri::command]
+pub fn entry_abs_path(state: State<'_, AppState>, path: String) -> CmdResult<String> {
+    let root = active_root(&state)?;
+    let target = if path.trim().is_empty() { root } else { notes::resolve(&root, &path)? };
+    Ok(target.to_string_lossy().into_owned())
 }

@@ -12,7 +12,8 @@
     "i18n:check": "node scripts/gen-i18n-keys.mjs --check",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "test:mcp": "vite-node scripts/mcp-e2e.ts"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.4",
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@fluent/syntax": "^0.19.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@solidjs/testing-library": "^0.8.10",
     "@tauri-apps/cli": "^2.12.6",
     "@types/katex": "^0.16.8",

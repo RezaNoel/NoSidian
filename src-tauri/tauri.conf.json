@@ -15,17 +15,18 @@
         "title": "NoSidian",
         "width": 1280,
         "height": 820,
-        "minWidth": 360,
+        "minWidth": 640,
         "minHeight": 520,
         "transparent": false,
         "decorations": false,
         "label": "main",
         "center": true,
-        "dragDropEnabled": false
+        "dragDropEnabled": false,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required"
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; img-src 'self' asset: http://asset.localhost data: blob: https:; media-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src ipc: http://ipc.localhost blob: data:"
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; img-src 'self' asset: http://asset.localhost data: blob: https:; media-src 'self' blob: data: https:; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://open.spotify.com https://w.soundcloud.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src ipc: http://ipc.localhost blob: data:"
     }
   },
   "bundle": {

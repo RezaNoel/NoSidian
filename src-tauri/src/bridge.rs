@@ -130,68 +130,95 @@ fn run_shell(command: &str, shell: &str, dir: &std::path::Path) -> CmdResult<She
 
 #[derive(Default)]
 pub struct McpBridge {
-    running: Arc<AtomicBool>,
+    running: AtomicBool,
+    generation: Arc<AtomicU64>,
     port: Mutex<u16>,
     token: Arc<Mutex<String>>,
     pending: Arc<Mutex<HashMap<u64, Sender<String>>>>,
     seq: Arc<AtomicU64>,
 }
 
-#[derive(Serialize, Clone)]
-struct McpRequest {
-    id: u64,
-    body: String,
-    client: String,
+/// One JSON-RPC body from a client, handed to whoever answers (the UI in the app).
+#[derive(Serialize, Clone, Debug)]
+pub struct McpRequest {
+    pub id: u64,
+    pub body: String,
+    pub client: String,
 }
 
-/// Start (or retarget) the bridge on 127.0.0.1:`port`. Returns the bound port.
-#[tauri::command]
-pub fn mcp_start(app: tauri::AppHandle, bridge: State<'_, McpBridge>, port: u16, token: String) -> CmdResult<u16> {
-    if token.len() < 16 {
-        return Err(CommandError { code: "invalid-path", detail: "token too short".into() });
-    }
-    *bridge.token.lock().map_err(internal)? = token;
-    if bridge.running.load(Ordering::SeqCst) {
-        return Ok(*bridge.port.lock().map_err(internal)?);
-    }
-    let listener = TcpListener::bind(("127.0.0.1", port)).map_err(|e| CommandError { code: "mcp-port", detail: e.to_string() })?;
-    let bound = listener.local_addr().map_err(internal)?.port();
-    listener.set_nonblocking(true).map_err(internal)?;
-    *bridge.port.lock().map_err(internal)? = bound;
-    bridge.running.store(true, Ordering::SeqCst);
-    let running = bridge.running.clone();
-    let token = bridge.token.clone();
-    let pending = bridge.pending.clone();
-    let seq = bridge.seq.clone();
-    std::thread::spawn(move || {
-        while running.load(Ordering::SeqCst) {
-            match listener.accept() {
-                Ok((stream, _)) => {
-                    let (app, token, pending, seq) = (app.clone(), token.clone(), pending.clone(), seq.clone());
-                    std::thread::spawn(move || {
-                        let _ = handle(stream, &app, &token, &pending, &seq, bound);
-                    });
+/// Receives each request; the answer comes back through [`McpBridge::respond`].
+pub type Forward = Arc<dyn Fn(McpRequest) + Send + Sync>;
+
+impl McpBridge {
+    /// Start (or retarget) the bridge on 127.0.0.1:`port` (0 picks a free port). Returns the bound port.
+    pub fn start(&self, port: u16, token: String, forward: Forward) -> Result<u16, String> {
+        if token.len() < 16 {
+            return Err("token too short".into());
+        }
+        *self.token.lock().map_err(|e| e.to_string())? = token;
+        if self.running.load(Ordering::SeqCst) {
+            return Ok(*self.port.lock().map_err(|e| e.to_string())?);
+        }
+        let listener = TcpListener::bind(("127.0.0.1", port)).map_err(|e| e.to_string())?;
+        let bound = listener.local_addr().map_err(|e| e.to_string())?.port();
+        listener.set_nonblocking(true).map_err(|e| e.to_string())?;
+        *self.port.lock().map_err(|e| e.to_string())? = bound;
+        self.running.store(true, Ordering::SeqCst);
+        let generation = self.generation.clone();
+        let mine = generation.load(Ordering::SeqCst);
+        let token = self.token.clone();
+        let pending = self.pending.clone();
+        let seq = self.seq.clone();
+        std::thread::spawn(move || {
+            while generation.load(Ordering::SeqCst) == mine {
+                match listener.accept() {
+                    Ok((stream, _)) => {
+                        let (forward, token, pending, seq) = (forward.clone(), token.clone(), pending.clone(), seq.clone());
+                        std::thread::spawn(move || {
+                            let _ = handle(stream, &forward, &token, &pending, &seq, bound);
+                        });
+                    }
+                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => std::thread::sleep(Duration::from_millis(50)),
+                    Err(_) => std::thread::sleep(Duration::from_millis(200)),
                 }
-                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => std::thread::sleep(Duration::from_millis(50)),
-                Err(_) => std::thread::sleep(Duration::from_millis(200)),
+            }
+        });
+        Ok(bound)
+    }
+
+    /// Stop listening; the listener thread notices within 50 ms and closes the port.
+    pub fn stop(&self) {
+        self.running.store(false, Ordering::SeqCst);
+        self.generation.fetch_add(1, Ordering::SeqCst);
+    }
+
+    /// The answer to a forwarded request (empty for notifications).
+    pub fn respond(&self, id: u64, body: String) {
+        if let Ok(mut p) = self.pending.lock() {
+            if let Some(tx) = p.remove(&id) {
+                let _ = tx.send(body);
             }
         }
+    }
+}
+
+#[tauri::command]
+pub fn mcp_start(app: tauri::AppHandle, bridge: State<'_, McpBridge>, port: u16, token: String) -> CmdResult<u16> {
+    let forward: Forward = Arc::new(move |req| {
+        let _ = app.emit("mcp-request", req);
     });
-    Ok(bound)
+    bridge.start(port, token, forward).map_err(|detail| CommandError { code: "mcp-port", detail })
 }
 
 #[tauri::command]
 pub fn mcp_stop(bridge: State<'_, McpBridge>) -> CmdResult<()> {
-    bridge.running.store(false, Ordering::SeqCst);
+    bridge.stop();
     Ok(())
 }
 
-/// The UI's answer to a forwarded request (empty for notifications).
 #[tauri::command]
 pub fn mcp_respond(bridge: State<'_, McpBridge>, id: u64, body: String) -> CmdResult<()> {
-    if let Some(tx) = bridge.pending.lock().map_err(internal)?.remove(&id) {
-        let _ = tx.send(body);
-    }
+    bridge.respond(id, body);
     Ok(())
 }
 
@@ -207,7 +234,7 @@ fn reply(stream: &mut TcpStream, status: &str, body: &str, extra: &str) -> std::
 
 fn handle(
     mut stream: TcpStream,
-    app: &tauri::AppHandle,
+    forward: &Forward,
     token: &Arc<Mutex<String>>,
     pending: &Arc<Mutex<HashMap<u64, Sender<String>>>>,
     seq: &Arc<AtomicU64>,
@@ -264,7 +291,7 @@ fn handle(
         p.insert(id, tx);
     }
     let client = headers.get("user-agent").cloned().unwrap_or_default();
-    let _ = app.emit("mcp-request", McpRequest { id, body: String::from_utf8_lossy(&body).into_owned(), client });
+    forward(McpRequest { id, body: String::from_utf8_lossy(&body).into_owned(), client });
     match rx.recv_timeout(Duration::from_secs(60)) {
         Ok(resp) if resp.is_empty() => reply(&mut stream, "202 Accepted", "", ""),
         Ok(resp) => reply(&mut stream, "200 OK", &resp, "Mcp-Session-Id: nosidian\r\n"),
@@ -274,5 +301,86 @@ fn handle(
             }
             reply(&mut stream, "504 Gateway Timeout", r#"{"error":"the app did not answer"}"#, "")
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const TOKEN: &str = "nos_mcp_test_token_123456";
+
+    fn server() -> (Arc<McpBridge>, u16) {
+        let bridge = Arc::new(McpBridge::default());
+        let weak = Arc::downgrade(&bridge);
+        let forward: Forward = Arc::new(move |req: McpRequest| {
+            if let Some(b) = weak.upgrade() {
+                let answer = if req.body.contains("notifications/") { String::new() } else { format!("{{\"echo\":{}}}", req.body) };
+                b.respond(req.id, answer);
+            }
+        });
+        let port = bridge.start(0, TOKEN.into(), forward).expect("start");
+        (bridge, port)
+    }
+
+    fn send(port: u16, raw: &str) -> (String, String) {
+        let mut s = TcpStream::connect(("127.0.0.1", port)).unwrap();
+        s.write_all(raw.as_bytes()).unwrap();
+        let mut out = String::new();
+        s.read_to_string(&mut out).unwrap();
+        let (head, body) = out.split_once("\r\n\r\n").unwrap_or((&out, ""));
+        (head.to_string(), body.to_string())
+    }
+
+    fn post(port: u16, host: &str, auth: &str, extra: &str, body: &str) -> (String, String) {
+        send(port, &format!("POST /mcp HTTP/1.1\r\nHost: {host}\r\nAuthorization: {auth}\r\nContent-Type: application/json\r\n{extra}Content-Length: {}\r\n\r\n{body}", body.len()))
+    }
+
+    #[test]
+    fn answers_authorised_loopback_requests() {
+        let (_b, port) = server();
+        let host = format!("127.0.0.1:{port}");
+        let bearer = format!("Bearer {TOKEN}");
+        let (head, body) = post(port, &host, &bearer, "", r#"{"jsonrpc":"2.0","id":1,"method":"ping"}"#);
+        assert!(head.starts_with("HTTP/1.1 200"), "{head}");
+        assert!(head.contains("Mcp-Session-Id: nosidian"));
+        assert_eq!(body, r#"{"echo":{"jsonrpc":"2.0","id":1,"method":"ping"}}"#);
+        let (head, body) = post(port, &format!("localhost:{port}"), &bearer, "", r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#);
+        assert!(head.starts_with("HTTP/1.1 202"), "{head}");
+        assert!(body.is_empty());
+    }
+
+    #[test]
+    fn refuses_everything_else() {
+        let (_b, port) = server();
+        let host = format!("127.0.0.1:{port}");
+        let bearer = format!("Bearer {TOKEN}");
+        let ping = r#"{"jsonrpc":"2.0","id":1,"method":"ping"}"#;
+        assert!(post(port, &host, "Bearer wrong", "", ping).0.starts_with("HTTP/1.1 401"));
+        assert!(post(port, &host, "", "", ping).0.starts_with("HTTP/1.1 401"));
+        assert!(post(port, &format!("evil.example:{port}"), &bearer, "", ping).0.starts_with("HTTP/1.1 403"));
+        assert!(post(port, &host, &bearer, "Origin: https://evil.example\r\n", ping).0.starts_with("HTTP/1.1 403"));
+        assert!(post(port, &host, &bearer, "Origin: http://localhost:5173\r\n", ping).0.starts_with("HTTP/1.1 200"));
+        let get = send(port, &format!("GET /mcp HTTP/1.1\r\nHost: {host}\r\nAuthorization: {bearer}\r\n\r\n"));
+        assert!(get.0.starts_with("HTTP/1.1 405"), "{}", get.0);
+        let other = send(port, &format!("POST /other HTTP/1.1\r\nHost: {host}\r\nAuthorization: {bearer}\r\nContent-Length: 0\r\n\r\n"));
+        assert!(other.0.starts_with("HTTP/1.1 404"));
+        let big = send(port, &format!("POST /mcp HTTP/1.1\r\nHost: {host}\r\nAuthorization: {bearer}\r\nContent-Length: {}\r\n\r\n", MAX_BODY + 1));
+        assert!(big.0.starts_with("HTTP/1.1 413"));
+        let bye = send(port, &format!("DELETE /mcp HTTP/1.1\r\nHost: {host}\r\nAuthorization: {bearer}\r\n\r\n"));
+        assert!(bye.0.starts_with("HTTP/1.1 200"));
+    }
+
+    #[test]
+    fn needs_a_long_token_and_can_restart() {
+        let b = McpBridge::default();
+        assert!(b.start(0, "short".into(), Arc::new(|_| {})).is_err());
+        let first = b.start(0, TOKEN.into(), Arc::new(|_| {})).unwrap();
+        assert_eq!(b.start(0, TOKEN.into(), Arc::new(|_| {})).unwrap(), first, "a running bridge keeps its port");
+        b.stop();
+        std::thread::sleep(Duration::from_millis(120));
+        let again = b.start(first, TOKEN.into(), Arc::new(|_| {})).unwrap();
+        assert_eq!(again, first, "the port is free again after stop");
+        b.stop();
     }
 }

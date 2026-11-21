@@ -884,6 +884,323 @@ export interface MessageArgs {
   "focus-default-reward": undefined;
   "pet-render-failed": undefined;
   "dash-queue-today": undefined;
+  "menu-cut": undefined;
+  "menu-copy": undefined;
+  "menu-paste": undefined;
+  "menu-select-all": undefined;
+  "ribbon-menu-reset": undefined;
+  "menu-open": undefined;
+  "menu-duplicate": undefined;
+  "menu-copy-link": undefined;
+  "menu-copy-location": undefined;
+  "menu-reveal-os": undefined;
+  "menu-reveal-vault": undefined;
+  "menu-copy-suffix": undefined;
+  "menu-copied": undefined;
+  "menu-failed": undefined;
+  "start-shortcuts": undefined;
+  "personal-birthday": undefined;
+  "greet-morning": undefined;
+  "greet-afternoon": undefined;
+  "greet-evening": undefined;
+  "greet-night": undefined;
+  "greet-morning-name": { name: string | number };
+  "greet-afternoon-name": { name: string | number };
+  "greet-evening-name": { name: string | number };
+  "greet-night-name": { name: string | number };
+  "greet-birthday": undefined;
+  "greet-birthday-name": { name: string | number };
+  "view-start": undefined;
+  "zen-back": undefined;
+  "stab-you": undefined;
+  "stab-appearance": undefined;
+  "stab-editor": undefined;
+  "stab-files": undefined;
+  "stab-features": undefined;
+  "stab-calendar": undefined;
+  "stab-companion": undefined;
+  "stab-hotkeys": undefined;
+  "stab-ai": undefined;
+  "stab-advanced": undefined;
+  "stab-access": undefined;
+  "stab-vault": undefined;
+  "settings-results": undefined;
+  "settings-found": { count: string | number };
+  "settings-related": undefined;
+  "personal-name": undefined;
+  "personal-dates": undefined;
+  "personal-date-add": undefined;
+  "personal-date-label": undefined;
+  "personal-date-when": undefined;
+  "personal-startup-sound": undefined;
+  "personal-sound-test": undefined;
+  "personal-greet": undefined;
+  "accent-custom": undefined;
+  "banner-edit": undefined;
+  "vault-switch-open": undefined;
+  "cal-show": undefined;
+  "cal-google": undefined;
+  "cal-src-daily": undefined;
+  "cal-src-tasks": undefined;
+  "cal-src-deadlines": undefined;
+  "cal-src-flashcards": undefined;
+  "cal-src-focus": undefined;
+  "cal-src-dates": undefined;
+  "cal-src-google": undefined;
+  "pet-species-bunny": undefined;
+  "pet-species-pup": undefined;
+  "pet-age": undefined;
+  "pet-age-unit": undefined;
+  "pet-age-days": { days: string | number };
+  "pet-satisfaction": undefined;
+  "pet-bond": undefined;
+  "pet-bond-new": undefined;
+  "pet-bond-friendly": undefined;
+  "pet-bond-close": undefined;
+  "pet-bond-best": undefined;
+  "pet-level-short": undefined;
+  "pet-coins": undefined;
+  "pet-card-share": undefined;
+  "pet-card-saved": undefined;
+  "pet-card-failed": undefined;
+  "pet-card-owner": { owner: string | number; tier: string | number };
+  "pet-model-title": undefined;
+  "cal-google-desktop": undefined;
+  "cal-google-unavailable": undefined;
+  "cal-google-about": undefined;
+  "cal-google-connect": undefined;
+  "cal-google-waiting": undefined;
+  "cal-google-done": undefined;
+  "cal-google-connected": undefined;
+  "cal-google-sync": undefined;
+  "cal-google-synced": undefined;
+  "cal-google-disconnect": undefined;
+  "cal-google-last": { time: string | number };
+  "cal-google-push-tasks": undefined;
+  "cal-google-push-deadlines": undefined;
+  "cal-google-push-dates": undefined;
+  "cal-mark-deadline": { name: string | number };
+  "cal-mark-tasks": { count: string | number };
+  "cal-mark-reviews": { count: string | number };
+  "cal-mark-focus": { minutes: string | number };
+  "err-google-failed": undefined;
+  "err-google-not-configured": undefined;
+  "err-google-signed-out": undefined;
+  "err-google-offline": undefined;
+  "err-google-timeout": undefined;
+  "err-google-denied": undefined;
+  "err-google-busy": undefined;
+  "cal-add-event": undefined;
+  "cal-agenda-empty": undefined;
+  "calendar-open-note": undefined;
+  "widget-countdown": undefined;
+  "countdown-set-birthday": undefined;
+  "countdown-days-to-birthday": { days: string | number };
+  "countdown-today": undefined;
+  "countdown-today-short": undefined;
+  "countdown-age": { days: string | number; months: string | number; years: string | number };
+  "countdown-lived": { days: string | number };
+  "countdown-in-days": { days: string | number };
+  "amb-effects": undefined;
+  "amb-pile": undefined;
+  "amb-sweep-hint": undefined;
+  "amb-soft-background": undefined;
+  "music-add-link": undefined;
+  "music-add-files": undefined;
+  "music-loading": undefined;
+  "music-kind-built-in": undefined;
+  "music-kind-file": undefined;
+  "music-kind-stream": undefined;
+  "music-kind-youtube": undefined;
+  "music-kind-spotify": undefined;
+  "music-kind-soundcloud": undefined;
+  "music-next": undefined;
+  "music-stop": undefined;
+  "music-built-in": undefined;
+  "music-radio": undefined;
+  "music-mine": undefined;
+  "music-mine-empty": undefined;
+  "music-player": undefined;
+  "music-expand": undefined;
+  "music-minimize": undefined;
+  "music-file-missing": undefined;
+  "music-radio-offline": undefined;
+  "music-add-failed": undefined;
+  "music-link-unsupported": undefined;
+  "amb-sounds": undefined;
+  "more-actions": undefined;
+  "srs-new-card": undefined;
+  "srs-edit-card": undefined;
+  "srs-card-type": undefined;
+  "srs-kind-basic": undefined;
+  "srs-kind-both": undefined;
+  "srs-kind-cloze": undefined;
+  "srs-front": undefined;
+  "srs-back": undefined;
+  "srs-cloze-text": undefined;
+  "srs-make-cloze": undefined;
+  "srs-cloze-help": undefined;
+  "srs-save-in": undefined;
+  "srs-save-add-another": undefined;
+  "srs-card-added": undefined;
+  "srs-card-saved": undefined;
+  "srs-card-edit-source": undefined;
+  "srs-mode-review": undefined;
+  "srs-mode-cram": undefined;
+  "srs-mode-reverse": undefined;
+  "srs-mode-quiz": undefined;
+  "srs-practice": undefined;
+  "srs-pick-answer": undefined;
+  "srs-next-card": undefined;
+  "srs-undo": undefined;
+  "srs-undone": undefined;
+  "srs-read-aloud": undefined;
+  "srs-read-aloud-auto": undefined;
+  "srs-leech": undefined;
+  "srs-leech-hint": undefined;
+  "srs-nothing-due": undefined;
+  "srs-sum-cards": undefined;
+  "srs-sum-accuracy": undefined;
+  "srs-sum-time": undefined;
+  "srs-sum-again": undefined;
+  "srs-deck": undefined;
+  "srs-filter": undefined;
+  "srs-filter-all": undefined;
+  "srs-filter-due": undefined;
+  "srs-filter-new": undefined;
+  "srs-filter-learning": undefined;
+  "srs-filter-young": undefined;
+  "srs-filter-mature": undefined;
+  "srs-filter-suspended": undefined;
+  "srs-filter-leech": undefined;
+  "srs-browse-count": { count: string | number };
+  "srs-card-stats": { lapses: string | number; reps: string | number };
+  "srs-unsuspend": undefined;
+  "srs-stat-avg-time": undefined;
+  "srs-seconds": { n: string | number };
+  "srs-stat-stages": undefined;
+  "srs-stat-answers": undefined;
+  "srs-total": undefined;
+  "srs-goal-today": { done: string | number; goal: string | number };
+  "srs-session-limit": undefined;
+  "srs-no-limit": undefined;
+  "srs-pick-deck": undefined;
+  "srs-study-all": undefined;
+  "proj-tab-list": undefined;
+  "proj-tab-automation": undefined;
+  "proj-add-blocker": undefined;
+  "proj-all-planned": undefined;
+  "proj-assignee": undefined;
+  "proj-change-deadline": undefined;
+  "proj-clear-filters": undefined;
+  "proj-color-n": { n: string | number };
+  "proj-day": undefined;
+  "proj-empty": undefined;
+  "proj-filter-keyword": undefined;
+  "proj-filter-recent": undefined;
+  "proj-filter-source": undefined;
+  "proj-from-note": undefined;
+  "proj-from-note-help": undefined;
+  "proj-from-rule": undefined;
+  "proj-inject-daily-help": undefined;
+  "proj-log-15": undefined;
+  "proj-minutes": { minutes: string | number };
+  "proj-next-day": undefined;
+  "proj-prev-day": undefined;
+  "proj-no-sprint": undefined;
+  "proj-no-tasks": undefined;
+  "proj-note-converted": { name: string | number };
+  "proj-note-missing": { name: string | number };
+  "proj-open-beside": undefined;
+  "proj-open-editor": undefined;
+  "proj-open-folder-note": undefined;
+  "proj-quick-add": undefined;
+  "proj-recent-all": undefined;
+  "proj-recent-24h": undefined;
+  "proj-recent-7d": undefined;
+  "proj-review-note": undefined;
+  "proj-rule-on": undefined;
+  "proj-schedule-at": { title: string | number };
+  "proj-show-deadline": undefined;
+  "proj-source-all": undefined;
+  "proj-source-manual": undefined;
+  "proj-source-notes": undefined;
+  "proj-sprints": undefined;
+  "proj-tasks-count": { count: string | number };
+  "proj-templates": undefined;
+  "proj-time-blocks": undefined;
+  "proj-time-this-task": undefined;
+  "proj-timer-start": undefined;
+  "proj-timer-stop": undefined;
+  "proj-timer-task": undefined;
+  "proj-unscheduled": undefined;
+  "proj-reopen": undefined;
+  "proj-mark-complete": undefined;
+  "proj-plan-at": undefined;
+  "proj-primary-project": undefined;
+  "media-add-quote": undefined;
+  "media-details": undefined;
+  "media-empty-books": undefined;
+  "media-empty-cinema": undefined;
+  "media-finished-on": { date: string | number };
+  "media-goal-none": undefined;
+  "media-goal-set": undefined;
+  "media-highlights": undefined;
+  "media-mark-watched": undefined;
+  "media-no-highlights": undefined;
+  "media-no-quotes": undefined;
+  "media-now-reading": undefined;
+  "media-now-watching": undefined;
+  "media-pages-back": undefined;
+  "media-pages-forward": undefined;
+  "media-plus-episode": undefined;
+  "media-quotes-title": undefined;
+  "media-rated": { n: string | number };
+  "media-runtime": undefined;
+  "media-started": { date: string | number };
+  "media-stat-books": undefined;
+  "media-stat-episodes": undefined;
+  "media-stat-hours": undefined;
+  "media-stat-pages": undefined;
+  "media-stat-this-year": undefined;
+  "media-stat-titles": undefined;
+  "media-watched-on": { date: string | number };
+  "media-search": undefined;
+  "media-stat-rating": undefined;
+  "mcp-stale": { path: string | number };
+  "mcp-connect-title": undefined;
+  "mcp-client-desktop": undefined;
+  "mcp-client-code": undefined;
+  "mcp-client-cursor": undefined;
+  "mcp-client-vscode": undefined;
+  "mcp-client-http": undefined;
+  "mcp-step-desktop": undefined;
+  "mcp-step-code": undefined;
+  "mcp-step-cursor": undefined;
+  "mcp-step-vscode": undefined;
+  "mcp-step-http": undefined;
+  "mcp-step-paste": undefined;
+  "mcp-step-restart": undefined;
+  "mcp-token-hint": undefined;
+  "mcp-examples-title": undefined;
+  "mcp-example-1": undefined;
+  "mcp-example-2": undefined;
+  "mcp-example-3": undefined;
+  "mcp-example-4": undefined;
+  "mcp-example-5": undefined;
+  "nav-start": undefined;
+  "tab-close-others": undefined;
+  "tab-close-right": undefined;
+  "tab-close-all": undefined;
+  "tab-copy-path": undefined;
+  "tab-show-in-files": undefined;
+  "menu-remove-recent": undefined;
+  "menu-clear-recent": undefined;
+  "tag-search": undefined;
+  "tag-copy": undefined;
+  "cal-add-yearly": undefined;
+  "cal-add-once": undefined;
+  "cal-remove-date": { name: string | number };
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -1771,5 +2088,322 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "focus-default-goal",
   "focus-default-reward",
   "pet-render-failed",
-  "dash-queue-today"
+  "dash-queue-today",
+  "menu-cut",
+  "menu-copy",
+  "menu-paste",
+  "menu-select-all",
+  "ribbon-menu-reset",
+  "menu-open",
+  "menu-duplicate",
+  "menu-copy-link",
+  "menu-copy-location",
+  "menu-reveal-os",
+  "menu-reveal-vault",
+  "menu-copy-suffix",
+  "menu-copied",
+  "menu-failed",
+  "start-shortcuts",
+  "personal-birthday",
+  "greet-morning",
+  "greet-afternoon",
+  "greet-evening",
+  "greet-night",
+  "greet-morning-name",
+  "greet-afternoon-name",
+  "greet-evening-name",
+  "greet-night-name",
+  "greet-birthday",
+  "greet-birthday-name",
+  "view-start",
+  "zen-back",
+  "stab-you",
+  "stab-appearance",
+  "stab-editor",
+  "stab-files",
+  "stab-features",
+  "stab-calendar",
+  "stab-companion",
+  "stab-hotkeys",
+  "stab-ai",
+  "stab-advanced",
+  "stab-access",
+  "stab-vault",
+  "settings-results",
+  "settings-found",
+  "settings-related",
+  "personal-name",
+  "personal-dates",
+  "personal-date-add",
+  "personal-date-label",
+  "personal-date-when",
+  "personal-startup-sound",
+  "personal-sound-test",
+  "personal-greet",
+  "accent-custom",
+  "banner-edit",
+  "vault-switch-open",
+  "cal-show",
+  "cal-google",
+  "cal-src-daily",
+  "cal-src-tasks",
+  "cal-src-deadlines",
+  "cal-src-flashcards",
+  "cal-src-focus",
+  "cal-src-dates",
+  "cal-src-google",
+  "pet-species-bunny",
+  "pet-species-pup",
+  "pet-age",
+  "pet-age-unit",
+  "pet-age-days",
+  "pet-satisfaction",
+  "pet-bond",
+  "pet-bond-new",
+  "pet-bond-friendly",
+  "pet-bond-close",
+  "pet-bond-best",
+  "pet-level-short",
+  "pet-coins",
+  "pet-card-share",
+  "pet-card-saved",
+  "pet-card-failed",
+  "pet-card-owner",
+  "pet-model-title",
+  "cal-google-desktop",
+  "cal-google-unavailable",
+  "cal-google-about",
+  "cal-google-connect",
+  "cal-google-waiting",
+  "cal-google-done",
+  "cal-google-connected",
+  "cal-google-sync",
+  "cal-google-synced",
+  "cal-google-disconnect",
+  "cal-google-last",
+  "cal-google-push-tasks",
+  "cal-google-push-deadlines",
+  "cal-google-push-dates",
+  "cal-mark-deadline",
+  "cal-mark-tasks",
+  "cal-mark-reviews",
+  "cal-mark-focus",
+  "err-google-failed",
+  "err-google-not-configured",
+  "err-google-signed-out",
+  "err-google-offline",
+  "err-google-timeout",
+  "err-google-denied",
+  "err-google-busy",
+  "cal-add-event",
+  "cal-agenda-empty",
+  "calendar-open-note",
+  "widget-countdown",
+  "countdown-set-birthday",
+  "countdown-days-to-birthday",
+  "countdown-today",
+  "countdown-today-short",
+  "countdown-age",
+  "countdown-lived",
+  "countdown-in-days",
+  "amb-effects",
+  "amb-pile",
+  "amb-sweep-hint",
+  "amb-soft-background",
+  "music-add-link",
+  "music-add-files",
+  "music-loading",
+  "music-kind-built-in",
+  "music-kind-file",
+  "music-kind-stream",
+  "music-kind-youtube",
+  "music-kind-spotify",
+  "music-kind-soundcloud",
+  "music-next",
+  "music-stop",
+  "music-built-in",
+  "music-radio",
+  "music-mine",
+  "music-mine-empty",
+  "music-player",
+  "music-expand",
+  "music-minimize",
+  "music-file-missing",
+  "music-radio-offline",
+  "music-add-failed",
+  "music-link-unsupported",
+  "amb-sounds",
+  "more-actions",
+  "srs-new-card",
+  "srs-edit-card",
+  "srs-card-type",
+  "srs-kind-basic",
+  "srs-kind-both",
+  "srs-kind-cloze",
+  "srs-front",
+  "srs-back",
+  "srs-cloze-text",
+  "srs-make-cloze",
+  "srs-cloze-help",
+  "srs-save-in",
+  "srs-save-add-another",
+  "srs-card-added",
+  "srs-card-saved",
+  "srs-card-edit-source",
+  "srs-mode-review",
+  "srs-mode-cram",
+  "srs-mode-reverse",
+  "srs-mode-quiz",
+  "srs-practice",
+  "srs-pick-answer",
+  "srs-next-card",
+  "srs-undo",
+  "srs-undone",
+  "srs-read-aloud",
+  "srs-read-aloud-auto",
+  "srs-leech",
+  "srs-leech-hint",
+  "srs-nothing-due",
+  "srs-sum-cards",
+  "srs-sum-accuracy",
+  "srs-sum-time",
+  "srs-sum-again",
+  "srs-deck",
+  "srs-filter",
+  "srs-filter-all",
+  "srs-filter-due",
+  "srs-filter-new",
+  "srs-filter-learning",
+  "srs-filter-young",
+  "srs-filter-mature",
+  "srs-filter-suspended",
+  "srs-filter-leech",
+  "srs-browse-count",
+  "srs-card-stats",
+  "srs-unsuspend",
+  "srs-stat-avg-time",
+  "srs-seconds",
+  "srs-stat-stages",
+  "srs-stat-answers",
+  "srs-total",
+  "srs-goal-today",
+  "srs-session-limit",
+  "srs-no-limit",
+  "srs-pick-deck",
+  "srs-study-all",
+  "proj-tab-list",
+  "proj-tab-automation",
+  "proj-add-blocker",
+  "proj-all-planned",
+  "proj-assignee",
+  "proj-change-deadline",
+  "proj-clear-filters",
+  "proj-color-n",
+  "proj-day",
+  "proj-empty",
+  "proj-filter-keyword",
+  "proj-filter-recent",
+  "proj-filter-source",
+  "proj-from-note",
+  "proj-from-note-help",
+  "proj-from-rule",
+  "proj-inject-daily-help",
+  "proj-log-15",
+  "proj-minutes",
+  "proj-next-day",
+  "proj-prev-day",
+  "proj-no-sprint",
+  "proj-no-tasks",
+  "proj-note-converted",
+  "proj-note-missing",
+  "proj-open-beside",
+  "proj-open-editor",
+  "proj-open-folder-note",
+  "proj-quick-add",
+  "proj-recent-all",
+  "proj-recent-24h",
+  "proj-recent-7d",
+  "proj-review-note",
+  "proj-rule-on",
+  "proj-schedule-at",
+  "proj-show-deadline",
+  "proj-source-all",
+  "proj-source-manual",
+  "proj-source-notes",
+  "proj-sprints",
+  "proj-tasks-count",
+  "proj-templates",
+  "proj-time-blocks",
+  "proj-time-this-task",
+  "proj-timer-start",
+  "proj-timer-stop",
+  "proj-timer-task",
+  "proj-unscheduled",
+  "proj-reopen",
+  "proj-mark-complete",
+  "proj-plan-at",
+  "proj-primary-project",
+  "media-add-quote",
+  "media-details",
+  "media-empty-books",
+  "media-empty-cinema",
+  "media-finished-on",
+  "media-goal-none",
+  "media-goal-set",
+  "media-highlights",
+  "media-mark-watched",
+  "media-no-highlights",
+  "media-no-quotes",
+  "media-now-reading",
+  "media-now-watching",
+  "media-pages-back",
+  "media-pages-forward",
+  "media-plus-episode",
+  "media-quotes-title",
+  "media-rated",
+  "media-runtime",
+  "media-started",
+  "media-stat-books",
+  "media-stat-episodes",
+  "media-stat-hours",
+  "media-stat-pages",
+  "media-stat-this-year",
+  "media-stat-titles",
+  "media-watched-on",
+  "media-search",
+  "media-stat-rating",
+  "mcp-stale",
+  "mcp-connect-title",
+  "mcp-client-desktop",
+  "mcp-client-code",
+  "mcp-client-cursor",
+  "mcp-client-vscode",
+  "mcp-client-http",
+  "mcp-step-desktop",
+  "mcp-step-code",
+  "mcp-step-cursor",
+  "mcp-step-vscode",
+  "mcp-step-http",
+  "mcp-step-paste",
+  "mcp-step-restart",
+  "mcp-token-hint",
+  "mcp-examples-title",
+  "mcp-example-1",
+  "mcp-example-2",
+  "mcp-example-3",
+  "mcp-example-4",
+  "mcp-example-5",
+  "nav-start",
+  "tab-close-others",
+  "tab-close-right",
+  "tab-close-all",
+  "tab-copy-path",
+  "tab-show-in-files",
+  "menu-remove-recent",
+  "menu-clear-recent",
+  "tag-search",
+  "tag-copy",
+  "cal-add-yearly",
+  "cal-add-once",
+  "cal-remove-date"
 ];

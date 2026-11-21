@@ -17,8 +17,13 @@ export interface PromptRequest {
   resolve: (v: string | boolean | null) => void;
 }
 
+/** The Windows/macOS/Linux app (or a ?titlebar preview): narrow windows hide panels instead of switching to the phone layout. */
+export const isDesktopApp = typeof window !== "undefined" &&
+  ((("__TAURI_INTERNALS__" in window) && !/Android|iPhone|iPad/i.test(navigator.userAgent)) || location.search.includes("titlebar"));
+if (isDesktopApp) document.documentElement.dataset.desktop = "true";
+
 const ui = createRoot(() => {
-  const mq = typeof window !== "undefined" && window.matchMedia ? window.matchMedia(MOBILE_QUERY) : null;
+  const mq = !isDesktopApp && typeof window !== "undefined" && window.matchMedia ? window.matchMedia(MOBILE_QUERY) : null;
   const [mobile, setMobile] = createSignal(mq?.matches ?? false);
   if (mq) {
     const on = (e: MediaQueryListEvent) => setMobile(e.matches);
@@ -35,6 +40,10 @@ const ui = createRoot(() => {
 });
 
 export const isMobile = ui.mobile;
+const zenPageSignal = createRoot(() => createSignal(false));
+/** The full-window Zen studio page. */
+export const zenPage = zenPageSignal[0];
+export const setZenPage = zenPageSignal[1];
 export const drawer = ui.drawer;
 export const setDrawer = ui.setDrawer;
 export const overlay = ui.overlay;

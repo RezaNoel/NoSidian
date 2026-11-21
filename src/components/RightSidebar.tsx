@@ -19,6 +19,7 @@ import { HistoryPanel } from "./HistoryPanel";
 import { SrsPanel } from "./flashcards/SrsPanel";
 import { FocusPanel } from "./focus/FocusPanel";
 import { isAppView } from "../state/views";
+import { noteItemMenu } from "./itemMenus";
 
 const TABS: { id: RightTab; icon: typeof Link2; label: () => string }[] = [
   { id: "links", icon: Link2, label: () => t("tab-links") },
@@ -51,7 +52,7 @@ function MentionList(props: { title: string; items: Mention[]; linkTo?: string }
           <For each={props.items}>
             {(m) => (
               <li class="mention">
-                <button class="list-row" onClick={() => go(m.path, m.line)}>
+                <button class="list-row" onClick={() => go(m.path, m.line)} onContextMenu={(e) => noteItemMenu(e, m.path)}>
                   <span class="list-title" dir="auto">{noteTitle(m.path)}</span>
                   <span class="list-snippet" dir="auto">{m.snippet}</span>
                 </button>
@@ -84,7 +85,7 @@ function LinksPanel(props: { path: string }) {
             <For each={out()}>
               {(o) => (
                 <li>
-                  <button class="list-row inline" classList={{ unresolved: !o.path }} onClick={() => (o.path ? go(o.path) : void createNote(o.target))}>
+                  <button class="list-row inline" classList={{ unresolved: !o.path }} onClick={() => (o.path ? go(o.path) : void createNote(o.target))} onContextMenu={(e) => o.path && noteItemMenu(e, o.path)}>
                     {o.path ? <ArrowUpRight class="flip-rtl" aria-hidden="true" /> : <CircleDashed aria-hidden="true" />}
                     <span class="list-title" dir="auto">{o.target}</span>
                   </button>

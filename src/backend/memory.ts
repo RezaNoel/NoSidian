@@ -218,6 +218,16 @@ export const memoryBackend: VaultBackend = {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     return true;
   },
+  async saveBytes(name, bytes) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([bytes as BlobPart]));
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    return true;
+  },
+  async revealInOs() {},
+  async absPath(path: string) { return path; },
   async vaultBackup() {
     const s = need();
     return JSON.stringify({ format: "nosidian-backup-1", createdAt: Date.now(), folders: s.folders, notes: Object.entries(s.files).map(([path, f]) => ({ path, content: f.content, modified: f.modified })) }, null, 2);

@@ -2,19 +2,18 @@
 // reward, mix ambient sounds and music, pick a background effect, and enter
 // the distraction-free full-screen mode.
 import { For, Show } from "solid-js";
-import { ArrowDown, ArrowUp, Coffee, Gift, Maximize2, Pause, Play, Plus, Trash2 } from "lucide-solid";
+import { ArrowDown, ArrowLeft, ArrowUp, Coffee, Gift, Maximize2, Play, Plus, Trash2 } from "lucide-solid";
 import { t } from "../../i18n";
 import { addBreakAfterBlock, addFocusBlock, removeZenBlock, updateZenBlock } from "../../core/zenMode";
-import { AMBIENT_MUSIC_TRACKS } from "../../core/utils/ambientMusic";
-import type { AmbientEffectType, AmbientMusicTrack } from "../../core/types";
-import { ambient, claimReward, sessionFinished, setZenOpen, syncMusic, timerIndex, timerRunning, zen } from "../../state/focus";
+import type { AmbientEffectType } from "../../core/types";
+import { claimReward, sessionFinished, setZenOpen, timerIndex, timerRunning, zen } from "../../state/focus";
 import { Toggle } from "../controls";
 import { MiniTimer } from "./MiniTimer";
-import { Mixer } from "./FocusPanel";
+import { AmbienceControls } from "./Ambience";
 
 export const EFFECTS: AmbientEffectType[] = ["none", "snow", "autumn", "sakura", "fireflies", "rain", "starfield", "embers", "aurora"];
 
-export default function ZenStudio() {
+export default function ZenStudio(props: { onClose?: () => void }) {
   const blocks = () => zen.state.blocks;
   const setBlocks = (fn: (b: typeof zen.state.blocks) => typeof zen.state.blocks) => zen.update((z) => { z.blocks = fn(JSON.parse(JSON.stringify(z.blocks))); });
   const swap = (i: number, j: number) => setBlocks((b) => { if (j < 0 || j >= b.length) return b; [b[i], b[j]] = [b[j], b[i]]; return b; });
@@ -22,6 +21,9 @@ export default function ZenStudio() {
   return (
     <div class="zen-studio page">
       <header class="page-head">
+        <Show when={props.onClose}>
+          <button class="icon-btn" title={t("zen-back")} aria-label={t("zen-back")} onClick={() => props.onClose?.()}><ArrowLeft class="flip-rtl" /></button>
+        </Show>
         <h1>{t("view-zen")}</h1>
         <button class="btn primary" onClick={() => setZenOpen(true)}><Maximize2 />{t("focus-zen-mode")}</button>
       </header>
@@ -69,25 +71,8 @@ export default function ZenStudio() {
           </Show>
         </section>
         <section class="card glass-soft">
-          <h2 class="section-title">{t("focus-music")}</h2>
-          <div class="row">
-            <select class="select" aria-label={t("focus-music")} value={ambient.state.musicTrack} onChange={(e) => { const v = e.currentTarget.value as AmbientMusicTrack; ambient.update((a) => { a.musicTrack = v; }); syncMusic(v !== "none" && ambient.state.musicPlaying); }}>
-              <option value="none">{t("focus-music-none")}</option>
-              <For each={AMBIENT_MUSIC_TRACKS}>{(tr) => <option value={tr.id}>{t(`music-${tr.id}`)}</option>}</For>
-            </select>
-            <button class="icon-btn" aria-pressed={ambient.state.musicPlaying} aria-label={ambient.state.musicPlaying ? t("focus-pause") : t("focus-start")} disabled={ambient.state.musicTrack === "none"} onClick={() => syncMusic(!ambient.state.musicPlaying)}>
-              {ambient.state.musicPlaying ? <Pause /> : <Play />}
-            </button>
-          </div>
-          <label class="mixer-row"><span>{t("focus-volume")}</span><input type="range" min="0" max="1" step="0.05" value={ambient.state.musicVolume} onInput={(e) => { const v = Number(e.currentTarget.value); ambient.update((a) => { a.musicVolume = v; }); syncMusic(); }} /></label>
-          <h2 class="section-title">{t("focus-sounds")}</h2>
-          <Mixer />
-          <h2 class="section-title">{t("focus-effect")}</h2>
-          <select class="select" aria-label={t("focus-effect")} value={ambient.state.effect} onChange={(e) => { const v = e.currentTarget.value as AmbientEffectType; ambient.update((a) => { a.effect = v; }); }}>
-            <For each={EFFECTS}>{(ef) => <option value={ef}>{t(`effect-${ef}`)}</option>}</For>
-          </select>
-          <label class="mixer-row"><span>{t("focus-density")}</span><input type="range" min="20" max="100" value={ambient.state.density} onInput={(e) => { const v = Number(e.currentTarget.value); ambient.update((a) => { a.density = v; }); }} /></label>
-          <label class="mixer-row"><span>{t("focus-wind")}</span><input type="range" min="-10" max="10" value={ambient.state.wind} onInput={(e) => { const v = Number(e.currentTarget.value); ambient.update((a) => { a.wind = v; }); }} /></label>
+          <h2 class="section-title">{t("footer-ambient")}</h2>
+          <AmbienceControls />
         </section>
       </div>
     </div>

@@ -6,11 +6,10 @@ import { Show, createSignal, onCleanup, onMount } from "solid-js";
 import { ChevronDown, Copy, FolderOpen, Minus, PanelLeft, PanelRight, Plus, Search, Square, Star, X } from "lucide-solid";
 import { t } from "../i18n";
 import { inTauri } from "../state/backend";
-import { tabTitle as noteTitle } from "../state/views";
+import { openView, tabTitle as noteTitle } from "../state/views";
 import { activePath, openNote, vault } from "../state/vault";
 import { profile, updateProfile } from "../state/workspace";
 import type { LeftTab } from "../state/types";
-import { commandById } from "../state/commands";
 import { Logo } from "./Logo";
 import { TabBar } from "./TabBar";
 import { ModeSwitch } from "./NoteView";
@@ -80,7 +79,7 @@ export function TitleBar() {
         </div>
         <div class="tb-tabs" data-tauri-drag-region>
           <TabBar inline />
-          <button class="tb-btn tb-new" title={t("action-new-note")} aria-label={t("action-new-note")} onClick={() => void commandById("new-note")?.run()}><Plus /></button>
+          <button class="tb-btn tb-new" title={t("view-start")} aria-label={t("view-start")} onClick={() => void openView("start")}><Plus /></button>
           <span class="tb-fill" data-tauri-drag-region />
         </div>
         <div class="tb-group">

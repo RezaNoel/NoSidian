@@ -1,6 +1,7 @@
-// Right sidebar "Focus" tab: timer, quick sound mixer and a link to Zen studio.
+// Right sidebar "Focus" tab: timer, Zen links and the ambience button.
 import { For } from "solid-js";
-import { Maximize2 } from "lucide-solid";
+import { CloudSun, Maximize2 } from "lucide-solid";
+import { setAmbOpen } from "./Ambience";
 import { t } from "../../i18n";
 import { SOUND_CHANNELS } from "../../core/utils/audio";
 import { setChannel, setZenOpen, zen } from "../../state/focus";
@@ -30,8 +31,7 @@ export function FocusPanel() {
         <button class="btn sm" onClick={() => setZenOpen(true)}><Maximize2 />{t("focus-zen-mode")}</button>
         <button class="btn sm" onClick={() => void openView("zen")}>{t("view-zen")}</button>
       </div>
-      <h3 class="section-title">{t("focus-sounds")}</h3>
-      <Mixer />
+      <button class="btn sm amb-toggle" onClick={() => setAmbOpen(true)}><CloudSun />{t("footer-ambient")}</button>
     </div>
   );
 }

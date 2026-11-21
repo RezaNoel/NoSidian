@@ -48,6 +48,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: npm ci
       - run: npx tauri build --bundles nsis
+        env:
+          # Google Calendar sign-in (desktop OAuth client). Read at compile time by src-tauri.
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       - uses: actions/upload-artifact@v4
         with:
           name: NoSidian-windows-exe

@@ -3,15 +3,16 @@
 import { For, Show, createMemo, createResource, createSignal } from "solid-js";
 import {
   ArrowUpDown, ChevronDown, ChevronRight, ChevronsDownUp, Crosshair, FilePlus, FileText, FileType,
-  Folder, FolderInput, FolderOpen, FolderPlus, Image, Pencil, SlidersHorizontal, Star, Trash2,
+  Copy, CopyPlus, ExternalLink, Folder, FolderInput, FolderOpen, FolderPlus, FolderSearch, Link, Pencil, SlidersHorizontal, Star, Trash2,
 } from "lucide-solid";
+import { inTauri } from "../state/backend";
 import { locale, t } from "../i18n";
 import { buildTree, relativeTime, visibleNodes, type TreeNode } from "../lib/tree";
 import { noteTitle } from "../lib/markdown";
 import { backend } from "../backend";
 import { activePath, canMoveInto, indexRev, moveEntry, createFolder, createNote, openNote, renameEntry, toggleStar, trashEntry, tree } from "../state/vault";
 import { profile, updateProfile } from "../state/workspace";
-import { askConfirm, askText, isMobile, setDrawer, setOverlay } from "../state/ui";
+import { askConfirm, askText, isMobile, setDrawer, toast } from "../state/ui";
 import type { NoteSummary, SortMode } from "../state/types";
 import { openMenu } from "./ContextMenu";
 import { pref } from "../state/prefs";
@@ -19,6 +20,10 @@ import { pref } from "../state/prefs";
 type DisplayKey = "updated" | "last-opened" | "words" | "backlinks" | "tags";
 const DISPLAY: DisplayKey[] = ["updated", "last-opened", "words", "backlinks", "tags"];
 const SORTS: SortMode[] = ["name-asc", "name-desc", "modified-new", "modified-old", "created-new", "created-old"];
+
+async function copyText(text: string) {
+  try { await navigator.clipboard.writeText(text); toast(t("menu-copied")); } catch { toast(t("menu-failed")); }
+}
 
 export async function promptNewNote(folder?: string) {
   const name = await askText(t("prompt-note-name"), t("untitled-note"), t("action-create"));
@@ -41,6 +46,20 @@ async function confirmTrash(node: { path: string; name: string }) {
     await trashEntry(node.path);
   }
 }
+
+/** Show a file or folder in the Files panel: open the panel, expand its folders and focus it. */
+export function revealInFiles(path: string): void {
+  updateProfile((p) => {
+    p.panels.left = true;
+    p.leftTab = "files";
+    const parts = path.split("/");
+    const ancestors = parts.map((_, i) => parts.slice(0, i + 1).join("/"));
+    p.collapsedFolders = p.collapsedFolders.filter((f) => !ancestors.includes(f));
+  });
+  if (isMobile()) setDrawer("left");
+  setTimeout(() => document.querySelector<HTMLElement>(`.tree [data-path="${CSS.escape(path)}"]`)?.focus(), 120);
+}
+if (typeof window !== "undefined") window.addEventListener("nosidian:reveal", (e) => { const d = (e as CustomEvent<string>).detail; if (d) revealInFiles(d); });
 
 export function FileTree() {
   let list!: HTMLUListElement;
@@ -104,17 +123,40 @@ export function FileTree() {
   const menuFor = (e: MouseEvent | { clientX: number; clientY: number }, n: TreeNode) => {
     const isFolder = n.kind === "folder";
     const starred = profile.starred.includes(n.path);
+    const desktop = inTauri();
     openMenu(e, [
       ...(isFolder
         ? [
             { label: t("action-new-note"), icon: <FilePlus />, run: () => void promptNewNote(n.path) },
             { label: t("action-new-folder"), icon: <FolderPlus />, run: () => void promptNewFolder(n.path) },
           ]
-        : [{ label: starred ? t("action-unstar") : t("action-star"), icon: <Star />, run: () => toggleStar(n.path) }]),
-      { label: t("action-rename"), icon: <Pencil />, run: () => void promptRename(n) },
+        : [
+            { label: t("menu-open"), icon: <ExternalLink />, run: () => openNote(n.path) },
+            { label: starred ? t("action-unstar") : t("action-star"), icon: <Star />, run: () => toggleStar(n.path) },
+          ]),
+      ...(n.kind === "markdown" ? [{ label: t("menu-duplicate"), icon: <CopyPlus />, run: () => void duplicate(n.path) }] : []),
+      { label: t("menu-copy-link"), icon: <Link />, sep: true, run: () => void copyText(n.kind === "folder" ? n.path : `[[${n.kind === "markdown" ? n.path.replace(/\.md$/i, "") : n.path}]]`) },
+      { label: t("menu-copy-location"), icon: <Copy />, run: () => void backend.absPath(n.path).then(copyText) },
+      ...(desktop ? [{ label: t("menu-reveal-os"), icon: <FolderSearch />, run: () => void backend.revealInOs(n.path).catch(() => toast(t("menu-failed"))) }] : []),
+      { label: t("action-rename"), icon: <Pencil />, sep: true, run: () => void promptRename(n) },
       { label: t("action-move-to"), icon: <FolderInput />, run: () => queueMicrotask(() => moveMenu(e, n)) },
-      { label: t("action-delete"), icon: <Trash2 />, danger: true, run: () => void confirmTrash(n) },
+      { label: t("action-delete"), icon: <Trash2 />, danger: true, sep: true, run: () => void confirmTrash(n) },
     ]);
+  };
+
+  const collapseAll = () => updateProfile((p) => { p.collapsedFolders = [...tree.folders]; });
+  /** Right-click on empty space in the explorer. */
+  const areaMenu = (e: MouseEvent) => openMenu(e, [
+    { label: t("action-new-note"), icon: <FilePlus />, run: () => void promptNewNote() },
+    { label: t("action-new-folder"), icon: <FolderPlus />, run: () => void promptNewFolder() },
+    { label: t("action-collapse-all"), icon: <ChevronsDownUp />, sep: true, run: collapseAll },
+    ...(inTauri() ? [{ label: t("menu-reveal-vault"), icon: <FolderSearch />, run: () => void backend.revealInOs("") }] : []),
+  ]);
+  const duplicate = async (path: string) => {
+    const base = path.replace(/\.md$/i, "");
+    const name = `${base.split("/").pop()} ${t("menu-copy-suffix")}`;
+    const folder = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : undefined;
+    await createNote(name, folder, await backend.read(path));
   };
 
   // Long-press opens the context menu on touch screens.
@@ -155,7 +197,8 @@ export function FileTree() {
   };
   const displayMenu = (e: MouseEvent) =>
     openMenu(e.currentTarget instanceof HTMLElement ? rectPoint(e.currentTarget) : e, DISPLAY.map((k) => ({
-      label: (show(k) ? "✓ " : "") + t(`explorer-${k}`),
+      label: t(`explorer-${k}`),
+      checked: show(k),
       run: () => updateProfile((p) => { p.uiButtons[`explorer.${k}`] = !show(k); }),
     })));
 
@@ -199,26 +242,26 @@ export function FileTree() {
 
   const cycleSort = (e: MouseEvent) =>
     openMenu(e.currentTarget instanceof HTMLElement ? rectPoint(e.currentTarget) : e, SORTS.map((s) => ({
-      label: (profile.sort === s ? "✓ " : "") + t(`sort-${s}`),
+      label: t(`sort-${s}`),
+      mark: profile.sort === s,
       run: () => updateProfile((p) => { p.sort = s; }),
     })));
 
   return (
     <div class="panel files-panel">
-      <div class="panel-head">
-        <h2 class="section-title">{t("tab-files")}</h2>
+      <div class="panel-head tools-only" onContextMenu={areaMenu}>
+        <h2 class="sr-only">{t("tab-files")}</h2>
         <div class="panel-tools" role="toolbar" aria-label={t("tab-files")}>
           <button class="icon-btn sm" title={t("action-new-note")} aria-label={t("action-new-note")} onClick={() => void promptNewNote()}><FilePlus /></button>
           <button class="icon-btn sm" title={t("action-new-folder")} aria-label={t("action-new-folder")} onClick={() => void promptNewFolder()}><FolderPlus /></button>
           <button class="icon-btn sm" title={`${t("action-sort")}: ${t(`sort-${profile.sort}`)}`} aria-label={t("action-sort")} aria-haspopup="menu" onClick={cycleSort}><ArrowUpDown /></button>
           <button class="icon-btn sm" title={t("explorer-display")} aria-label={t("explorer-display")} aria-haspopup="menu" onClick={displayMenu}><SlidersHorizontal /></button>
           <button class="icon-btn sm" title={t("action-reveal-active")} aria-label={t("action-reveal-active")} onClick={reveal} disabled={!activePath()}><Crosshair /></button>
-          <button class="icon-btn sm" title={t("action-collapse-all")} aria-label={t("action-collapse-all")} onClick={() => updateProfile((p) => { p.collapsedFolders = [...tree.folders]; })}><ChevronsDownUp /></button>
-          <button class="icon-btn sm" aria-pressed={profile.banner.enabled} title={t("banner-title")} aria-label={t("banner-title")} aria-haspopup="dialog" onClick={() => setOverlay("banner")}><Image /></button>
+          <button class="icon-btn sm" title={t("action-collapse-all")} aria-label={t("action-collapse-all")} onClick={collapseAll}><ChevronsDownUp /></button>
         </div>
       </div>
       <Show when={visible().length} fallback={<p class="empty">{t("links-none")}</p>}>
-        <ul ref={list} class="tree" classList={{ "drop-root": dropOn() === "" }} role="tree" aria-label={t("tab-files")}
+        <ul ref={list} class="tree" classList={{ "drop-root": dropOn() === "" }} role="tree" aria-label={t("tab-files")} onContextMenu={areaMenu}
           onDragOver={(e) => onDragOver(e, "")} onDragLeave={(e) => { if (e.target === e.currentTarget) setDropOn(null); }} onDrop={(e) => onDrop(e, "")}>
           <For each={visible()}>
             {(n) => {

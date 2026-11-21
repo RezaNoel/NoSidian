@@ -4,10 +4,12 @@ import { t } from "./i18n";
 import { LiveAnnouncer } from "./a11y/announcer";
 import { settings } from "./state/settings";
 import { restoreVault } from "./state/session";
-import { overlay, setOverlay, toasts } from "./state/ui";
+import { overlay, setOverlay, setZenPage, toasts, zenPage } from "./state/ui";
+import { Suspense, lazy } from "solid-js";
+const ZenStudioPage = lazy(() => import("./components/focus/ZenStudio"));
 import { vault } from "./state/vault";
 import { BannerSettings } from "./components/Banner";
-import { ContextMenu } from "./components/ContextMenu";
+import { ContextMenu, installContextMenuGuard, installSelectEnhancer } from "./components/ContextMenu";
 import { Dialogs } from "./components/Dialogs";
 import { Modal } from "./components/Modal";
 import { Onboarding } from "./components/Onboarding";
@@ -23,8 +25,12 @@ import { enabledModules } from "./state/modules";
 import { Lightbox, SlidesOverlay } from "./components/Overlays";
 import { ZenOverlay } from "./components/focus/ZenOverlay";
 import { AmbientOverlay } from "./components/focus/AmbientOverlay";
+import { AmbiencePopover, MusicDock } from "./components/focus/Ambience";
 import { PetCompanion, PetStudio, openPetStudio } from "./components/pet/PetCard";
 import { TerminalDrawer, terminalOpen } from "./components/terminal/Terminal";
+import { welcome } from "./state/personal";
+import { toast } from "./state/ui";
+import { announce } from "./a11y/announcer";
 import { applyCustomCss, dev, mcp, runStartupPlugins, syncMcp } from "./state/devtools";
 
 bindPrompts((folder) => promptNewNote(folder), () => promptNewFolder());
@@ -36,6 +42,8 @@ export function App() {
 
   createEffect(() => applyPrefsToDocument());
   onCleanup(installHotkeys());
+  installContextMenuGuard();
+  installSelectEnhancer();
 
   const mods = createMemo(() => enabledModules(settings.experienceLevel, settings.moduleOverrides));
   const inWorkspace = () => phase() === "workspace" && !!vault();
@@ -43,6 +51,8 @@ export function App() {
   window.addEventListener("nosidian:pet", onPet);
   onCleanup(() => window.removeEventListener("nosidian:pet", onPet));
   createEffect(() => { if (dev.ready()) applyCustomCss(); });
+  // Start sound and greeting once the app has opened (onboarding done).
+  createEffect(() => { if (phase() !== "onboarding" && settings.onboarding.completed) void welcome(toast, announce); });
   let pluginsStarted = false;
   createEffect(() => {
     if (!inWorkspace() || !dev.ready() || pluginsStarted) return;
@@ -91,6 +101,13 @@ export function App() {
       <Show when={overlay() === "banner"}><BannerSettings onClose={() => setOverlay("none")} /></Show>
       <Show when={inWorkspace()}>
         <Show when={mods().has("ambient-effects")}><AmbientOverlay /></Show>
+        <Show when={zenPage()}>
+          <section class="zen-page" aria-label={t("view-zen")} onKeyDown={(e) => { if (e.key === "Escape" && !e.defaultPrevented) setZenPage(false); }}>
+            <Suspense><ZenStudioPage onClose={() => setZenPage(false)} /></Suspense>
+          </section>
+        </Show>
+        <AmbiencePopover />
+        <MusicDock />
         <ZenOverlay />
         <SlidesOverlay />
         <Show when={mods().has("integrated-terminal") && terminalOpen()}><TerminalDrawer /></Show>
