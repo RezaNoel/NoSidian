@@ -60,11 +60,13 @@ jobs:
         with: { node-version: 22, cache: npm }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
-      - uses: android-actions/setup-android@v3
+      # The runner image ships the Android SDK; only the NDK needs installing.
       - name: Android NDK
         run: |
-          sdkmanager --install "ndk;${NDK_VERSION}"
-          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
+          SDKM="$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin | sort -V | tail -1)/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" --install "ndk;${NDK_VERSION}" "platforms;android-35" "build-tools;35.0.0"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
@@ -80,7 +82,7 @@ jobs:
           if [ -n "$KEYSTORE_B64" ]; then
             npx tauri android build --apk --ci
             echo "$KEYSTORE_B64" | base64 -d > release.jks
-            BT=$(ls -d "$ANDROID_SDK_ROOT"/build-tools/* | sort -V | tail -1)
+            BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
             for f in src-tauri/gen/android/app/build/outputs/apk/universal/release/*-unsigned.apk; do
               "$BT/zipalign" -f 4 "$f" aligned.apk
               "$BT/apksigner" sign --ks release.jks --ks-pass env:KEYSTORE_PASSWORD --ks-key-alias "$KEY_ALIAS" --out NoSidian.apk aligned.apk
