@@ -1,7 +1,11 @@
 // Dashboard: switchable hubs of widgets (notes, tasks, study, focus, media,
 // pet). Edit mode adds, removes, resizes and reorders widgets.
-import { For, Match, Show, Switch, createMemo, createResource, createSignal, onMount } from "solid-js";
-import { ArrowLeft, ArrowRight, Check, Download, Pencil, Plus, Trash2, Upload, X } from "lucide-solid";
+import { For, Match, Show, Switch, createMemo, createResource, createSignal, onMount, type Component } from "solid-js";
+import {
+  ArrowLeft, ArrowRight, BarChart3, BookOpen, Brain, CalendarCheck, CalendarDays, CalendarHeart, Check, Clapperboard, Code2, Download, FilePlus2, FileText, FolderOpen,
+  GraduationCap, Hash, History, Hourglass, Image, Inbox, KanbanSquare, Layers, LayoutGrid, ListChecks, Network, PawPrint, PenLine, Pencil, Plus, SquareTerminal,
+  Star, StickyNote, Tags, Timer, Trash2, Upload, X, Zap,
+} from "lucide-solid";
 import { locale, t } from "../../i18n";
 import { backend } from "../../backend";
 import { DASHBOARD_TEMPLATES, DASHBOARD_WIDGET_CATALOG, createCustomHub, exportDashboardJson, parseImportedDashboardJson, stepWidgetSpan } from "../../core/dashboardPresets";
@@ -17,7 +21,7 @@ import { openView } from "../../state/views";
 import { countDeck } from "../../state/srs";
 import { allTasks, primaryProject, toggleTask } from "../../state/projects";
 import { media } from "../../state/media";
-import { askConfirm, askText, toast } from "../../state/ui";
+import { askConfirm, askText, isMobile, toast } from "../../state/ui";
 import { noteTitle } from "../../lib/markdown";
 import { PRESET_SRC } from "../Banner";
 import { CalendarPanel } from "../Calendar";
@@ -26,6 +30,19 @@ import { promptNewNote } from "../FileTree";
 import { MiniTimer } from "../focus/MiniTimer";
 import { PetCard } from "../pet/PetCard";
 import { Modal } from "../Modal";
+import { openMenu, type MenuItem } from "../ContextMenu";
+
+
+type IconC = Component<{ class?: string; "aria-hidden"?: boolean | "true" }>;
+const WIDGET_ICON: Record<DashboardWidgetType, IconC> = {
+  cover: Image, "deadline-hero": Hourglass, stats: BarChart3, "recent-notes": History, todos: ListChecks, calendar: CalendarDays, shortcuts: Zap,
+  scratchpad: StickyNote, "project-spotlight": KanbanSquare, "pet-home": PawPrint, "flashcard-queue": Layers, "pomodoro-timer": Timer, "starred-notes": Star,
+  "tag-explorer": Hash, "reading-shelf": BookOpen, watchlist: Clapperboard, "writing-goal": PenLine, "quick-capture": Inbox, countdown: CalendarHeart,
+};
+const SHORTCUT_ICON: Record<DashboardShortcutItem["actionType"], IconC> = {
+  note: FileText, folder: FolderOpen, daily: CalendarCheck, flashcards: Brain, graph: Network, "new-note": FilePlus2, projects: KanbanSquare, media: Clapperboard, terminal: SquareTerminal,
+};
+const HUB_ICON: Record<string, IconC> = { study: GraduationCap, writer: PenLine, developer: Code2 };
 
 const hubName = (h: DashboardConfig) => h.name || t(`hub-${h.templateId === "writer" || h.templateId === "developer" ? h.templateId : "study"}`);
 const widgetTitle = (w: DashboardWidget) => w.title || t(`widget-${w.type}`);
@@ -84,10 +101,10 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
       </Match>
       <Match when={w().type === "stats"}>
         <dl class="w-stats">
-          <div><dt>{t("dash-stat-notes")}</dt><dd>{num(tree.notes.filter((n) => n.kind === "markdown").length)}</dd></div>
-          <div><dt>{t("dash-stat-words")}</dt><dd>{num(corpus().reduce((n, x) => n + computeNoteStats(x.content).words, 0))}</dd></div>
-          <div><dt>{t("dash-stat-tags")}</dt><dd>{num(tags().length)}</dd></div>
-          <div><dt>{t("dash-stat-due")}</dt><dd>{num(countDeck(null).due)}</dd></div>
+          <div><dt><FileText aria-hidden="true" />{t("dash-stat-notes")}</dt><dd>{num(tree.notes.filter((n) => n.kind === "markdown").length)}</dd></div>
+          <div><dt><PenLine aria-hidden="true" />{t("dash-stat-words")}</dt><dd>{num(corpus().reduce((n, x) => n + computeNoteStats(x.content).words, 0))}</dd></div>
+          <div><dt><Tags aria-hidden="true" />{t("dash-stat-tags")}</dt><dd>{num(tags().length)}</dd></div>
+          <div><dt><Brain aria-hidden="true" />{t("dash-stat-due")}</dt><dd>{num(countDeck(null).due)}</dd></div>
         </dl>
       </Match>
       <Match when={w().type === "recent-notes"}>
@@ -115,10 +132,13 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
       <Match when={w().type === "countdown"}><CountdownWidget /></Match>
       <Match when={w().type === "shortcuts"}>
         <div class="w-shortcuts">
-          <For each={w().shortcuts ?? []}>
+          <For each={(w().shortcuts ?? []).filter((s) => !(isMobile() && s.actionType === "terminal"))}>
             {(s, i) => (
               <div class="w-shortcut">
-                <button class="btn" style={{ "--chip": s.color ?? "var(--accent)" }} onClick={() => runShortcut(s)}>{s.label || t(`dash-sc-${s.actionType}`)}</button>
+                <button class="sc-tile" style={{ "--chip": s.color ?? "var(--accent)" }} title={s.target ?? ""} onClick={() => runShortcut(s)}>
+                  {(() => { const I = SHORTCUT_ICON[s.actionType] ?? Zap; return <I aria-hidden="true" />; })()}
+                  <span dir="auto">{s.label || t(`dash-sc-${s.actionType}`)}</span>
+                </button>
                 <Show when={props.edit}><button class="icon-btn sm ghost" aria-label={t("action-delete")} onClick={() => updateWidget(w().id, (x) => { x.shortcuts!.splice(i(), 1); })}><X /></button></Show>
               </div>
             )}
@@ -132,7 +152,7 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
               updateWidget(w().id, (x) => { (x.shortcuts ??= []).push({ id: `sc-${Date.now()}`, label: type === "note" && target ? noteTitle(target) : "", icon: "file", actionType: type, target }); });
             }}>
               <option value="" disabled>{t("dash-sc-add")}</option>
-              <For each={SHORTCUT_TYPES}>{(ty) => <option value={ty}>{t(`dash-sc-${ty}`)}</option>}</For>
+              <For each={SHORTCUT_TYPES.filter((ty) => !(isMobile() && ty === "terminal"))}>{(ty) => <option value={ty}>{t(`dash-sc-${ty}`)}</option>}</For>
             </select>
           </Show>
         </div>
@@ -300,12 +320,34 @@ export default function Dashboard() {
     input.click();
   };
 
+  const widgetMenu = (e: MouseEvent, w: DashboardWidget, i: number) => {
+    const count = activeHub()?.widgets.length ?? 0;
+    const items: MenuItem[] = [
+      { label: t("dash-move-back"), icon: <ArrowLeft class="flip-rtl" />, disabled: i === 0, run: () => move(i, i - 1) },
+      { label: t("dash-move-forward"), icon: <ArrowRight class="flip-rtl" />, disabled: i >= count - 1, run: () => move(i, i + 1) },
+      ...([1, 2, 3] as const).map((n, k) => ({ label: t("dash-width", { span: n }), mark: w.span === n, sep: k === 0, run: () => updateWidget(w.id, (x) => { x.span = n; }) })),
+      { label: t("dash-widget-title"), icon: <Pencil />, sep: true, run: async () => { const v = await askText(t("dash-widget-title"), widgetTitle(w), t("action-save")); if (v !== null) updateWidget(w.id, (x) => { x.title = v.trim(); }); } },
+      { label: t("dash-add-widget"), icon: <Plus />, run: () => setAdding(true) },
+      { label: edit() ? t("dash-done") : t("dash-edit"), icon: edit() ? <Check /> : <LayoutGrid />, run: () => setEdit(!edit()) },
+      { label: t("dash-remove-widget"), icon: <Trash2 />, danger: true, sep: true, run: () => updateHub((h) => { h.widgets.splice(i, 1); }) },
+    ];
+    openMenu(e, items);
+  };
+  const hubMenu = (e: MouseEvent) => openMenu(e, [
+    { label: t("dash-rename-hub"), icon: <Pencil />, run: () => void rename() },
+    { label: t("dash-add-widget"), icon: <Plus />, run: () => setAdding(true) },
+    { label: t("dash-export"), icon: <Download />, sep: true, run: () => void exportHub() },
+    { label: t("dash-import"), icon: <Upload />, run: importHub },
+    { label: t("dash-new-hub"), icon: <Plus />, sep: true, run: () => setNewHub(true) },
+    { label: t("dash-delete-hub"), icon: <Trash2 />, danger: true, disabled: dashboards.state.hubs.length < 2, run: () => void remove() },
+  ]);
+
   return (
     <div class="dashboard">
       <header class="dash-bar">
         <div class="dash-hubs" role="tablist" aria-label={t("view-dashboard")}>
           <For each={dashboards.state.hubs}>
-            {(h) => <button role="tab" class="chip" aria-selected={h.id === activeHub()?.id} onClick={() => dashboards.update((d) => { d.activeId = h.id; })}><span dir="auto">{hubName(h)}</span></button>}
+            {(h) => { const I = HUB_ICON[h.templateId] ?? LayoutGrid; return <button role="tab" class="chip" aria-selected={h.id === activeHub()?.id} onClick={() => dashboards.update((d) => { d.activeId = h.id; })} onContextMenu={(e) => { dashboards.update((d) => { d.activeId = h.id; }); hubMenu(e); }}><I aria-hidden="true" /><span dir="auto">{hubName(h)}</span></button>; }}
           </For>
           <button class="icon-btn sm" title={t("dash-new-hub")} aria-label={t("dash-new-hub")} onClick={() => setNewHub(true)}><Plus /></button>
         </div>
@@ -322,12 +364,12 @@ export default function Dashboard() {
       <div class="dash-grid" classList={{ editing: edit() }}>
         <For each={activeHub()?.widgets ?? []}>
           {(w, i) => (
-            <section class={`widget glass-soft wt-${w.type}`} style={{ "--span": w.span }} aria-label={widgetTitle(w)}
+            <section class={`widget glass-soft wt-${w.type}`} style={{ "--span": w.span }} aria-label={widgetTitle(w)} onContextMenu={(e) => { if ((e.target as HTMLElement).closest("input, textarea, [contenteditable]")) return; widgetMenu(e, w, i()); }}
               draggable={edit()} onDragStart={() => setDrag(i())} onDragOver={(e) => { if (drag() !== null) e.preventDefault(); }}
               onDrop={(e) => { e.preventDefault(); const d = drag(); setDrag(null); if (d !== null && d !== i()) move(d, i()); }}>
               <Show when={w.type !== "cover" || edit()}>
                 <header class="widget-head">
-                  <Show when={edit()} fallback={<h3 dir="auto">{widgetTitle(w)}</h3>}>
+                  <Show when={edit()} fallback={<h3 dir="auto">{(() => { const I = WIDGET_ICON[w.type] ?? LayoutGrid; return <I aria-hidden="true" />; })()}<span>{widgetTitle(w)}</span></h3>}>
                     <input class="input sm widget-title-input" dir="auto" value={w.title} placeholder={t(`widget-${w.type}`)} aria-label={t("dash-widget-title")} onChange={(e) => { const v = e.currentTarget.value; updateWidget(w.id, (x) => { x.title = v; }); }} />
                     <div class="widget-tools">
                       <button class="icon-btn sm" aria-label={t("dash-move-back")} title={t("dash-move-back")} onClick={() => move(i(), i() - 1)}><ArrowLeft class="flip-rtl" /></button>
@@ -347,7 +389,7 @@ export default function Dashboard() {
         <Modal title={t("dash-add-widget")} onClose={() => setAdding(false)} class="modal-lg">
           <div class="choice-grid">
             <For each={DASHBOARD_WIDGET_CATALOG}>
-              {(c) => <button class="choice-card" onClick={() => { addWidget(c.type as DashboardWidgetType); setAdding(false); }}><strong>{t(`widget-${c.type}`)}</strong><span>{t(`widget-cat-${c.category}`)}</span></button>}
+              {(c) => { const I = WIDGET_ICON[c.type as DashboardWidgetType] ?? LayoutGrid; return <button class="choice-card widget-choice" onClick={() => { addWidget(c.type as DashboardWidgetType); setAdding(false); }}><I aria-hidden="true" /><strong>{t(`widget-${c.type}`)}</strong><span>{t(`widget-cat-${c.category}`)}</span></button>; }}
             </For>
           </div>
         </Modal>

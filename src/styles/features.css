@@ -903,3 +903,20 @@ svg.star.on { color: #f5b83d; fill: #f5b83d; }
 .mcp-examples { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.9em; }
 .mcp-examples li { display: flex; gap: 6px; align-items: flex-start; }
 .mcp-examples li span { padding-block-start: 4px; }
+
+/* Dashboard icons */
+.widget-head h3 { display: flex; align-items: center; gap: 7px; min-inline-size: 0; }
+.widget-head h3 > svg { inline-size: 15px; block-size: 15px; color: var(--accent); flex: none; }
+.widget-head h3 > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-hubs .chip svg { inline-size: 14px; block-size: 14px; flex: none; }
+.w-stats dt { display: inline-flex; align-items: center; gap: 8px; }
+.w-stats dt svg { inline-size: 15px; block-size: 15px; color: var(--text-muted); }
+.w-shortcuts { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; align-items: stretch; }
+.w-shortcut { position: relative; display: flex; }
+.w-shortcut > .icon-btn { position: absolute; inset-block-start: 2px; inset-inline-end: 2px; }
+.sc-tile { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px 6px 10px; min-block-size: 78px; border-radius: var(--radius-md); border: 1px solid var(--border); background: rgb(var(--l2) / 0.45); color: var(--text-primary); cursor: pointer; font: inherit; font-size: 0.82em; font-weight: 600; text-align: center; transition: border-color 120ms, background 120ms; }
+.sc-tile:hover, .sc-tile:focus-visible { border-color: color-mix(in srgb, var(--chip) 60%, transparent); background: color-mix(in srgb, var(--chip) 10%, transparent); }
+.sc-tile svg { inline-size: 22px; block-size: 22px; color: var(--chip, var(--accent)); }
+.sc-tile span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-inline-size: 100%; }
+.widget-choice { align-items: flex-start; }
+.widget-choice > svg { inline-size: 20px; block-size: 20px; color: var(--accent); margin-block-end: 2px; }
