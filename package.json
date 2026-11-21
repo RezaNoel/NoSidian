@@ -1,0 +1,33 @@
+{
+  "name": "nosidian",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run i18n:gen && vite",
+    "build": "npm run i18n:gen && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "i18n:gen": "node scripts/gen-i18n-keys.mjs",
+    "i18n:check": "node scripts/gen-i18n-keys.mjs --check",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@fluent/bundle": "^0.19.1",
+    "@tauri-apps/api": "^2.12.5",
+    "@tauri-apps/plugin-dialog": "^2.8.4",
+    "solid-js": "^1.9.20"
+  },
+  "devDependencies": {
+    "@fluent/syntax": "^0.19.0",
+    "@solidjs/testing-library": "^0.8.10",
+    "@tauri-apps/cli": "^2.12.6",
+    "jsdom": "^31.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.8",
+    "vite-plugin-solid": "^2.11.17",
+    "vitest": "^3.2.7"
+  }
+}

@@ -1,0 +1,15 @@
+[package]
+name = "nosidian-core"
+description = "Vault, configuration and workspace-profile logic for NoSidian"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

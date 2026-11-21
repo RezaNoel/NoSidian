@@ -1,0 +1,73 @@
+/* Design tokens. Themes set colors; settings set --accent, --glass-blur,
+   --glass-opacity on <html> at runtime. All layout uses logical properties
+   (inline-start/end) so RTL works by flipping <html dir>. */
+
+:root {
+  --accent: #8b7cf6;
+  --glass-blur: 18px;
+  --glass-opacity: 0.62;
+  --radius-unit: 8px;
+  --space: 8px;
+  --font-ui: system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans Arabic",
+    "Vazirmatn", "Noto Sans CJK SC", "Noto Sans Devanagari", sans-serif;
+  --ribbon-width: 52px;
+  --status-height: 28px;
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  color-scheme: dark;
+}
+
+/* ---------- Themes ---------- */
+:root, [data-theme="obsidian-slate"] {
+  --bg: #15171c; --surface: #1f2229; --text: #e6e8ee; --muted: #a3aab6;
+  --hairline: rgb(255 255 255 / 0.10); --specular: rgb(255 255 255 / 0.22);
+  --mesh-1: #5b4bd6; --mesh-2: #1f8a8a; --mesh-3: #a3417a;
+}
+[data-theme="midnight-carbon"] {
+  --bg: #0b0c0f; --surface: #16181d; --text: #eceef2; --muted: #9aa0ab;
+  --hairline: rgb(255 255 255 / 0.08); --specular: rgb(255 255 255 / 0.18);
+  --mesh-1: #2c3e8f; --mesh-2: #6b2d8c; --mesh-3: #0f6e6e;
+}
+[data-theme="nord-arctic"] {
+  --bg: #2e3440; --surface: #3b4252; --text: #eceff4; --muted: #c0c8d6;
+  --hairline: rgb(255 255 255 / 0.12); --specular: rgb(255 255 255 / 0.24);
+  --mesh-1: #5e81ac; --mesh-2: #88c0d0; --mesh-3: #b48ead;
+}
+[data-theme="catppuccin-mocha"] {
+  --bg: #1e1e2e; --surface: #313244; --text: #cdd6f4; --muted: #b4bcd8;
+  --hairline: rgb(255 255 255 / 0.10); --specular: rgb(255 255 255 / 0.22);
+  --mesh-1: #cba6f7; --mesh-2: #89b4fa; --mesh-3: #f5c2e7;
+}
+[data-theme="paper-daylight"] {
+  color-scheme: light;
+  --bg: #eef0f4; --surface: #ffffff; --text: #1c2028; --muted: #4d5562;
+  --hairline: rgb(0 0 0 / 0.10); --specular: rgb(255 255 255 / 0.85);
+  --mesh-1: #a5b4fc; --mesh-2: #99f6e4; --mesh-3: #fbcfe8;
+}
+[data-theme="warm-parchment"] {
+  color-scheme: light;
+  --bg: #efe6d6; --surface: #fbf6ee; --text: #2d2418; --muted: #5e5140;
+  --hairline: rgb(60 40 10 / 0.14); --specular: rgb(255 255 255 / 0.8);
+  --mesh-1: #f4c27a; --mesh-2: #e8a0a0; --mesh-3: #b7d3a8;
+}
+
+/* ---------- Radius and density ---------- */
+[data-radius="sharp"] { --radius-unit: 3px; }
+[data-radius="balanced"] { --radius-unit: 8px; }
+[data-radius="soft"] { --radius-unit: 14px; }
+[data-density="compact"] { --space: 6px; font-size: 14px; }
+[data-density="comfortable"] { --space: 8px; font-size: 15px; }
+
+/* ---------- Accessibility mode ---------- */
+[data-a11y="true"] {
+  --focus-ring: 0 0 0 3px var(--bg), 0 0 0 6px var(--accent);
+  /* Keep glass panels opaque enough for strong text contrast. */
+  --glass-opacity: max(var(--glass-opacity), 0.9) !important;
+}
+[data-reduce-motion="true"] *, [data-reduce-motion="true"] *::before, [data-reduce-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}

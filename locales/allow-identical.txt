@@ -1,0 +1,4 @@
+# Message ids whose translation may legitimately equal the English text
+# (brand names, product names). Format: <locale>:<id> or *:<id> for all.
+*:app-name
+*:theme-catppuccin-mocha
