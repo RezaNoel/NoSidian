@@ -54,6 +54,7 @@ export const DASHBOARD_WIDGET_CATALOG: DashboardWidgetCatalogItem[] = [
   { type: 'shortcuts', defaultSpan: 2, category: 'core', iconKey: 'zap', titleEn: 'Quick Shortcuts', titleFa: 'میانبرهای سریع' },
   { type: 'recent-notes', defaultSpan: 1, category: 'core', iconKey: 'clock', titleEn: 'Recent Files', titleFa: 'فایل‌های اخیر' },
   { type: 'starred-notes', defaultSpan: 1, category: 'core', iconKey: 'star', titleEn: 'Starred Notes', titleFa: 'یادداشت‌های نشان‌شده' },
+  { type: 'countdown', defaultSpan: 1, category: 'core', iconKey: 'cake', titleEn: 'Birthday and dates', titleFa: 'تولد و تاریخ‌ها' },
   { type: 'quick-capture', defaultSpan: 1, category: 'core', iconKey: 'inbox', titleEn: 'Quick Capture', titleFa: 'ثبت سریع یادداشت' },
   { type: 'todos', defaultSpan: 1, category: 'projects', iconKey: 'check-square', titleEn: 'Action Checklist', titleFa: 'چک‌لیست کارها' },
   { type: 'deadline-hero', defaultSpan: 3, category: 'projects', iconKey: 'alarm-clock', titleEn: 'Project Deadline', titleFa: 'شمارش معکوس ددلاین' },

@@ -20,6 +20,17 @@ export const zen = appDoc<ZenStudioConfig>("zen", () => {
 });
 export const ambient = appDoc<AmbientConfig>("ambient", () => ({ effect: "none", density: 55, wind: 2, maxPileHeight: 28, musicTrack: "none", musicPlaying: false, musicVolume: 0.35 }));
 
+/** Focused minutes per day (YYYY-MM-DD), for the calendar and stats. */
+export const focusLog = appDoc<{ days: Record<string, number> }>("focus-log", () => ({ days: {} }));
+let focusSeconds = 0;
+function logFocusSecond() {
+  if (++focusSeconds < 60) return;
+  focusSeconds = 0;
+  const d = new Date();
+  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  focusLog.update((l) => { l.days[key] = (l.days[key] ?? 0) + 1; });
+}
+
 const timer = createRoot(() => {
   const [running, setRunning] = createSignal(false);
   const [index, setIndex] = createSignal(0);
@@ -87,7 +98,7 @@ function advance() {
 
 function tick() {
   const r = timer.remaining() - 1;
-  if (currentBlock()?.kind === "focus") petStudyTick();
+  if (currentBlock()?.kind === "focus") { petStudyTick(); logFocusSecond(); }
   if (r === 60 && zen.state.oneMinuteWarningEnabled) toast(t("focus-one-minute"));
   if (r <= 0) advance();
   else timer.setRemaining(r);

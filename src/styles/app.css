@@ -521,14 +521,29 @@ label.btn:focus-within { box-shadow: var(--focus-ring); }
 .cal-grid th { font-size: 0.7em; font-weight: 600; color: var(--text-muted); padding-block: 4px; text-align: center; }
 .cal-grid td { padding: 0; text-align: center; }
 .cal-day {
-  position: relative; inline-size: 100%; aspect-ratio: 1; max-block-size: 38px; border: 1px solid transparent; border-radius: var(--radius-sm);
+  position: relative; inline-size: 100%; block-size: 40px; padding: 3px 0 0; border: 1px solid transparent; border-radius: var(--radius-sm);
   background: transparent; color: var(--text-secondary); font-size: 0.82em; cursor: pointer; font-variant-numeric: tabular-nums;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 1px;
 }
+.cal-day.focus { background: var(--accent-soft); color: var(--text-primary); }
+.cal-day.special .cal-num { color: var(--accent); font-weight: 700; }
+.cal-marks { display: inline-flex; gap: 1px; block-size: 11px; }
+.cal-mark { inline-size: 10px; block-size: 10px; stroke-width: 2.4; color: var(--text-muted); }
+.cal-mark.mk-birthday, .cal-mark.mk-date { color: var(--accent); }
+.cal-mark.mk-deadline { color: #d9534f; }
+.cal-agenda { margin: 0 8px 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.cal-agenda-head { display: flex; align-items: center; gap: 4px; }
+.cal-agenda-date { flex: 1; min-inline-size: 0; font-size: 0.82em; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-agenda ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+.cal-agenda li { display: flex; align-items: center; gap: 8px; font-size: 0.82em; min-inline-size: 0; }
+.cal-agenda li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-agenda li .cal-mark { inline-size: 14px; block-size: 14px; flex: none; }
+.cal-agenda-empty { margin: 6px 0 0; font-size: 0.8em; color: var(--text-muted); }
 .cal-day:hover { background: var(--hover); color: var(--text-primary); }
 .cal-day.today { border-color: var(--accent-border); color: var(--text-primary); font-weight: 700; }
 .cal-day.focus:focus-visible { box-shadow: var(--focus-ring); }
 .cal-day.has::after {
-  content: ""; position: absolute; inset-block-end: 3px; inset-inline-start: 50%; translate: -50% 0;
+  content: ""; position: absolute; inset-block-end: 2px; inset-inline-start: 50%; translate: -50% 0;
   inline-size: 4px; block-size: 4px; border-radius: 50%; background: var(--accent);
 }
 

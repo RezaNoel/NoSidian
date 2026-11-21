@@ -3,6 +3,7 @@
 
 mod bridge;
 mod commands;
+mod google;
 
 use std::sync::Mutex;
 
@@ -23,6 +24,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(bridge::McpBridge::default())
+        .manage(google::Google::default())
         .setup(|app| {
             let dir = app.path().app_config_dir()?;
             app.manage(AppState {
@@ -69,6 +71,10 @@ pub fn run() {
             commands::files_import,
             commands::export_text,
             commands::export_bytes,
+            google::google_status,
+            google::google_connect,
+            google::google_disconnect,
+            google::google_request,
             commands::vault_backup,
             commands::reveal_in_os,
             commands::entry_abs_path,

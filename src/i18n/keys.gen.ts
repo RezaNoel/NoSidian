@@ -940,7 +940,6 @@ export interface MessageArgs {
   "vault-switch-open": undefined;
   "cal-show": undefined;
   "cal-google": undefined;
-  "cal-google-soon": undefined;
   "cal-src-daily": undefined;
   "cal-src-tasks": undefined;
   "cal-src-deadlines": undefined;
@@ -966,6 +965,42 @@ export interface MessageArgs {
   "pet-card-failed": undefined;
   "pet-card-owner": { owner: string | number; tier: string | number };
   "pet-model-title": undefined;
+  "cal-google-desktop": undefined;
+  "cal-google-unavailable": undefined;
+  "cal-google-about": undefined;
+  "cal-google-connect": undefined;
+  "cal-google-waiting": undefined;
+  "cal-google-done": undefined;
+  "cal-google-connected": undefined;
+  "cal-google-sync": undefined;
+  "cal-google-synced": undefined;
+  "cal-google-disconnect": undefined;
+  "cal-google-last": { time: string | number };
+  "cal-google-push-tasks": undefined;
+  "cal-google-push-deadlines": undefined;
+  "cal-google-push-dates": undefined;
+  "cal-mark-deadline": { name: string | number };
+  "cal-mark-tasks": { count: string | number };
+  "cal-mark-reviews": { count: string | number };
+  "cal-mark-focus": { minutes: string | number };
+  "err-google-failed": undefined;
+  "err-google-not-configured": undefined;
+  "err-google-signed-out": undefined;
+  "err-google-offline": undefined;
+  "err-google-timeout": undefined;
+  "err-google-denied": undefined;
+  "err-google-busy": undefined;
+  "cal-add-event": undefined;
+  "cal-agenda-empty": undefined;
+  "calendar-open-note": undefined;
+  "widget-countdown": undefined;
+  "countdown-set-birthday": undefined;
+  "countdown-days-to-birthday": { days: string | number };
+  "countdown-today": undefined;
+  "countdown-today-short": undefined;
+  "countdown-age": { days: string | number; months: string | number; years: string | number };
+  "countdown-lived": { days: string | number };
+  "countdown-in-days": { days: string | number };
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -1910,7 +1945,6 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "vault-switch-open",
   "cal-show",
   "cal-google",
-  "cal-google-soon",
   "cal-src-daily",
   "cal-src-tasks",
   "cal-src-deadlines",
@@ -1935,5 +1969,41 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "pet-card-saved",
   "pet-card-failed",
   "pet-card-owner",
-  "pet-model-title"
+  "pet-model-title",
+  "cal-google-desktop",
+  "cal-google-unavailable",
+  "cal-google-about",
+  "cal-google-connect",
+  "cal-google-waiting",
+  "cal-google-done",
+  "cal-google-connected",
+  "cal-google-sync",
+  "cal-google-synced",
+  "cal-google-disconnect",
+  "cal-google-last",
+  "cal-google-push-tasks",
+  "cal-google-push-deadlines",
+  "cal-google-push-dates",
+  "cal-mark-deadline",
+  "cal-mark-tasks",
+  "cal-mark-reviews",
+  "cal-mark-focus",
+  "err-google-failed",
+  "err-google-not-configured",
+  "err-google-signed-out",
+  "err-google-offline",
+  "err-google-timeout",
+  "err-google-denied",
+  "err-google-busy",
+  "cal-add-event",
+  "cal-agenda-empty",
+  "calendar-open-note",
+  "widget-countdown",
+  "countdown-set-birthday",
+  "countdown-days-to-birthday",
+  "countdown-today",
+  "countdown-today-short",
+  "countdown-age",
+  "countdown-lived",
+  "countdown-in-days"
 ];

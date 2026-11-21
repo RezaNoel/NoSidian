@@ -964,7 +964,6 @@ banner-edit = Edit
 vault-switch-open = Open
 cal-show = Show on the calendar
 cal-google = Google Calendar
-cal-google-soon = Connecting to Google Calendar is set up in the next update.
 cal-src-daily = Days with a daily note
 cal-src-tasks = Tasks due
 cal-src-deadlines = Project deadlines
@@ -993,3 +992,48 @@ pet-card-saved = Card saved
 pet-card-failed = Could not make the card
 pet-card-owner = { $owner } and their companion · { $tier }
 pet-model-title = Your own 3D model
+cal-google-desktop = Google Calendar works in the desktop app.
+cal-google-unavailable = This copy of NoSidian was built without Google sign-in.
+cal-google-about = Sign in with Google to see your events in the calendar and send scheduled tasks, deadlines and important dates to Google Calendar. Changes on either side are synced.
+cal-google-connect = Sign in with Google
+cal-google-waiting = Waiting for the browser…
+cal-google-done = You are signed in. You can close this tab and go back to NoSidian.
+cal-google-connected = Google Calendar connected
+cal-google-sync = Sync now
+cal-google-synced = Calendar synced
+cal-google-disconnect = Sign out
+cal-google-last = Last synced { $time }
+cal-google-push-tasks = Send scheduled tasks
+cal-google-push-deadlines = Send project deadlines
+cal-google-push-dates = Send birthday and important dates
+cal-mark-deadline = Deadline: { $name }
+cal-mark-tasks = { $count } scheduled tasks
+cal-mark-reviews = { $count ->
+    [one] Reviewed { $count } card
+   *[other] Reviewed { $count } cards
+}
+cal-mark-focus = Focused { $minutes } min
+err-google-failed = Google Calendar could not be reached. Try again later.
+err-google-not-configured = This copy of NoSidian was built without Google sign-in.
+err-google-signed-out = Google sign-in expired. Sign in again in Settings › Calendar.
+err-google-offline = No internet connection to Google.
+err-google-timeout = Sign-in took too long. Try again.
+err-google-denied = Google sign-in was cancelled.
+err-google-busy = A Google sign-in window is already open.
+cal-add-event = Add to Google Calendar
+cal-agenda-empty = Nothing planned
+calendar-open-note = Open daily note
+widget-countdown = Birthday and dates
+countdown-set-birthday = Add your birthday to see a countdown and your age
+countdown-days-to-birthday = { $days ->
+    [one] day until your birthday
+   *[other] days until your birthday
+}
+countdown-today = Happy birthday
+countdown-today-short = Today
+countdown-age = { $years } years, { $months } months and { $days } days old
+countdown-lived = { $days } days lived
+countdown-in-days = { $days ->
+    [one] in { $days } day
+   *[other] in { $days } days
+}

@@ -1,12 +1,31 @@
-// Calendar panel: month grid with dots on days that have a daily note. Uses
-// the Persian (Jalali) calendar when the UI language is Persian. Arrow keys
-// move between days; Enter opens or creates that day's note.
+// Calendar panel: month grid with small symbols on days that stand out
+// (birthday, important dates, deadlines, scheduled tasks, Google events,
+// review and focus days, daily notes) and the focused day's agenda below.
+// Uses the Persian (Jalali) calendar when the UI language is Persian. Arrow
+// keys move between days; Enter opens or creates that day's note.
 import { For, Show, createMemo, createSignal } from "solid-js";
-import { ChevronLeft, ChevronRight } from "lucide-solid";
+import { Brain, CalendarDays, Cake, ChevronLeft, ChevronRight, Clock, FileText, Flag, Plus, Star, Timer } from "lucide-solid";
+import { marksOn, ymd, type Mark, type MarkKind } from "../state/calendarMarks";
+import { addGoogleEvent, googleStatus } from "../state/google";
+import { askText } from "../state/ui";
 import { locale, t } from "../i18n";
 import { calendarFor, intlLocale, monthGrid, monthOf, sameDay, shiftMonth, weekStartFor, type MonthRef } from "../lib/dates";
-import { dailyPath, existingPaths, openDailyNote } from "../state/daily";
+import { openDailyNote } from "../state/daily";
 import { isMobile, setDrawer } from "../state/ui";
+
+const ICONS: Record<MarkKind, typeof Star> = { birthday: Cake, date: Star, deadline: Flag, task: Clock, google: CalendarDays, cards: Brain, focus: Timer, daily: FileText };
+
+/** Up to three distinct symbols for a day; the daily note shows as a dot. */
+function DayMarks(props: { marks: Mark[] }) {
+  const kinds = () => [...new Set(props.marks.map((m) => m.kind).filter((k) => k !== "daily"))].slice(0, 3);
+  return (
+    <Show when={kinds().length}>
+      <span class="cal-marks" aria-hidden="true">
+        <For each={kinds()}>{(k) => { const I = ICONS[k]; return <I class={`cal-mark mk-${k}`} />; }}</For>
+      </span>
+    </Show>
+  );
+}
 
 export function CalendarPanel() {
   const today = new Date();
@@ -17,7 +36,11 @@ export function CalendarPanel() {
   const month = createMemo(() => (shown().kind === kind() ? shown() : monthOf(focus(), kind())));
   const weekStart = () => weekStartFor(locale());
   const weeks = createMemo(() => monthGrid(month(), weekStart()));
-  const existing = createMemo(() => existingPaths());
+  const agenda = createMemo(() => marksOn(focus()));
+  const addEvent = async () => {
+    const v = await askText(t("cal-add-event"), "", t("action-add"));
+    if (v?.trim()) await addGoogleEvent(ymd(focus()), v.trim());
+  };
 
   const title = createMemo(() => {
     const mid = weeks().flat().find((d) => d)!;
@@ -94,18 +117,23 @@ export function CalendarPanel() {
                     <td>
                       <Show when={d}>
                         {(day) => {
-                          const has = () => existing().has(dailyPath(day()));
+                          const marks = createMemo(() => marksOn(day()));
+                          const has = () => marks().some((m) => m.kind === "daily");
+                          const special = () => marks().some((m) => m.kind === "birthday" || m.kind === "date");
                           const isFocus = () => sameDay(day(), focus());
                           return (
                             <button
                               class="cal-day"
-                              classList={{ today: sameDay(day(), today), has: has(), focus: isFocus() }}
+                              classList={{ today: sameDay(day(), today), has: has(), special: special(), focus: isFocus() }}
                               tabIndex={isFocus() ? 0 : -1}
                               aria-current={sameDay(day(), today) ? "date" : undefined}
-                              aria-label={`${fullDate().format(day())}${has() ? `, ${t("calendar-has-note")}` : ""}`}
-                              onClick={() => { setFocus(day()); open(day()); }}
+                              aria-label={[fullDate().format(day()), ...marks().map((m) => m.label)].join(", ")}
+                              title={marks().map((m) => m.label).join("\n") || undefined}
+                              onClick={() => { if (isFocus()) open(day()); else setFocus(day()); }}
+                              onDblClick={() => open(day())}
                             >
-                              {dayNum().format(day())}
+                              <span class="cal-num">{dayNum().format(day())}</span>
+                              <DayMarks marks={marks()} />
                             </button>
                           );
                         }}
@@ -118,6 +146,22 @@ export function CalendarPanel() {
           </For>
         </tbody>
       </table>
+      <section class="cal-agenda" aria-label={fullDate().format(focus())}>
+        <div class="cal-agenda-head">
+          <span class="cal-agenda-date">{fullDate().format(focus())}</span>
+          <button class="icon-btn sm" title={t("calendar-open-note")} aria-label={t("calendar-open-note")} onClick={() => open(focus())}><FileText /></button>
+          <Show when={googleStatus().connected}>
+            <button class="icon-btn sm" title={t("cal-add-event")} aria-label={t("cal-add-event")} onClick={() => void addEvent()}><Plus /></button>
+          </Show>
+        </div>
+        <Show when={agenda().filter((m) => m.kind !== "daily").length} fallback={<p class="cal-agenda-empty">{t("cal-agenda-empty")}</p>}>
+          <ul>
+            <For each={agenda().filter((m) => m.kind !== "daily")}>
+              {(m) => { const I = ICONS[m.kind]; return <li><I class={`cal-mark mk-${m.kind}`} aria-hidden="true" /><span dir="auto">{m.label}</span></li>; }}
+            </For>
+          </ul>
+        </Show>
+      </section>
     </div>
   );
 }

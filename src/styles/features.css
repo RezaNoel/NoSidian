@@ -597,3 +597,19 @@ details.callout[open] > summary::after { transform: rotate(90deg); }
 .pet-fact strong { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .pet-fact span { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 @media (max-width: 560px) { .pet-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Birthday and dates widget */
+.w-countdown { display: grid; gap: 10px; }
+.w-countdown-hero { display: flex; align-items: baseline; gap: 10px; }
+.w-countdown-hero svg { inline-size: 22px; block-size: 22px; color: var(--accent); align-self: center; }
+.w-countdown-hero strong { font-size: 2em; line-height: 1; font-variant-numeric: tabular-nums; }
+.w-countdown-hero span { color: var(--text-secondary); }
+.w-countdown-age { margin: 0; font-size: 0.9em; }
+.w-countdown-empty { display: flex; align-items: center; gap: 10px; inline-size: 100%; padding: 12px; border: 1px dashed var(--border-strong); border-radius: var(--radius-md); background: transparent; color: var(--text-secondary); cursor: pointer; text-align: start; }
+.w-countdown-empty:hover { background: var(--hover); color: var(--text-primary); }
+.w-countdown-empty svg { inline-size: 20px; block-size: 20px; flex: none; }
+.w-countdown-empty span { flex: 1; }
+.w-countdown-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.w-countdown-list li { display: flex; align-items: center; gap: 8px; font-size: 0.88em; min-inline-size: 0; }
+.w-countdown-list li svg { inline-size: 14px; block-size: 14px; color: var(--accent); flex: none; }
+.w-countdown-list li span:nth-child(2) { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

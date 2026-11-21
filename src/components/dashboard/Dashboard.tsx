@@ -21,6 +21,7 @@ import { askConfirm, askText, toast } from "../../state/ui";
 import { noteTitle } from "../../lib/markdown";
 import { PRESET_SRC } from "../Banner";
 import { CalendarPanel } from "../Calendar";
+import { CountdownWidget } from "./Countdown";
 import { promptNewNote } from "../FileTree";
 import { MiniTimer } from "../focus/MiniTimer";
 import { PetCard } from "../pet/PetCard";
@@ -111,6 +112,7 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
         </form>
       </Match>
       <Match when={w().type === "calendar"}><CalendarPanel /></Match>
+      <Match when={w().type === "countdown"}><CountdownWidget /></Match>
       <Match when={w().type === "shortcuts"}>
         <div class="w-shortcuts">
           <For each={w().shortcuts ?? []}>

@@ -263,7 +263,8 @@ export type DashboardWidgetType =
   | 'reading-shelf'
   | 'watchlist'
   | 'writing-goal'
-  | 'quick-capture';
+  | 'quick-capture'
+  | 'countdown';
 
 export interface DashboardShortcutItem {
   id: string;
