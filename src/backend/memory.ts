@@ -168,4 +168,68 @@ export const memoryBackend: VaultBackend = {
   async rebuildIndex() {
     return Object.keys(need().files).length;
   },
+  async storeRead<T>(name: string) {
+    try { const v = localStorage.getItem(`${KEY}.store.${name}`); return v ? (JSON.parse(v) as T) : null; } catch { return null; }
+  },
+  async storeWrite(name, value) {
+    try { localStorage.setItem(`${KEY}.store.${name}`, JSON.stringify(value)); } catch { /* ignore */ }
+  },
+  async appStoreRead<T>(name: string) {
+    try { const v = localStorage.getItem(`nosidian.app.${name}`); return v ? (JSON.parse(v) as T) : null; } catch { return null; }
+  },
+  async appStoreWrite(name, value) {
+    try { localStorage.setItem(`nosidian.app.${name}`, JSON.stringify(value)); } catch { /* ignore */ }
+  },
+  async historyList(path) {
+    return (history.get(path) ?? []).map((h) => ({ ts: h.ts, size: h.content.length })).reverse();
+  },
+  async historySnapshot(path, content) {
+    const list = history.get(path) ?? [];
+    if (list[list.length - 1]?.content === content) return null;
+    const ts = Math.max(Date.now(), (list[list.length - 1]?.ts ?? 0) + 1);
+    list.push({ ts, content });
+    history.set(path, list.slice(-60));
+    return { ts, size: content.length };
+  },
+  async historyRead(path, ts) {
+    const h = history.get(path)?.find((x) => x.ts === ts);
+    if (!h) throw { code: "not-found", detail: path };
+    return h.content;
+  },
+  async attachments() {
+    return [];
+  },
+  async fileRead(path) {
+    const f = need().files[path];
+    if (!f) throw { code: "not-found", detail: path };
+    return new TextEncoder().encode(f.content);
+  },
+  async fileWrite(path) {
+    throw { code: "io", detail: path };
+  },
+  async importFiles() {
+    return [];
+  },
+  async saveText(name, content) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([content], { type: "text/plain" }));
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    return true;
+  },
+  async vaultBackup() {
+    const s = need();
+    return JSON.stringify({ format: "nosidian-backup-1", createdAt: Date.now(), folders: s.folders, notes: Object.entries(s.files).map(([path, f]) => ({ path, content: f.content, modified: f.modified })) }, null, 2);
+  },
+  async terminalExec() {
+    throw { code: "shell-disabled", detail: "the system shell needs the desktop app" };
+  },
+  async mcpStart() {
+    throw { code: "unknown", detail: "the MCP bridge needs the desktop app" };
+  },
+  async mcpStop() {},
+  async mcpRespond() {},
 };
+
+const history = new Map<string, { ts: number; content: string }[]>();

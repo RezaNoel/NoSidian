@@ -27,14 +27,22 @@
     "@tauri-apps/api": "^2.12.5",
     "@tauri-apps/plugin-dialog": "^2.8.4",
     "dompurify": "^3.4.18",
+    "highlight.js": "^11.12.0",
+    "jszip": "^3.10.1",
+    "katex": "^0.19.1",
     "lucide-solid": "^1.77.0",
     "marked": "^18.2.1",
-    "solid-js": "^1.9.20"
+    "mermaid": "^12.3.0",
+    "pdfjs-dist": "^6.5.438",
+    "solid-js": "^1.9.20",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@fluent/syntax": "^0.19.0",
     "@solidjs/testing-library": "^0.8.10",
     "@tauri-apps/cli": "^2.12.6",
+    "@types/katex": "^0.16.8",
+    "@types/three": "^0.187.0",
     "jsdom": "^31.0.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.8",

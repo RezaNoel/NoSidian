@@ -1,5 +1,5 @@
 // Root: boots into the first-launch wizard or straight into the last vault.
-import { For, Match, Show, Switch, createEffect, createSignal, onCleanup, onMount } from "solid-js";
+import { For, Match, Show, Switch, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { t } from "./i18n";
 import { LiveAnnouncer } from "./a11y/announcer";
 import { settings } from "./state/settings";
@@ -19,6 +19,13 @@ import { SettingsWindow } from "./components/settings/SettingsWindow";
 import { promptNewFolder, promptNewNote } from "./components/FileTree";
 import { bindPrompts, installHotkeys } from "./state/commands";
 import { applyPrefsToDocument } from "./state/prefs";
+import { enabledModules } from "./state/modules";
+import { Lightbox, SlidesOverlay } from "./components/Overlays";
+import { ZenOverlay } from "./components/focus/ZenOverlay";
+import { AmbientOverlay } from "./components/focus/AmbientOverlay";
+import { PetCompanion, PetStudio, openPetStudio } from "./components/pet/PetCard";
+import { TerminalDrawer, terminalOpen } from "./components/terminal/Terminal";
+import { applyCustomCss, dev, mcp, runStartupPlugins, syncMcp } from "./state/devtools";
 
 bindPrompts((folder) => promptNewNote(folder), () => promptNewFolder());
 
@@ -29,6 +36,24 @@ export function App() {
 
   createEffect(() => applyPrefsToDocument());
   onCleanup(installHotkeys());
+
+  const mods = createMemo(() => enabledModules(settings.experienceLevel, settings.moduleOverrides));
+  const inWorkspace = () => phase() === "workspace" && !!vault();
+  const onPet = () => openPetStudio();
+  window.addEventListener("nosidian:pet", onPet);
+  onCleanup(() => window.removeEventListener("nosidian:pet", onPet));
+  createEffect(() => { if (dev.ready()) applyCustomCss(); });
+  let pluginsStarted = false;
+  createEffect(() => {
+    if (!inWorkspace() || !dev.ready() || pluginsStarted) return;
+    pluginsStarted = true;
+    runStartupPlugins();
+  });
+  createEffect(() => {
+    if (!mcp.ready()) return;
+    void [mcp.state.enabled, mcp.state.mode, mcp.state.port, mcp.state.token];
+    void syncMcp();
+  });
 
   onMount(async () => {
     if (!settings.onboarding.completed) return setPhase("onboarding");
@@ -64,6 +89,17 @@ export function App() {
         </Modal>
       </Show>
       <Show when={overlay() === "banner"}><BannerSettings onClose={() => setOverlay("none")} /></Show>
+      <Show when={inWorkspace()}>
+        <Show when={mods().has("ambient-effects")}><AmbientOverlay /></Show>
+        <ZenOverlay />
+        <SlidesOverlay />
+        <Show when={mods().has("integrated-terminal") && terminalOpen()}><TerminalDrawer /></Show>
+        <Show when={mods().has("companion-pet") && settings.petEnabled}>
+          <PetCompanion />
+          <PetStudio />
+        </Show>
+      </Show>
+      <Lightbox />
       <Dialogs />
       <ContextMenu />
       <div class="toasts" aria-hidden="true">

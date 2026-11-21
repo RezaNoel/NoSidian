@@ -73,7 +73,7 @@ export function defaultConfig(): AppConfig {
     useCase: "general",
     appearance: {
       theme: "obsidian-slate",
-      accent: "#8b7cf6",
+      accent: "#3b7ddd",
       glassBlur: 18,
       glassOpacity: 0.62,
       ambientMesh: true,
@@ -118,6 +118,14 @@ export interface WorkspaceProfile {
   sort: SortMode;
   noteModes: Record<string, ViewMode>;
   banner: BannerConfig;
+  /** Per-note text direction override. */
+  noteDirs: Record<string, "auto" | "ltr" | "rtl">;
+  /** Custom explorer icon/color per file or folder, and folder tags. */
+  fileStyles: Record<string, { icon?: string; color?: string; tags?: string[] }>;
+  /** Ribbon tool order (tool keys); unknown tools are appended. */
+  ribbonOrder: string[];
+  /** Folders that are opened as projects. */
+  projectFolders: string[];
 }
 
 /** `image` is a preset id or `asset:<file name>` for an uploaded image. */
@@ -148,6 +156,10 @@ export function defaultProfile(): WorkspaceProfile {
     sort: "name-asc",
     noteModes: {},
     banner: { enabled: false, image: "carbon", height: 96, posY: 50, opacity: 90 },
+    noteDirs: {},
+    fileStyles: {},
+    ribbonOrder: [],
+    projectFolders: [],
   };
 }
 

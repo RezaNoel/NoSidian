@@ -40,7 +40,31 @@ export interface VaultBackend {
   links(path: string): Promise<NoteLinks>;
   summaries(): Promise<NoteSummary[]>;
   rebuildIndex(): Promise<number>;
+  /** Feature documents in `.nosidian/<name>.json` (null when missing). */
+  storeRead<T = unknown>(name: string): Promise<T | null>;
+  storeWrite(name: string, value: unknown): Promise<void>;
+  /** App-wide documents (pet, plugins) outside any vault. */
+  appStoreRead<T = unknown>(name: string): Promise<T | null>;
+  appStoreWrite(name: string, value: unknown): Promise<void>;
+  historyList(path: string): Promise<Snapshot[]>;
+  historySnapshot(path: string, content: string): Promise<Snapshot | null>;
+  historyRead(path: string, ts: number): Promise<string>;
+  attachments(): Promise<string[]>;
+  fileRead(path: string): Promise<Uint8Array>;
+  fileWrite(path: string, base64: string): Promise<void>;
+  /** Ask for files on disk and copy them into `folder`. */
+  importFiles(folder: string): Promise<string[]>;
+  /** Ask where to save and write text there. Returns false if cancelled. */
+  saveText(defaultName: string, content: string, ext: string): Promise<boolean>;
+  vaultBackup(): Promise<string>;
+  /** System shell (only when enabled in settings; the Rust side checks too). */
+  terminalExec(command: string, shell: string, cwd: string): Promise<{ stdout: string; stderr: string; code: number }>;
+  mcpStart(port: number, token: string): Promise<number>;
+  mcpStop(): Promise<void>;
+  mcpRespond(id: number, body: string): Promise<void>;
 }
+
+export interface Snapshot { ts: number; size: number }
 
 async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   const { invoke } = await import("@tauri-apps/api/core");
@@ -78,6 +102,37 @@ const tauriBackend: VaultBackend = {
   links: (path) => invoke("index_links", { path }),
   summaries: () => invoke("index_summaries"),
   rebuildIndex: () => invoke("index_rebuild"),
+  storeRead: (name) => invoke("store_read", { name }),
+  storeWrite: (name, value) => invoke("store_write", { name, value }),
+  appStoreRead: (name) => invoke("app_store_read", { name }),
+  appStoreWrite: (name, value) => invoke("app_store_write", { name, value }),
+  historyList: (path) => invoke("history_list", { path }),
+  historySnapshot: (path, content) => invoke("history_snapshot", { path, content }),
+  historyRead: (path, ts) => invoke("history_read", { path, ts }),
+  attachments: () => invoke("attachments_list"),
+  async fileRead(path) {
+    const buf = await invoke<ArrayBuffer | number[]>("file_read", { path });
+    return buf instanceof ArrayBuffer ? new Uint8Array(buf) : Uint8Array.from(buf);
+  },
+  fileWrite: (path, data) => invoke("file_write", { path, data }),
+  async importFiles(folder) {
+    const { open } = await import("@tauri-apps/plugin-dialog");
+    const res = await open({ multiple: true, filters: [{ name: "Markdown / PDF / media", extensions: ["md", "markdown", "pdf", "png", "jpg", "jpeg", "gif", "webp", "svg", "mp3", "wav", "ogg", "m4a", "mp4", "webm"] }] });
+    const sources = Array.isArray(res) ? res : res ? [res] : [];
+    return sources.length ? invoke("files_import", { sources, folder }) : [];
+  },
+  async saveText(defaultName, content, ext) {
+    const { save } = await import("@tauri-apps/plugin-dialog");
+    const path = await save({ defaultPath: defaultName, filters: [{ name: ext.toUpperCase(), extensions: [ext] }] });
+    if (!path) return false;
+    await invoke("export_text", { path, content });
+    return true;
+  },
+  vaultBackup: () => invoke("vault_backup"),
+  terminalExec: (command, shell, cwd) => invoke("terminal_exec", { command, shell, cwd }),
+  mcpStart: (port, token) => invoke("mcp_start", { port, token }),
+  mcpStop: () => invoke("mcp_stop"),
+  mcpRespond: (id, body) => invoke("mcp_respond", { id, body }),
 };
 
 export const backend: VaultBackend = inTauri() ? tauriBackend : memoryBackend;

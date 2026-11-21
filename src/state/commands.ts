@@ -11,6 +11,10 @@ import { profile, updateProfile } from "./workspace";
 import { setOverlay, toast } from "./ui";
 import { activePath, closeTab, createFolder, bumpIndex, createNote, openNote, toggleStar } from "./vault";
 import { openDailyNote } from "./daily";
+import { openView } from "./views";
+import { setSlidesFor } from "./ui";
+import { setZenOpen } from "./focus";
+import { exportBackup, exportStandalone, importIntoVault } from "./export";
 
 export interface Command {
   id: string;
@@ -21,7 +25,7 @@ export interface Command {
   run: () => unknown;
 }
 
-const hasNote = () => !!activePath();
+const hasNote = () => !!activePath() && !activePath()!.startsWith("app:");
 
 function cycleTab(step: number) {
   const tabs = profile.openTabs;
@@ -30,7 +34,7 @@ function cycleTab(step: number) {
   openNote(tabs[(i + step + tabs.length) % tabs.length]);
 }
 
-function setMode(mode: "editor" | "split" | "reader") {
+function setMode(mode: "editor" | "split" | "reader" | "mindmap" | "kanban") {
   const path = activePath();
   if (path) updateProfile((p) => { p.noteModes[path] = mode; });
 }
@@ -76,6 +80,21 @@ export const COMMANDS: Command[] = [
     updateSettings((c) => { c.appearance.theme = next; });
     announce(t("announce-theme-changed", { theme: t(`theme-${next}`) }));
   } },
+  { id: "mode-mindmap", label: "mode-mindmap", when: hasNote, run: () => setMode("mindmap") },
+  { id: "mode-kanban", label: "mode-kanban", when: hasNote, run: () => setMode("kanban") },
+  { id: "open-dashboard", label: "view-dashboard", defaultKey: "Mod+Shift+H", run: () => void openView("dashboard") },
+  { id: "open-graph", label: "view-graph", defaultKey: "Mod+G", run: () => void openView("graph") },
+  { id: "open-flashcards", label: "view-flashcards", defaultKey: "Mod+Shift+R", run: () => void openView("flashcards") },
+  { id: "open-projects", label: "view-projects", defaultKey: "Mod+Shift+P", run: () => void openView("projects") },
+  { id: "open-media", label: "view-media", run: () => void openView("media") },
+  { id: "open-zen", label: "view-zen", run: () => void openView("zen") },
+  { id: "zen-mode", label: "focus-zen-mode", defaultKey: "Mod+Shift+Z", run: () => setZenOpen(true) },
+  { id: "present", label: "slides-present", defaultKey: "Mod+Shift+S", when: hasNote, run: () => setSlidesFor(activePath()!) },
+  { id: "terminal", label: "ribbon-terminal", defaultKey: "Mod+`", run: () => window.dispatchEvent(new CustomEvent("nosidian:terminal")) },
+  { id: "companion", label: "pet-studio", run: () => window.dispatchEvent(new CustomEvent("nosidian:pet")) },
+  { id: "import-files", label: "import-files", run: () => void importIntoVault() },
+  { id: "export-backup", label: "export-backup", run: () => void exportBackup() },
+  { id: "export-standalone", label: "export-standalone", run: () => void exportStandalone() },
   { id: "rebuild-index", label: "cmd-rebuild-index", run: async () => {
     const n = await backend.rebuildIndex();
     bumpIndex();
@@ -90,7 +109,9 @@ const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(n
 /** The shortcut currently bound to a command ("" when unbound). */
 export function keyFor(id: string): string {
   const custom = pref("hotkeys")[id];
-  return custom !== undefined ? custom : (commandById(id)?.defaultKey ?? "");
+  const key = custom !== undefined ? custom : (commandById(id)?.defaultKey ?? "");
+  // Off macOS the Ctrl key is reported as "Mod".
+  return isMac() ? key : key.replace(/^Ctrl\+/, "Mod+");
 }
 
 export function setKey(id: string, combo: string): void {
@@ -126,6 +147,7 @@ export function comboOf(e: Pick<KeyboardEvent, "key" | "code" | "ctrlKey" | "met
   else if (e.code === "Comma") key = ",";
   else if (e.code === "Period") key = ".";
   else if (e.code === "Slash") key = "/";
+  else if (e.code === "Backquote") key = "`";
   else key = NAMED[e.key] ?? (e.key.length === 1 ? e.key.toUpperCase() : e.key);
   parts.push(key);
   return parts.join("+");

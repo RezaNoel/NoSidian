@@ -6,7 +6,8 @@
   --font-ui: "Plus Jakarta Sans", "Vazirmatn", system-ui, -apple-system, "Segoe UI", "Noto Sans",
     "Noto Sans Arabic", "Noto Sans CJK SC", "Noto Sans Devanagari", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --accent: #7c3aed;
+  --accent: #3b7ddd;
+  --accent-ink: #fff;
   --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
   --accent-border: color-mix(in srgb, var(--accent) 42%, transparent);
   --glass-blur: 18px;
@@ -34,7 +35,7 @@
   --border: rgb(255 255 255 / 0.11); --border-strong: rgb(255 255 255 / 0.22);
   --hover: rgb(255 255 255 / 0.07); --specular: rgb(255 255 255 / 0.10);
   --shadow: 0 14px 36px rgb(0 0 0 / 0.48);
-  --mesh-1: #2a3cff; --mesh-2: #0f8f8a; --mesh-3: #7c3aed;
+  --mesh-1: #22407e; --mesh-2: #1c4a52; --mesh-3: #2b3150;
 }
 [data-theme="midnight-carbon"] {
   --bg-primary: #06070b; --l1: 11 13 20; --l2: 20 23 34; --l3: 11 13 21;
@@ -42,7 +43,7 @@
   --border: rgb(255 255 255 / 0.12); --border-strong: rgb(255 255 255 / 0.24);
   --hover: rgb(255 255 255 / 0.08); --specular: rgb(255 255 255 / 0.09);
   --shadow: 0 16px 40px rgb(0 0 0 / 0.72);
-  --mesh-1: #1d2b6b; --mesh-2: #4a1d6b; --mesh-3: #0b4f4f;
+  --mesh-1: #182545; --mesh-2: #24233a; --mesh-3: #123331;
 }
 [data-theme="nord-arctic"] {
   --bg-primary: #1f2530; --l1: 41 48 62; --l2: 56 65 83; --l3: 37 44 57;

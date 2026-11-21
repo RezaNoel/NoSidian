@@ -6,7 +6,7 @@ import { Show, createSignal, onCleanup, onMount } from "solid-js";
 import { ChevronDown, Copy, FolderOpen, Minus, PanelLeft, PanelRight, Plus, Search, Square, Star, X } from "lucide-solid";
 import { t } from "../i18n";
 import { inTauri } from "../state/backend";
-import { noteTitle } from "../lib/markdown";
+import { tabTitle as noteTitle } from "../state/views";
 import { activePath, openNote, vault } from "../state/vault";
 import { profile, updateProfile } from "../state/workspace";
 import type { LeftTab } from "../state/types";

@@ -15,6 +15,10 @@ import type { Mention, NoteLinks, RightTab } from "../state/types";
 import { editorGotoLine, revealLine } from "./Editor";
 import { modeOf } from "./NoteView";
 import { scrollReaderTo } from "./Reader";
+import { HistoryPanel } from "./HistoryPanel";
+import { SrsPanel } from "./flashcards/SrsPanel";
+import { FocusPanel } from "./focus/FocusPanel";
+import { isAppView } from "../state/views";
 
 const TABS: { id: RightTab; icon: typeof Link2; label: () => string }[] = [
   { id: "links", icon: Link2, label: () => t("tab-links") },
@@ -148,6 +152,9 @@ export function RightSidebar() {
               <Switch fallback={<p class="empty">{t("panel-coming-soon")}</p>}>
                 <Match when={profile.rightTab === "links"}><LinksPanel path={path} /></Match>
                 <Match when={profile.rightTab === "outline"}><OutlinePanel path={path} /></Match>
+                <Match when={profile.rightTab === "history" && !isAppView(path)}><HistoryPanel path={path} /></Match>
+                <Match when={profile.rightTab === "srs"}><SrsPanel path={path} /></Match>
+                <Match when={profile.rightTab === "focus"}><FocusPanel /></Match>
               </Switch>
             )}
           </Show>

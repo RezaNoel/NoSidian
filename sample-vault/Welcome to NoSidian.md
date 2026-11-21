@@ -5,22 +5,25 @@ author: Workspace
 ---
 # Welcome to NoSidian
 
-A fast, offline-first Markdown knowledge workspace inspired by Obsidian—with **Home Dashboards**, **Multi-line Flashcards**, **Media Studio**, **Interactive Ambient Canvas**, **Companion Pet**, and **Optional Project Mode**.
+NoSidian keeps your notes as plain Markdown files in a folder on your computer. Nothing is sent anywhere. This sample vault shows what the app can do; delete it or open your own folder whenever you like.
 
-> [!tip]+ Open your own Markdown files or local folder
-> Use **Open .md Files** or **Open Local Folder** in the left sidebar toolbar, or **drag and drop** any `.md`, image, or audio files straight onto this window.
+> [!tip]+ Use your own notes
+> Click the vault name at the bottom of the left sidebar and choose **Open an existing folder**. Your files stay where they are.
 
-## Built-In Power Features
-- **5 Home Dashboard Templates & Custom Builder**: Switch to the **Home** icon in the ribbon to explore General, Language, Writer, Developer, or Research dashboards—or customize & export your own JSON layout.
-- **Customizable Files & Folders**: Hover any folder or note in the sidebar and click the palette/settings icon to pick custom icons, colors, and selectable metadata (last opened, word count, backlinks).
-- **Rich Multi-line Flashcards (`??` / `+++`)**: Put `??` on its own line between Front and Back and end cards with `+++`—bold, headings, <u>underline</u>, audio, and zoomable images all render inside cards! See [[Flashcards & Active Recall]].
-- **Interactive Calendar & Daily Note Templates**: Open the **Calendar** tab on the left and click any day to create or open that day's note using your selected template in **Settings → Daily Notes**.
-- **Smart Bilingual RTL/LTR Engine**: Mix English, Persian, Arabic, Portuguese, Japanese, Chinese, and 8 more languages seamlessly. See [[Bilingual RTL & LTR Showcase]].
-- **Two-Way Synced Kanban & Mindmap**: Open [[Projects/Product Roadmap Kanban]] and switch to **Kanban** or **Mindmap** in the top bar.
+## Where things are
+- **Left ribbon:** the dashboard, graph, flashcards, projects, focus studio, reading shelf, terminal and companion.
+- **Ctrl+O** finds a note by name. **Ctrl+K** runs any command. **Ctrl+Shift+F** searches inside notes.
+- **Ctrl+1, 2, 3** switch between the editor, split view and reader.
+- **Alt+D** opens today's daily note. Pick its template under **Settings › Daily notes**.
 
-## Interactive Checklist & Formatting
-Click checkboxes right inside Reader/Split mode:
-- [x] Explore [[Markdown, Math & Mermaid Showcase]]
-- [ ] Try ++underlined++ or `<u>underlined</u>` text
-- [ ] Switch among **14 languages** inside **Settings**
-- [ ] Enable **Project Mode** in **Settings → Modules** if you want Sprints & Pinned Deadlines
+## Try these
+- [x] Read [[Markdown, Math & Mermaid Showcase]] to see formulas, diagrams and callouts.
+- [ ] Study the cards in [[Flashcards & Active Recall]] (Ctrl+Shift+R).
+- [ ] Open [[Projects/Product Roadmap Kanban]] and switch the note to **Kanban** or **Mind map** in the top bar.
+- [ ] Write a line in Persian or Arabic under an English one, as in [[Bilingual RTL & LTR Showcase]]. Each paragraph picks its own direction.
+- [ ] Turn on **Project mode** in **Settings › Modules and accessibility** for sprints, a timeline and deadlines.
+
+## How notes connect
+Link a note by typing its name in double brackets, like `[[Second Brain Architecture]]`. The right sidebar lists every note that links here, and the graph (Ctrl+G) draws the whole vault.
+
+Tick a checkbox above in reader or split view and the file updates.

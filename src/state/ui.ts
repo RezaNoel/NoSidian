@@ -28,8 +28,10 @@ const ui = createRoot(() => {
   const [drawer, setDrawer] = createSignal<Drawer>("none");
   const [overlay, setOverlay] = createSignal<Overlay>("none");
   const [dialog, setDialog] = createSignal<PromptRequest | null>(null);
+  const [zoomImage, setZoomImage] = createSignal<{ src: string; alt: string } | null>(null);
+  const [slides, setSlides] = createSignal<string | null>(null);
   const [toasts, setToasts] = createSignal<{ id: number; text: string; error: boolean }[]>([]);
-  return { mobile, drawer, setDrawer, overlay, setOverlay, dialog, setDialog, toasts, setToasts };
+  return { mobile, drawer, setDrawer, overlay, setOverlay, dialog, setDialog, toasts, setToasts, zoomImage, setZoomImage, slides, setSlides };
 });
 
 export const isMobile = ui.mobile;
@@ -62,6 +64,9 @@ export function closeDialog(result: string | boolean | null): void {
 let toastId = 0;
 if (typeof window !== "undefined") window.addEventListener("nosidian:toast", (e) => toast((e as CustomEvent<string>).detail));
 export const toasts = ui.toasts;
+/** Image shown full-screen by the lightbox (click an image in the reader). */
+export const zoomImage = ui.zoomImage;
+export const setZoomImage = ui.setZoomImage;
 /** Brief on-screen message, also spoken by screen readers. */
 export function toast(text: string, error = false): void {
   const id = ++toastId;
@@ -69,3 +74,6 @@ export function toast(text: string, error = false): void {
   announce(text, error ? "assertive" : "polite");
   setTimeout(() => ui.setToasts((l) => l.filter((x) => x.id !== id)), error ? 6000 : 3200);
 }
+/** Note shown as a full-screen slide deck, if any. */
+export const slidesFor = ui.slides;
+export const setSlidesFor = ui.setSlides;

@@ -1,9 +1,9 @@
 // CodeMirror 6 Markdown editor. One instance per open note; mixed RTL/LTR
 // lines get their own direction, and the theme follows the app tokens.
-import { createEffect, onCleanup, onMount } from "solid-js";
+import { createEffect, createRoot, onCleanup, onMount } from "solid-js";
 import { Compartment, EditorState, type Extension } from "@codemirror/state";
-import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
-import { indentUnit } from "@codemirror/language";
+import { autocompletion, closeBrackets, closeBracketsKeymap, type Completion, type CompletionContext } from "@codemirror/autocomplete";
+import { foldGutter, foldKeymap, indentUnit } from "@codemirror/language";
 import { EditorView, drawSelection, highlightActiveLine, highlightActiveLineGutter, keymap, lineNumbers, placeholder } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
@@ -12,7 +12,10 @@ import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import { tags as tg } from "@lezer/highlight";
 import { t } from "../i18n";
 import { noteTitle } from "../lib/markdown";
-import { contents, setContent } from "../state/vault";
+import { contents, markdownPaths, setContent, indexRev } from "../state/vault";
+import { backend } from "../backend";
+import { formatDailyName } from "../lib/dates";
+import { createResource } from "solid-js";
 import { pref } from "../state/prefs";
 
 const highlight = HighlightStyle.define([
@@ -53,7 +56,89 @@ function prefExtensions(): Extension[] {
     EditorState.tabSize.of(size),
     indentUnit.of(" ".repeat(size)),
     EditorView.contentAttributes.of({ spellcheck: String(pref("spellcheck")) }),
+    pref("foldHeadings") ? [foldGutter(), keymap.of(foldKeymap)] : [],
+    pref("autopairMarkdown") ? markdownPairs : [],
   ];
+}
+
+/** Wrap `**`, `==`, `~~` and `` ` `` around the selection when typed with text selected. */
+const markdownPairs = EditorView.inputHandler.of((view, from, to, text) => {
+  if (from === to || !["*", "=", "~", "`", "_"].includes(text)) return false;
+  const mark = text === "*" || text === "=" || text === "~" ? text.repeat(2) : text;
+  view.dispatch(view.state.changeByRange((r) => ({
+    changes: [{ from: r.from, insert: mark }, { from: r.to, insert: mark }],
+    range: { anchor: r.from + mark.length, head: r.to + mark.length } as never,
+  })));
+  return true;
+});
+
+// ---------- Autocomplete: [[links]], #tags and /commands ----------
+const tagStore = createRoot(() => createResource(() => indexRev() + 1, () => backend.tags().catch(() => []), { initialValue: [] })[0]);
+
+function linkSource(ctx: CompletionContext) {
+  const m = ctx.matchBefore(/\[\[[^\]\n]*$/);
+  if (!m) return null;
+  const options: Completion[] = markdownPaths().map((p) => ({ label: noteTitle(p), detail: p.includes("/") ? p.slice(0, p.lastIndexOf("/")) : undefined, apply: `${noteTitle(p)}]]`, type: "text" }));
+  return { from: m.from + 2, options, validFor: /^[^\]\n]*$/ };
+}
+function tagSource(ctx: CompletionContext) {
+  const m = ctx.matchBefore(/(?:^|\s)#[\p{L}\p{N}_/-]*$/u);
+  if (!m) return null;
+  const from = m.from + m.text.indexOf("#") + 1;
+  return { from, options: tagStore().map((x) => ({ label: x.tag, detail: String(x.count), type: "keyword" })), validFor: /^[\p{L}\p{N}_/-]*$/u };
+}
+const SLASH: [string, string][] = [
+  ["h1", "# "], ["h2", "## "], ["h3", "### "], ["list", "- "], ["numbered", "1. "], ["task", "- [ ] "], ["quote", "> "],
+  ["callout", "> [!note] "], ["code", "```\n\n```"], ["math", "$$\n\n$$"], ["mermaid", "```mermaid\ngraph TD\n  A --> B\n```"],
+  ["table", "| A | B |\n| --- | --- |\n|  |  |"], ["divider", "---\n"], ["card", " :: "], ["cloze", "==text=="],
+];
+function slashSource(ctx: CompletionContext) {
+  const m = ctx.matchBefore(/(?:^|\s)\/[\w-]*$/);
+  if (!m) return null;
+  const from = m.from + m.text.indexOf("/");
+  const options: Completion[] = [
+    ...SLASH.map(([id, text]) => ({ label: `/${id}`, detail: t(`slash-${id}` as "slash-h1"), apply: text, type: "function" })),
+    { label: "/date", detail: t("slash-date"), apply: () => formatDailyName(new Date(), "YYYY-MM-DD"), type: "function" },
+  ].map((o) => typeof o.apply === "function" ? { ...o, apply: (o.apply as () => string)() } : o);
+  return { from, options, validFor: /^\/[\w-]*$/ };
+}
+
+// ---------- Formatting commands (toolbar, palette) ----------
+export type FormatKind = "bold" | "italic" | "strike" | "highlight" | "code" | "link" | "wikilink" | "h1" | "h2" | "h3" | "list" | "numbered" | "task" | "quote" | "codeblock" | "math" | "table" | "callout" | "divider";
+const WRAP: Partial<Record<FormatKind, [string, string]>> = {
+  bold: ["**", "**"], italic: ["*", "*"], strike: ["~~", "~~"], highlight: ["==", "=="], code: ["`", "`"], link: ["[", "](url)"], wikilink: ["[[", "]]"],
+};
+const PREFIX: Partial<Record<FormatKind, string>> = { h1: "# ", h2: "## ", h3: "### ", list: "- ", numbered: "1. ", task: "- [ ] ", quote: "> ", callout: "> [!note] " };
+const BLOCK: Partial<Record<FormatKind, string>> = { codeblock: "```\n$\n```", math: "$$\n$\n$$", table: "| A | B |\n| --- | --- |\n| $ |  |", divider: "\n---\n$" };
+
+export function applyFormat(kind: FormatKind): boolean {
+  const view = activeView;
+  if (!view) return false;
+  const wrap = WRAP[kind], prefix = PREFIX[kind], block = BLOCK[kind];
+  if (wrap) {
+    view.dispatch(view.state.changeByRange((r) => {
+      const sel = view.state.sliceDoc(r.from, r.to);
+      const on = sel.startsWith(wrap[0]) && sel.endsWith(wrap[1]) && sel.length >= wrap[0].length + wrap[1].length;
+      const insert = on ? sel.slice(wrap[0].length, sel.length - wrap[1].length) : wrap[0] + sel + wrap[1];
+      return { changes: { from: r.from, to: r.to, insert }, range: { anchor: on ? r.from : r.from + wrap[0].length, head: on ? r.from + insert.length : r.from + wrap[0].length + sel.length } as never };
+    }));
+  } else if (prefix) {
+    const lines = new Set<number>();
+    for (const r of view.state.selection.ranges) for (let l = view.state.doc.lineAt(r.from).number; l <= view.state.doc.lineAt(r.to).number; l++) lines.add(l);
+    const changes = [...lines].map((n) => {
+      const line = view.state.doc.line(n);
+      const cur = /^(#{1,6} |[-*+] \[[ xX]\] |[-*+] |\d+\. |> \[![\w-]+\] |> )/.exec(line.text)?.[0] ?? "";
+      return { from: line.from, to: line.from + cur.length, insert: cur === prefix ? "" : prefix };
+    });
+    view.dispatch({ changes });
+  } else if (block) {
+    const r = view.state.selection.main;
+    const sel = view.state.sliceDoc(r.from, r.to);
+    const [a, b] = block.split("$");
+    view.dispatch({ changes: { from: r.from, to: r.to, insert: a + sel + b }, selection: { anchor: r.from + a.length, head: r.from + a.length + sel.length } });
+  }
+  view.focus();
+  return true;
 }
 
 /** Imperative handle used by the outline panel. */
@@ -101,6 +186,7 @@ export function Editor(props: { path: string }) {
           syntaxHighlighting(highlight),
           keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, indentWithTab]),
           placeholder(t("editor-label")),
+          autocompletion({ override: [linkSource, tagSource, slashSource], icons: false }),
           EditorView.contentAttributes.of({ "aria-label": `${t("editor-label")}: ${noteTitle(props.path)}`, "aria-multiline": "true", dir: "auto" }),
           theme,
           prefsSlot.of(prefExtensions()),
@@ -108,6 +194,7 @@ export function Editor(props: { path: string }) {
             if (u.docChanged && !syncing) setContent(props.path, u.state.doc.toString());
             if (u.focusChanged && u.view.hasFocus) { activeView = u.view; activeViewPath = props.path; }
           }),
+          EditorView.domEventHandlers({ scroll: (_e, v) => { syncReaderScroll(v); } }),
         ],
       }),
     });
@@ -148,4 +235,15 @@ export function Editor(props: { path: string }) {
   });
 
   return <div ref={host} class="editor-host" />;
+}
+
+/** Split view: keep the reader roughly aligned with the editor's top line. */
+function syncReaderScroll(view: EditorView) {
+  if (!pref("scrollSync")) return;
+  const reader = view.dom.closest(".panes")?.querySelector<HTMLElement>("[data-sync=reader]");
+  if (!reader) return;
+  const sc = view.scrollDOM;
+  const max = sc.scrollHeight - sc.clientHeight;
+  const frac = max > 0 ? sc.scrollTop / max : 0;
+  reader.scrollTop = frac * (reader.scrollHeight - reader.clientHeight);
 }

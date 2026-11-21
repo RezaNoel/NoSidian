@@ -18,7 +18,7 @@ button { cursor: pointer; }
 }
 .skip-link {
   position: absolute; inset-inline-start: 12px; inset-block-start: -100px; z-index: 1000;
-  padding: 8px 14px; background: var(--accent); color: #fff; border-radius: var(--radius-sm);
+  padding: 8px 14px; background: var(--accent); color: var(--accent-ink); border-radius: var(--radius-sm);
   text-decoration: none; font-weight: 600;
 }
 .skip-link:focus { inset-block-start: 12px; }
@@ -52,11 +52,11 @@ button { cursor: pointer; }
 .backdrop { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .backdrop span {
   position: absolute; inline-size: 60vmax; block-size: 60vmax; border-radius: 50%;
-  filter: blur(90px); opacity: 0.38; animation: drift 32s ease-in-out infinite alternate;
+  filter: blur(110px); opacity: 0.2; animation: drift 60s ease-in-out infinite alternate;
 }
 .backdrop span:nth-child(1) { background: var(--mesh-1); inset-block-start: -22vmax; inset-inline-start: -18vmax; }
 .backdrop span:nth-child(2) { background: var(--mesh-2); inset-block-end: -26vmax; inset-inline-end: -16vmax; animation-delay: -11s; }
-.backdrop span:nth-child(3) { background: var(--mesh-3); inset-block-start: 25%; inset-inline-start: 40%; inline-size: 38vmax; block-size: 38vmax; opacity: 0.22; animation-delay: -21s; }
+.backdrop span:nth-child(3) { background: var(--mesh-3); inset-block-start: 25%; inset-inline-start: 40%; inline-size: 38vmax; block-size: 38vmax; opacity: 0.12; animation-delay: -21s; }
 [data-mesh="false"] .backdrop span { animation: none; }
 @keyframes drift {
   0% { transform: translate(0, 0) scale(1); }
@@ -85,7 +85,7 @@ button { cursor: pointer; }
   transition: border-color 120ms, background 120ms;
 }
 .btn:hover { border-color: var(--accent-border); background: var(--hover); }
-.btn.primary { background: var(--accent); border-color: transparent; color: #fff; }
+.btn.primary { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
 .btn.primary:hover { filter: brightness(1.08); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn svg { inline-size: 16px; block-size: 16px; }
@@ -98,6 +98,6 @@ button { cursor: pointer; }
 
 .empty { color: var(--text-muted); font-size: 0.9em; padding: 12px; text-align: center; }
 .section-title {
-  font-size: 0.72em; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);
+  font-size: 0.82em; color: var(--text-muted);
   font-weight: 600; margin: 0;
 }

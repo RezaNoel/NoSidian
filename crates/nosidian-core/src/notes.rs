@@ -24,7 +24,7 @@ pub enum EntryKind {
 }
 
 impl EntryKind {
-    fn from_path(p: &Path) -> Option<Self> {
+    pub fn from_path(p: &Path) -> Option<Self> {
         match p.extension()?.to_str()?.to_ascii_lowercase().as_str() {
             "md" | "markdown" => Some(EntryKind::Markdown),
             "pdf" => Some(EntryKind::Pdf),

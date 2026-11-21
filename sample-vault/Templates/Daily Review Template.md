@@ -2,7 +2,7 @@
 tags: [template, daily]
 date: {{date}}
 ---
-# Daily Log — {{date}} ({{day}})
+# Daily log: {{date}} ({{day}})
 
 ## Top 3 Priorities
 - [ ] 

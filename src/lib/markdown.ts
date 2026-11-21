@@ -75,9 +75,73 @@ export function tagsOf(src: string): string[] {
   return [...out];
 }
 
+const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+
+// KaTeX and highlight.js are loaded once and used synchronously by the renderer.
+import katex from "katex";
+import hljs from "highlight.js/lib/common";
+
+function mathHtml(tex: string, display: boolean): string {
+  try {
+    return katex.renderToString(tex, { displayMode: display, throwOnError: false, output: "htmlAndMathml", strict: "ignore" });
+  } catch {
+    return `<code>${escapeHtml(tex)}</code>`;
+  }
+}
+
+/** Known callout types and the icon class used for each. */
+export const CALLOUTS = ["note", "abstract", "info", "todo", "tip", "success", "question", "warning", "failure", "danger", "bug", "example", "quote"] as const;
+const CALLOUT_ALIAS: Record<string, string> = {
+  summary: "abstract", tldr: "abstract", hint: "tip", important: "tip", check: "success", done: "success",
+  help: "question", faq: "question", caution: "warning", attention: "warning", fail: "failure", missing: "failure",
+  error: "danger", cite: "quote",
+};
+
+let taskCounter = 0;
+
 const marked = new Marked({ gfm: true, breaks: false });
 marked.use({
   extensions: [
+    {
+      name: "blockMath",
+      level: "block",
+      start: (src: string) => src.match(/^\$\$/m)?.index,
+      tokenizer(src: string) {
+        const m = /^\$\$([\s\S]+?)\$\$[^\n]*(?:\n|$)/.exec(src);
+        if (m) return { type: "blockMath", raw: m[0], text: m[1].trim() };
+        return undefined;
+      },
+      renderer(tok: unknown) {
+        return `<div class="math-block" dir="ltr">${mathHtml((tok as unknown as { text: string }).text, true)}</div>\n`;
+      },
+    },
+    {
+      name: "inlineMath",
+      level: "inline",
+      start: (src: string) => src.indexOf("$"),
+      tokenizer(src: string) {
+        const m = /^\$(?!\s)((?:\\\$|[^$\n])+?)(?<!\s)\$(?!\d)/.exec(src);
+        if (m) return { type: "inlineMath", raw: m[0], text: m[1] };
+        return undefined;
+      },
+      renderer(tok: unknown) {
+        return `<span class="math-inline" dir="ltr">${mathHtml((tok as unknown as { text: string }).text, false)}</span>`;
+      },
+    },
+    {
+      name: "embed",
+      level: "inline",
+      start: (src: string) => src.indexOf("![["),
+      tokenizer(src: string) {
+        const m = /^!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/.exec(src);
+        if (m) return { type: "embed", raw: m[0], target: m[1].trim(), size: (m[2] ?? "").trim() };
+        return undefined;
+      },
+      renderer(tok: unknown) {
+        const t = tok as unknown as { target: string; size: string };
+        return `<span class="embed" data-embed="${escapeHtml(t.target)}" data-size="${escapeHtml(t.size)}"></span>`;
+      },
+    },
     {
       name: "wikilink",
       level: "inline",
@@ -87,13 +151,52 @@ marked.use({
         if (m) return { type: "wikilink", raw: m[0], target: m[1].trim(), label: (m[2] ?? m[1]).trim() };
         return undefined;
       },
-      renderer(tok) {
+      renderer(tok: unknown) {
         const t = tok as unknown as { target: string; label: string };
-        const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
-        return `<a class="wikilink" href="#" data-target="${esc(t.target)}">${esc(t.label)}</a>`;
+        return `<a class="wikilink" href="#" data-target="${escapeHtml(t.target)}">${escapeHtml(t.label)}</a>`;
       },
     },
-  ],
+    {
+      name: "mark",
+      level: "inline",
+      start: (src: string) => src.indexOf("=="),
+      tokenizer(this: { lexer: { inlineTokens(s: string): unknown[] } }, src: string) {
+        const m = /^==(?!\s)([^=\n]+?)==/.exec(src);
+        if (m) return { type: "mark", raw: m[0], tokens: this.lexer.inlineTokens(m[1]) };
+        return undefined;
+      },
+      renderer(this: { parser: { parseInline(t: unknown[]): string } }, tok: unknown) {
+        return `<mark>${this.parser.parseInline((tok as unknown as { tokens: unknown[] }).tokens)}</mark>`;
+      },
+    },
+    {
+      name: "underline",
+      level: "inline",
+      start: (src: string) => src.indexOf("++"),
+      tokenizer(this: { lexer: { inlineTokens(s: string): unknown[] } }, src: string) {
+        const m = /^\+\+(?!\s)([^+\n]+?)\+\+/.exec(src);
+        if (m) return { type: "underline", raw: m[0], tokens: this.lexer.inlineTokens(m[1]) };
+        return undefined;
+      },
+      renderer(this: { parser: { parseInline(t: unknown[]): string } }, tok: unknown) {
+        return `<u>${this.parser.parseInline((tok as unknown as { tokens: unknown[] }).tokens)}</u>`;
+      },
+    },
+    {
+      name: "hashtag",
+      level: "inline",
+      start: (src: string) => { const m = /(^|\s)#[\p{L}\p{N}_]/u.exec(src); return m ? m.index + m[1].length : undefined; },
+      tokenizer(src: string) {
+        const m = /^#([\p{L}\p{N}_][\p{L}\p{N}_/-]*)/u.exec(src);
+        if (m && !/^\d+$/.test(m[1])) return { type: "hashtag", raw: m[0], tag: m[1] };
+        return undefined;
+      },
+      renderer(tok: unknown) {
+        const tag = (tok as unknown as { tag: string }).tag;
+        return `<a class="tag" href="#" data-tag="${escapeHtml(tag)}">#${escapeHtml(tag)}</a>`;
+      },
+    },
+  ] as never,
   renderer: {
     heading({ tokens, depth }) {
       const text = this.parser.parseInline(tokens);
@@ -103,13 +206,88 @@ marked.use({
     paragraph({ tokens }) {
       return `<p dir="auto">${this.parser.parseInline(tokens)}</p>\n`;
     },
+    code({ text, lang }) {
+      const language = (lang ?? "").trim().split(/\s+/)[0].toLowerCase();
+      if (language === "mermaid") return `<div class="mermaid-block" data-mermaid="${encodeURIComponent(text)}"></div>\n`;
+      let body: string;
+      try {
+        body = language && hljs.getLanguage(language) ? hljs.highlight(text, { language, ignoreIllegals: true }).value : escapeHtml(text);
+      } catch {
+        body = escapeHtml(text);
+      }
+      return `<div class="code-block" dir="ltr"><div class="code-head"><span class="code-lang">${escapeHtml(language)}</span><button type="button" class="code-copy" data-copy></button></div><pre><code class="hljs">${body}</code></pre></div>\n`;
+    },
+    checkbox({ checked }) {
+      return `<input type="checkbox" class="task-box" data-task="${taskCounter++}"${checked ? " checked" : ""}> `;
+    },
+    image({ href, title, text }) {
+      const local = !/^(https?:|data:|blob:)/i.test(href);
+      const t = title ? ` title="${escapeHtml(title)}"` : "";
+      return local
+        ? `<span class="embed" data-embed="${escapeHtml(decodeURI(href))}" data-alt="${escapeHtml(text)}"></span>`
+        : `<img src="${escapeHtml(href)}" alt="${escapeHtml(text)}"${t} loading="lazy">`;
+    },
+    blockquote({ tokens }) {
+      const inner = this.parser.parse(tokens);
+      const m = /^<p dir="auto">\[!([\w-]+)\]([+-]?)[ \t]*([^\n<]*)(?:<br>\n?|\n|(?=<\/p>))/.exec(inner);
+      if (!m) return `<blockquote dir="auto">${inner}</blockquote>\n`;
+      const raw = m[1].toLowerCase();
+      const type = (CALLOUTS as readonly string[]).includes(raw) ? raw : CALLOUT_ALIAS[raw] ?? "note";
+      const title = m[3].trim() || raw.charAt(0).toUpperCase() + raw.slice(1);
+      let rest = inner.slice(m[0].length);
+      rest = rest.startsWith("</p>") ? rest.slice(4) : `<p dir="auto">${rest}`;
+      const body = rest.trim() ? `<div class="callout-body">${rest}</div>` : "";
+      if (m[2]) {
+        return `<details class="callout callout-${type}" data-callout="${type}"${m[2] === "+" ? " open" : ""}><summary class="callout-title" dir="auto">${title}</summary>${body}</details>\n`;
+      }
+      return `<div class="callout callout-${type}" data-callout="${type}"><div class="callout-title" dir="auto">${title}</div>${body}</div>\n`;
+    },
   },
 });
 
-/** Render Markdown to sanitized HTML. Rich blocks (math, Mermaid, callouts) arrive in Phase 3. */
+/** Render Markdown to sanitized HTML (math, callouts, code, tasks, embeds). */
 export function renderMarkdown(src: string, opts: { breaks?: boolean } = {}): string {
   const [, body] = splitFrontMatter(src);
-  const withMarks = body.replace(/==([^=\n]+)==/g, "<mark>$1</mark>").replace(/\+\+([^+\n]+)\+\+/g, "<u>$1</u>");
-  const html = marked.parse(withMarks, { async: false, breaks: opts.breaks ?? false }) as string;
-  return DOMPurify.sanitize(html, { ADD_ATTR: ["data-target", "dir"] });
+  taskCounter = 0;
+  const html = marked.parse(body, { async: false, breaks: opts.breaks ?? false }) as string;
+  return DOMPurify.sanitize(html, { ADD_ATTR: ["data-target", "dir", "target"], ADD_TAGS: ["details", "summary"] });
+}
+
+/** Line numbers (0-based) of task list items, in document order. */
+export function taskLines(src: string): number[] {
+  const out: number[] = [];
+  const lines = src.split("\n");
+  const [, , start] = splitFrontMatter(src);
+  let fence = false;
+  for (let i = start; i < lines.length; i++) {
+    if (/^\s*(```|~~~)/.test(lines[i])) fence = !fence;
+    if (!fence && /^(?:\s*>)*\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]/.test(lines[i])) out.push(i);
+  }
+  return out;
+}
+
+/** Toggle the n-th task checkbox in the source. */
+export function toggleTask(src: string, n: number, checked: boolean): string {
+  const line = taskLines(src)[n];
+  if (line === undefined) return src;
+  const lines = src.split("\n");
+  lines[line] = lines[line].replace(/\[[ xX]\]/, checked ? "[x]" : "[ ]");
+  return lines.join("\n");
+}
+
+/** Split a note into slides on lines containing only `---` (outside code and front matter). */
+export function splitSlides(src: string): string[] {
+  const [, body] = splitFrontMatter(src);
+  const slides: string[] = [];
+  let cur: string[] = [];
+  let fence = false;
+  for (const l of body.split("\n")) {
+    if (/^\s*(```|~~~)/.test(l)) fence = !fence;
+    if (!fence && /^\s*---\s*$/.test(l)) {
+      slides.push(cur.join("\n"));
+      cur = [];
+    } else cur.push(l);
+  }
+  slides.push(cur.join("\n"));
+  return slides.filter((s) => s.trim());
 }
