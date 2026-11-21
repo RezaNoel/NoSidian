@@ -912,6 +912,42 @@ export interface MessageArgs {
   "greet-birthday-name": { name: string | number };
   "view-start": undefined;
   "zen-back": undefined;
+  "stab-you": undefined;
+  "stab-appearance": undefined;
+  "stab-editor": undefined;
+  "stab-files": undefined;
+  "stab-features": undefined;
+  "stab-calendar": undefined;
+  "stab-companion": undefined;
+  "stab-hotkeys": undefined;
+  "stab-ai": undefined;
+  "stab-advanced": undefined;
+  "stab-access": undefined;
+  "stab-vault": undefined;
+  "settings-results": undefined;
+  "settings-found": { count: string | number };
+  "settings-related": undefined;
+  "personal-name": undefined;
+  "personal-dates": undefined;
+  "personal-date-add": undefined;
+  "personal-date-label": undefined;
+  "personal-date-when": undefined;
+  "personal-startup-sound": undefined;
+  "personal-sound-test": undefined;
+  "personal-greet": undefined;
+  "accent-custom": undefined;
+  "banner-edit": undefined;
+  "vault-switch-open": undefined;
+  "cal-show": undefined;
+  "cal-google": undefined;
+  "cal-google-soon": undefined;
+  "cal-src-daily": undefined;
+  "cal-src-tasks": undefined;
+  "cal-src-deadlines": undefined;
+  "cal-src-flashcards": undefined;
+  "cal-src-focus": undefined;
+  "cal-src-dates": undefined;
+  "cal-src-google": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -1827,5 +1863,41 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "greet-birthday",
   "greet-birthday-name",
   "view-start",
-  "zen-back"
+  "zen-back",
+  "stab-you",
+  "stab-appearance",
+  "stab-editor",
+  "stab-files",
+  "stab-features",
+  "stab-calendar",
+  "stab-companion",
+  "stab-hotkeys",
+  "stab-ai",
+  "stab-advanced",
+  "stab-access",
+  "stab-vault",
+  "settings-results",
+  "settings-found",
+  "settings-related",
+  "personal-name",
+  "personal-dates",
+  "personal-date-add",
+  "personal-date-label",
+  "personal-date-when",
+  "personal-startup-sound",
+  "personal-sound-test",
+  "personal-greet",
+  "accent-custom",
+  "banner-edit",
+  "vault-switch-open",
+  "cal-show",
+  "cal-google",
+  "cal-google-soon",
+  "cal-src-daily",
+  "cal-src-tasks",
+  "cal-src-deadlines",
+  "cal-src-flashcards",
+  "cal-src-focus",
+  "cal-src-dates",
+  "cal-src-google"
 ];

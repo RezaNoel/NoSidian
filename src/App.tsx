@@ -9,7 +9,7 @@ import { Suspense, lazy } from "solid-js";
 const ZenStudioPage = lazy(() => import("./components/focus/ZenStudio"));
 import { vault } from "./state/vault";
 import { BannerSettings } from "./components/Banner";
-import { ContextMenu, installContextMenuGuard } from "./components/ContextMenu";
+import { ContextMenu, installContextMenuGuard, installSelectEnhancer } from "./components/ContextMenu";
 import { Dialogs } from "./components/Dialogs";
 import { Modal } from "./components/Modal";
 import { Onboarding } from "./components/Onboarding";
@@ -42,6 +42,7 @@ export function App() {
   createEffect(() => applyPrefsToDocument());
   onCleanup(installHotkeys());
   installContextMenuGuard();
+  installSelectEnhancer();
 
   const mods = createMemo(() => enabledModules(settings.experienceLevel, settings.moduleOverrides));
   const inWorkspace = () => phase() === "workspace" && !!vault();

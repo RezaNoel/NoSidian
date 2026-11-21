@@ -1,7 +1,13 @@
-// Every setting as a searchable entry: the tab it lives on, the message keys it
-// can be found by, and how to render it.
-import { For, Show, createMemo, createSignal, onCleanup, type JSX } from "solid-js";
-import { Image, RotateCcw, Vault as VaultIcon, Volume2, VolumeX, RefreshCw } from "lucide-solid";
+// Every setting as a searchable entry: its tab, an icon, the message keys and
+// extra English words it can be found by, and how to render it. Settings are
+// rows: icon and label at the start, the control at the end.
+import { For, Index, Show, type JSX } from "solid-js";
+import {
+  AlignJustify, ArrowDownUp, Blocks, BookOpenCheck, Brush, CalendarDays, CaseSensitive, Columns2, Contrast, Droplets,
+  Eye, FileClock, FilePlus, FileText, FolderOpen, Gauge, Hand, Image, Keyboard, Languages, LayoutPanelLeft, ListOrdered,
+  MessageSquareText, Monitor, Music2, Palette, PanelTop, PartyPopper, Play, Plus, Rocket, RotateCcw, Ruler, ScanEye,
+  Sparkles, SpellCheck, SquareRadical, Trash2, User, Vault as VaultIcon, Volume2, VolumeX, RefreshCw, Brackets, Type, Cake,
+} from "lucide-solid";
 import { t, type MessageKey } from "../../i18n";
 import { LANGUAGES, type LanguageCode } from "../../i18n/languages";
 import { readOpenNote } from "../../a11y/voice";
@@ -10,48 +16,86 @@ import { formatDailyName } from "../../lib/dates";
 import { MODULE_MIN_LEVEL, enabledModules } from "../../state/modules";
 import { settings, updateSettings } from "../../state/settings";
 import { pref, setPref, type DefaultMode, type StartupScreen } from "../../state/prefs";
-import { COMMANDS, comboOf, conflictFor, formatCombo, keyFor, setKey, setRecording, commandById } from "../../state/commands";
+import { commandById } from "../../state/commands";
 import { profile, updateProfile } from "../../state/workspace";
 import { setOverlay } from "../../state/ui";
 import { tree } from "../../state/vault";
-import { THEMES, type Density, type ExperienceLevel, type FocusProfile, type ModuleId, type RadiusScale, type SortMode, type ThemeId } from "../../state/types";
-import { Choice, Field, GlassPreview, Toggle, changeLanguage, changeTheme } from "../controls";
+import { personal } from "../../state/personal";
+import { THEMES, type Density, type ExperienceLevel, type FocusProfile, type ModuleId, type RadiusScale, type ThemeId } from "../../state/types";
+import { Toggle, changeLanguage, changeTheme } from "../controls";
 import { CssSettings, McpSettings, PetSettings, PluginSettings, PrefToggle, ShellSettings, VaultTools } from "./advanced";
+import { Hotkeys } from "./hotkeys";
+import { CalendarSettings } from "./calendar";
 
 export type TabId =
-  | "general" | "workspace" | "editor" | "files" | "appearance" | "daily" | "hotkeys"
-  | "pet" | "mcp" | "modules" | "developer" | "vault" | "sync";
+  | "you" | "appearance" | "editor" | "files" | "features" | "calendar" | "companion"
+  | "hotkeys" | "ai" | "advanced" | "access" | "vault";
 
-export interface Entry { tab: TabId; keys: MessageKey[]; render: () => JSX.Element }
+type Icon = typeof User;
+export interface Entry { tab: TabId; icon?: Icon; keys: MessageKey[]; tags?: string; wide?: boolean; render: () => JSX.Element }
 
-const e = (tab: TabId, keys: MessageKey[], render: () => JSX.Element): Entry => ({ tab, keys, render });
+const e = (tab: TabId, icon: Icon | undefined, keys: MessageKey[], render: () => JSX.Element, extra: { tags?: string; wide?: boolean } = {}): Entry =>
+  ({ tab, icon, keys, render, ...extra });
+
+// ---------- Row building blocks ----------
+
+let rowId = 0;
+/** Label at the start, control at the end. */
+function Row(props: { label: string; hint?: string; children: (id: string) => JSX.Element }) {
+  const id = `set-${++rowId}`;
+  return (
+    <div class="set-row">
+      <label class="set-label" for={id}>
+        <span>{props.label}</span>
+        <Show when={props.hint}><small>{props.hint}</small></Show>
+      </label>
+      <div class="set-control">{props.children(id)}</div>
+    </div>
+  );
+}
 
 function Select<T extends string>(props: { label: string; value: T; options: { value: T; label: string }[]; onChange: (v: T) => void; hint?: string }) {
   return (
-    <Field label={props.label} hint={props.hint}>
+    <Row label={props.label} hint={props.hint}>
       {(id) => (
-        <select id={id} class="input" value={props.value} onChange={(ev) => props.onChange(ev.currentTarget.value as T)}>
+        <select id={id} class="select" value={props.value} onChange={(ev) => props.onChange(ev.currentTarget.value as T)}>
           <For each={props.options}>{(o) => <option value={o.value}>{o.label}</option>}</For>
         </select>
       )}
-    </Field>
+    </Row>
   );
 }
 
 function Range(props: { label: string; value: number; min: number; max: number; step: number; show: (v: number) => string; onChange: (v: number) => void }) {
   return (
-    <Field label={`${props.label} (${props.show(props.value)})`}>
-      {(id) => <input id={id} type="range" min={props.min} max={props.max} step={props.step} value={props.value} onInput={(ev) => props.onChange(Number(ev.currentTarget.value))} />}
-    </Field>
+    <Row label={props.label}>
+      {(id) => (
+        <div class="set-range">
+          <input id={id} type="range" min={props.min} max={props.max} step={props.step} value={props.value} onInput={(ev) => props.onChange(Number(ev.currentTarget.value))} />
+          <output for={id}>{props.show(props.value)}</output>
+        </div>
+      )}
+    </Row>
   );
 }
 
-function SoonCard(props: { title: string; desc?: string }) {
+/** Icon buttons for a small set of choices. */
+function Segmented<T extends string>(props: { label: string; value: T; options: { value: T; label: string; icon?: Icon }[]; onChange: (v: T) => void }) {
   return (
-    <div class="soon-card">
-      <strong>{props.title}</strong>
-      <span class="badge">{t("coming-soon")}</span>
-      <Show when={props.desc}><p class="hint">{props.desc}</p></Show>
+    <div class="set-row">
+      <span class="set-label" id={`seg-${props.label}`}><span>{props.label}</span></span>
+      <div class="set-control">
+        <div class="segmented" role="radiogroup" aria-labelledby={`seg-${props.label}`}>
+          <For each={props.options}>
+            {(o) => (
+              <button role="radio" aria-checked={props.value === o.value} title={o.label} onClick={() => props.onChange(o.value)}>
+                <Show when={o.icon}>{(() => { const I = o.icon!; return <I aria-hidden="true" />; })()}</Show>
+                <span class="seg-label">{o.label}</span>
+              </button>
+            )}
+          </For>
+        </div>
+      </div>
     </div>
   );
 }
@@ -80,281 +124,303 @@ const MODULE_LABEL: Record<ModuleId, MessageKey> = {
   "advanced-ribbon-tools": "module-advanced-ribbon-tools",
 };
 
+const moduleOn = (id: ModuleId) => enabledModules(settings.experienceLevel, settings.moduleOverrides).has(id);
+const setModule = (id: ModuleId, v: boolean) => updateSettings((c) => {
+  const byLevel = enabledModules(c.experienceLevel, {}).has(id);
+  if (v === byLevel) delete c.moduleOverrides[id];
+  else c.moduleOverrides[id] = v;
+});
+
 function ModuleToggle(props: { id: ModuleId }) {
-  const on = () => enabledModules(settings.experienceLevel, settings.moduleOverrides).has(props.id);
+  return <Toggle label={t(MODULE_LABEL[props.id])} checked={moduleOn(props.id)} onChange={(v) => setModule(props.id, v)} />;
+}
+
+/** All optional features as a grid of switch tiles. */
+function ModuleGrid() {
+  const ids = (Object.keys(MODULE_LABEL) as ModuleId[]).filter((id) => id !== "advanced-ribbon-tools");
   return (
-    <Toggle
-      label={t(MODULE_LABEL[props.id])}
-      hint={t(`experience-${MODULE_MIN_LEVEL[props.id]}`)}
-      checked={on()}
-      onChange={(v) => updateSettings((c) => {
-        const byLevel = enabledModules(c.experienceLevel, {}).has(props.id);
-        if (v === byLevel) delete c.moduleOverrides[props.id];
-        else c.moduleOverrides[props.id] = v;
-      })}
-    />
+    <div class="module-grid" role="group" aria-label={t("stab-features")}>
+      <For each={ids}>
+        {(id) => (
+          <label class="module-tile" classList={{ on: moduleOn(id) }} title={t(`experience-${MODULE_MIN_LEVEL[id]}`)}>
+            <input type="checkbox" role="switch" checked={moduleOn(id)} onChange={(ev) => setModule(id, ev.currentTarget.checked)} />
+            <span>{t(MODULE_LABEL[id])}</span>
+          </label>
+        )}
+      </For>
+    </div>
   );
 }
 
-const moduleEntry = (tab: TabId, id: ModuleId) => e(tab, [MODULE_LABEL[id]], () => <ModuleToggle id={id} />);
+// ---------- Appearance ----------
 
-// ---------- Hotkeys ----------
+export const ACCENTS = ["#3b7ddd", "#1f9e8a", "#3f9b4f", "#c98a1c", "#d9566b", "#7c5cdb", "#64748b"];
 
-function Hotkeys() {
-  const [filter, setFilter] = createSignal("");
-  const [recording, setRec] = createSignal<string | null>(null);
-  const [problem, setProblem] = createSignal<{ id: string; text: string } | null>(null);
-  const rows = createMemo(() => {
-    const q = filter().trim().toLocaleLowerCase();
-    return COMMANDS.filter((c) => !q || t(c.label).toLocaleLowerCase().includes(q) || formatCombo(keyFor(c.id)).toLocaleLowerCase().includes(q));
-  });
-  const stop = () => { setRec(null); setRecording(false); };
-  onCleanup(() => setRecording(false));
-  const onKey = (id: string, ev: KeyboardEvent) => {
-    if (recording() !== id) return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    if (ev.key === "Escape") return stop();
-    if (ev.key === "Backspace" || ev.key === "Delete") {
-      setKey(id, "");
-      setProblem(null);
-      return stop();
-    }
-    const combo = comboOf(ev);
-    if (!combo) return;
-    const other = conflictFor(combo, id);
-    if (other) {
-      setProblem({ id, text: t("hotkeys-conflict", { name: t(other.label) }) });
-      return;
-    }
-    setKey(id, combo);
-    setProblem(null);
-    stop();
-  };
+const THEME_SWATCH: Record<ThemeId, [string, string, string]> = {
+  "obsidian-slate": ["#0f1219", "#202534", "#eef0f6"],
+  "midnight-carbon": ["#06070b", "#141722", "#f5f6fa"],
+  "nord-arctic": ["#1f2530", "#384153", "#eceff4"],
+  "catppuccin-mocha": ["#151522", "#2b2c44", "#cdd6f4"],
+  "paper-daylight": ["#edf1f8", "#ffffff", "#141720"],
+  "warm-parchment": ["#f2ead8", "#fcf7ec", "#31261b"],
+};
+
+function ThemePicker() {
   return (
-    <div class="hotkeys">
-      <input class="input" type="search" placeholder={t("hotkeys-filter")} aria-label={t("hotkeys-filter")} value={filter()} onInput={(ev) => setFilter(ev.currentTarget.value)} dir="auto" />
-      <p class="hint">{t("hotkeys-record-hint")}</p>
-      <ul class="hotkey-list">
-        <For each={rows()}>
-          {(c) => {
-            const isCustom = () => keyFor(c.id) !== (commandById(c.id)?.defaultKey ?? "");
-            return (
-              <li class="hotkey-row">
-                <span class="hotkey-name" id={`hk-${c.id}`}>{t(c.label)}</span>
-                <button
-                  class="kbd-btn"
-                  classList={{ recording: recording() === c.id }}
-                  aria-describedby={`hk-${c.id}`}
-                  aria-label={`${t(c.label)}: ${recording() === c.id ? t("hotkeys-record") : formatCombo(keyFor(c.id)) || t("hotkey-none")}`}
-                  onClick={() => { setRec(c.id); setRecording(true); setProblem(null); }}
-                  onKeyDown={(ev) => onKey(c.id, ev)}
-                  onBlur={() => recording() === c.id && stop()}
-                >
-                  {recording() === c.id ? t("hotkeys-record") : formatCombo(keyFor(c.id)) || t("hotkey-none")}
-                </button>
-                <button class="icon-btn" disabled={!isCustom()} title={t("hotkeys-reset")} aria-label={`${t("hotkeys-reset")}: ${t(c.label)}`} onClick={() => setKey(c.id, commandById(c.id)?.defaultKey ?? "")}>
-                  <RotateCcw />
-                </button>
-                <Show when={problem()?.id === c.id}><p class="field-error" role="alert">{problem()!.text}</p></Show>
-              </li>
-            );
-          }}
+    <div class="theme-grid" role="radiogroup" aria-label={t("field-theme")}>
+      <For each={THEMES}>
+        {(id) => (
+          <button role="radio" aria-checked={settings.appearance.theme === id} class="theme-tile" onClick={() => changeTheme(id)}>
+            <span class="theme-swatch" style={{ background: THEME_SWATCH[id][0] }} aria-hidden="true">
+              <span style={{ background: THEME_SWATCH[id][1] }} />
+              <span style={{ background: settings.appearance.accent }} />
+              <i style={{ background: THEME_SWATCH[id][2] }} />
+            </span>
+            <span class="theme-name">{t(`theme-${id}`)}</span>
+          </button>
+        )}
+      </For>
+    </div>
+  );
+}
+
+function AccentPicker() {
+  return (
+    <div class="set-row">
+      <span class="set-label"><span>{t("field-accent")}</span></span>
+      <div class="set-control accent-row" role="radiogroup" aria-label={t("field-accent")}>
+        <For each={ACCENTS}>
+          {(c) => (
+            <button role="radio" class="accent-dot" aria-checked={settings.appearance.accent.toLowerCase() === c} aria-label={c} title={c}
+              style={{ background: c }} onClick={() => updateSettings((x) => { x.appearance.accent = c; })} />
+          )}
         </For>
+        <label class="accent-dot custom" title={t("accent-custom")}>
+          <input type="color" aria-label={t("accent-custom")} value={settings.appearance.accent} onInput={(ev) => updateSettings((c) => { c.appearance.accent = ev.currentTarget.value; })} />
+          <Plus aria-hidden="true" />
+        </label>
+      </div>
+    </div>
+  );
+}
+
+// ---------- You ----------
+
+function ImportantDates() {
+  const add = () => personal.update((p) => { p.dates.push({ id: `d${Date.now().toString(36)}`, label: "", date: "" }); });
+  return (
+    <div class="set-block">
+      <div class="set-block-head">
+        <PartyPopper aria-hidden="true" /><span>{t("personal-dates")}</span>
+        <button class="icon-btn sm" title={t("personal-date-add")} aria-label={t("personal-date-add")} onClick={add}><Plus /></button>
+      </div>
+      <ul class="dates-list">
+        <Index each={personal.state.dates}>
+          {(d, i) => (
+            <li>
+              <input class="input sm" dir="auto" placeholder={t("personal-date-label")} aria-label={t("personal-date-label")} value={d().label}
+                onChange={(ev) => { const v = ev.currentTarget.value; personal.update((p) => { p.dates[i].label = v; }); }} />
+              <input class="input sm" type="date" aria-label={t("personal-date-when")} value={d().date.length === 5 ? `2000-${d().date}` : d().date}
+                onChange={(ev) => { const v = ev.currentTarget.value; personal.update((p) => { p.dates[i].date = v.slice(5); }); }} />
+              <button class="icon-btn sm" title={t("action-delete")} aria-label={t("action-delete")} onClick={() => personal.update((p) => { p.dates.splice(i, 1); })}><Trash2 /></button>
+            </li>
+          )}
+        </Index>
       </ul>
     </div>
   );
 }
 
+function playStartSound() {
+  const a = new Audio("sounds/startup.wav");
+  a.volume = 0.7;
+  void a.play().catch(() => undefined);
+}
+
 // ---------- Entries ----------
 
 export const ENTRIES: Entry[] = [
-  // General
-  e("general", ["field-language"], () => (
-    <Field label={t("field-language")}>
+  // You
+  e("you", User, ["personal-name"], () => (
+    <Row label={t("personal-name")}>
+      {(id) => <input id={id} class="input" dir="auto" autocomplete="given-name" value={personal.state.name} onChange={(ev) => { const v = ev.currentTarget.value.trim(); personal.update((p) => { p.name = v; }); }} />}
+    </Row>
+  ), { tags: "name nickname greeting profile me" }),
+  e("you", Cake, ["personal-birthday"], () => (
+    <Row label={t("personal-birthday")}>
+      {(id) => <input id={id} class="input" type="date" value={personal.state.birthday} onChange={(ev) => { const v = ev.currentTarget.value; personal.update((p) => { p.birthday = v; }); }} />}
+    </Row>
+  ), { tags: "birthday born age date of birth" }),
+  e("you", PartyPopper, ["personal-dates", "personal-date-add"], () => <ImportantDates />, { tags: "anniversary event countdown reminder", wide: true }),
+  e("you", Languages, ["field-language"], () => (
+    <Row label={t("field-language")}>
       {(id) => (
-        <select id={id} class="input" value={settings.language ?? "en"} onChange={(ev) => changeLanguage(ev.currentTarget.value as LanguageCode)}>
+        <select id={id} class="select" value={settings.language ?? "en"} onChange={(ev) => changeLanguage(ev.currentTarget.value as LanguageCode)}>
           <For each={LANGUAGES}>{(l) => <option value={l.code} lang={l.code}>{l.name}</option>}</For>
         </select>
       )}
-    </Field>
-  )),
-  e("general", ["field-experience", "experience-beginner", "experience-intermediate", "experience-advanced"], () => (
-    <Select<ExperienceLevel> label={t("field-experience")} value={settings.experienceLevel} hint={t("modules-hint")}
-      options={(["beginner", "intermediate", "advanced"] as const).map((v) => ({ value: v, label: t(`experience-${v}`) }))}
-      onChange={(v) => updateSettings((c) => { c.experienceLevel = v; })} />
-  )),
-  e("general", ["startup-screen", "startup-last", "startup-empty", "startup-daily"], () => (
+    </Row>
+  ), { tags: "language locale persian farsi english translate rtl" }),
+  e("you", Rocket, ["startup-screen", "startup-last", "startup-empty", "startup-daily"], () => (
     <Select<StartupScreen> label={t("startup-screen")} value={pref("startup")}
       options={(["last", "empty", "daily"] as const).map((v) => ({ value: v, label: t(`startup-${v}`) }))}
       onChange={(v) => setPref("startup", v)} />
-  )),
-
-  e("general", ["settings-rerun-onboarding", "settings-rerun-onboarding-hint"], () => (
-    <div class="field">
-      <button class="btn" onClick={rerunOnboarding}><RotateCcw aria-hidden="true" />{t("settings-rerun-onboarding")}</button>
-      <span class="hint">{t("settings-rerun-onboarding-hint")}</span>
+  ), { tags: "open launch start begin home" }),
+  e("you", Music2, ["personal-startup-sound"], () => (
+    <div class="set-row">
+      <Toggle label={t("personal-startup-sound")} checked={personal.state.startupSound} onChange={(v) => personal.update((p) => { p.startupSound = v; })} />
+      <button class="icon-btn" title={t("personal-sound-test")} aria-label={t("personal-sound-test")} onClick={playStartSound}><Play /></button>
     </div>
-  )),
+  ), { tags: "sound chime audio welcome launch" }),
+  e("you", MessageSquareText, ["personal-greet"], () => (
+    <Toggle label={t("personal-greet")} checked={personal.state.greet} onChange={(v) => personal.update((p) => { p.greet = v; })} />
+  ), { tags: "welcome hello greeting message" }),
 
-  // Workspace
-  e("workspace", ["focus-profile", "focus-clean-minimal", "focus-deep-writing", "focus-review-quiz", "focus-full-studio"], () => (
-    <Choice<FocusProfile> legend={t("focus-profile")} value={profile.focusProfile}
+  // Appearance
+  e("appearance", undefined, ["field-theme", ...THEMES.map((x) => `theme-${x}` as MessageKey)], () => <ThemePicker />, { tags: "dark light color colour mode night", wide: true }),
+  e("appearance", Palette, ["field-accent", "accent-custom"], () => <AccentPicker />, { tags: "color colour highlight tint brand" }),
+  e("appearance", Droplets, ["field-glass-blur"], () => (
+    <Range label={t("field-glass-blur")} value={settings.appearance.glassBlur} min={0} max={40} step={1} show={(v) => `${v}px`} onChange={(v) => updateSettings((c) => { c.appearance.glassBlur = v; })} />
+  ), { tags: "glass frosted blur transparency" }),
+  e("appearance", Contrast, ["field-glass-opacity"], () => (
+    <Range label={t("field-glass-opacity")} value={settings.appearance.glassOpacity} min={0.2} max={0.95} step={0.01} show={(v) => `${Math.round(v * 100)}%`} onChange={(v) => updateSettings((c) => { c.appearance.glassOpacity = v; })} />
+  ), { tags: "glass transparency opacity see through" }),
+  e("appearance", undefined, ["field-radius", "radius-sharp", "radius-balanced", "radius-soft"], () => (
+    <Segmented<RadiusScale> label={t("field-radius")} value={settings.appearance.radius}
+      options={(["sharp", "balanced", "soft"] as const).map((v) => ({ value: v, label: t(`radius-${v}`) }))}
+      onChange={(v) => updateSettings((c) => { c.appearance.radius = v; })} />
+  ), { tags: "corners round rounded square" }),
+  e("appearance", undefined, ["field-density", "density-compact", "density-comfortable"], () => (
+    <Segmented<Density> label={t("field-density")} value={settings.appearance.density}
+      options={(["compact", "comfortable"] as const).map((v) => ({ value: v, label: t(`density-${v}`) }))}
+      onChange={(v) => updateSettings((c) => { c.appearance.density = v; })} />
+  ), { tags: "size spacing compact small big font" }),
+  e("appearance", undefined, ["focus-profile", "focus-clean-minimal", "focus-deep-writing", "focus-review-quiz", "focus-full-studio"], () => (
+    <Segmented<FocusProfile> label={t("focus-profile")} value={profile.focusProfile}
       options={(["clean-minimal", "deep-writing", "review-quiz", "full-studio"] as const).map((v) => ({ value: v, label: t(`focus-${v}`) }))}
       onChange={(v) => applyFocusProfile(v)} />
-  )),
-  e("workspace", ["shell-ribbon-label"], () => <Toggle label={t("shell-ribbon-label")} checked={profile.panels.ribbon} onChange={(v) => updateProfile((p) => { p.panels.ribbon = v; })} />),
-  e("workspace", ["shell-left-sidebar-label"], () => <Toggle label={t("shell-left-sidebar-label")} checked={profile.panels.left} onChange={(v) => updateProfile((p) => { p.panels.left = v; })} />),
-  e("workspace", ["shell-right-sidebar-label"], () => <Toggle label={t("shell-right-sidebar-label")} checked={profile.panels.right} onChange={(v) => updateProfile((p) => { p.panels.right = v; })} />),
-  e("workspace", ["shell-status-bar-label"], () => <Toggle label={t("shell-status-bar-label")} checked={profile.panels.statusBar} onChange={(v) => updateProfile((p) => { p.panels.statusBar = v; })} />),
+  ), { tags: "layout panels sidebars workspace minimal" }),
+  e("appearance", Sparkles, ["field-ambient-mesh"], () => <Toggle label={t("field-ambient-mesh")} checked={settings.appearance.ambientMesh} onChange={(v) => updateSettings((c) => { c.appearance.ambientMesh = v; })} />, { tags: "background glow animation" }),
+  e("appearance", PanelTop, ["shell-status-bar-label"], () => <Toggle label={t("shell-status-bar-label")} checked={profile.panels.statusBar} onChange={(v) => updateProfile((p) => { p.panels.statusBar = v; })} />, { tags: "footer bottom bar words count" }),
+  e("appearance", Image, ["banner-title"], () => (
+    <div class="set-row"><span class="set-label"><span>{t("banner-title")}</span></span><button class="btn sm" onClick={() => setOverlay("banner")}>{t("banner-edit")}</button></div>
+  ), { tags: "cover header picture image vault banner" }),
 
   // Editor
-  e("editor", ["editor-default-mode", "mode-editor", "mode-split", "mode-reader"], () => (
-    <Select<DefaultMode> label={t("editor-default-mode")} value={pref("editorDefaultMode")}
-      options={(["editor", "split", "reader"] as const).map((v) => ({ value: v, label: t(`mode-${v}`) }))}
+  e("editor", undefined, ["editor-default-mode", "mode-editor", "mode-split", "mode-reader"], () => (
+    <Segmented<DefaultMode> label={t("editor-default-mode")} value={pref("editorDefaultMode")}
+      options={([["editor", FileText], ["split", Columns2], ["reader", BookOpenCheck]] as const).map(([v, icon]) => ({ value: v, label: t(`mode-${v}`), icon }))}
       onChange={(v) => setPref("editorDefaultMode", v)} />
-  )),
-  e("editor", ["editor-font-size"], () => <Range label={t("editor-font-size")} value={pref("fontSize")} min={11} max={26} step={1} show={(v) => `${v}px`} onChange={(v) => setPref("fontSize", v)} />),
-  e("editor", ["editor-line-height"], () => <Range label={t("editor-line-height")} value={pref("lineHeight")} min={1.2} max={2.4} step={0.1} show={(v) => v.toFixed(1)} onChange={(v) => setPref("lineHeight", v)} />),
-  e("editor", ["editor-tab-size"], () => (
+  ), { tags: "view preview read edit split open" }),
+  e("editor", Type, ["editor-font-size"], () => <Range label={t("editor-font-size")} value={pref("fontSize")} min={11} max={26} step={1} show={(v) => `${v}px`} onChange={(v) => setPref("fontSize", v)} />, { tags: "text size bigger smaller zoom" }),
+  e("editor", AlignJustify, ["editor-line-height"], () => <Range label={t("editor-line-height")} value={pref("lineHeight")} min={1.2} max={2.4} step={0.1} show={(v) => v.toFixed(1)} onChange={(v) => setPref("lineHeight", v)} />, { tags: "spacing leading lines" }),
+  e("editor", Ruler, ["editor-readable"], () => <Toggle label={t("editor-readable")} checked={pref("readableLine")} onChange={(v) => setPref("readableLine", v)} />, { tags: "width narrow column wide" }),
+  e("editor", ListOrdered, ["editor-line-numbers"], () => <Toggle label={t("editor-line-numbers")} checked={pref("lineNumbers")} onChange={(v) => setPref("lineNumbers", v)} />, { tags: "gutter numbers" }),
+  e("editor", CaseSensitive, ["pref-format-bar"], () => <PrefToggle k="formatBar" label={t("pref-format-bar")} />, { tags: "toolbar bold italic buttons formatting" }),
+  e("editor", Brackets, ["pref-show-properties"], () => <PrefToggle k="showProperties" label={t("pref-show-properties")} />, { tags: "frontmatter yaml metadata properties" }),
+  e("editor", Eye, ["pref-props-reader"], () => <PrefToggle k="propsInReader" label={t("pref-props-reader")} />, { tags: "frontmatter metadata reader preview" }),
+  e("editor", ArrowDownUp, ["pref-scroll-sync"], () => <PrefToggle k="scrollSync" label={t("pref-scroll-sync")} />, { tags: "scroll sync split preview" }),
+  e("editor", LayoutPanelLeft, ["pref-fold-headings"], () => <PrefToggle k="foldHeadings" label={t("pref-fold-headings")} />, { tags: "collapse fold headings sections" }),
+  e("editor", Brackets, ["editor-autopair", "pref-autopair-md"], () => (
+    <>
+      <Toggle label={t("editor-autopair")} checked={pref("autopair")} onChange={(v) => setPref("autopair", v)} />
+      <PrefToggle k="autopairMarkdown" label={t("pref-autopair-md")} />
+    </>
+  ), { tags: "brackets quotes close pair wrap" }),
+  e("editor", SpellCheck, ["editor-spellcheck"], () => <Toggle label={t("editor-spellcheck")} checked={pref("spellcheck")} onChange={(v) => setPref("spellcheck", v)} />, { tags: "spelling typo check" }),
+  e("editor", SquareRadical, ["editor-strict-breaks"], () => <Toggle label={t("editor-strict-breaks")} checked={pref("strictBreaks")} onChange={(v) => setPref("strictBreaks", v)} />, { tags: "line break newline markdown" }),
+  e("editor", Keyboard, ["editor-tab-size"], () => (
     <Select<string> label={t("editor-tab-size")} value={String(pref("tabSize"))} options={["2", "4", "8"].map((v) => ({ value: v, label: v }))} onChange={(v) => setPref("tabSize", Number(v))} />
-  )),
-  e("editor", ["editor-readable"], () => <Toggle label={t("editor-readable")} checked={pref("readableLine")} onChange={(v) => setPref("readableLine", v)} />),
-  e("editor", ["editor-line-numbers"], () => <Toggle label={t("editor-line-numbers")} checked={pref("lineNumbers")} onChange={(v) => setPref("lineNumbers", v)} />),
-  e("editor", ["editor-autopair"], () => <Toggle label={t("editor-autopair")} checked={pref("autopair")} onChange={(v) => setPref("autopair", v)} />),
-  e("editor", ["editor-spellcheck"], () => <Toggle label={t("editor-spellcheck")} checked={pref("spellcheck")} onChange={(v) => setPref("spellcheck", v)} />),
-  e("editor", ["editor-strict-breaks"], () => <Toggle label={t("editor-strict-breaks")} checked={pref("strictBreaks")} onChange={(v) => setPref("strictBreaks", v)} />),
+  ), { tags: "indent spaces tab" }),
 
-  // Files and links
-  e("files", ["files-new-note-folder", "files-root"], () => (
+  // Files and daily notes
+  e("files", FilePlus, ["files-new-note-folder", "files-root"], () => (
     <Select<string> label={t("files-new-note-folder")} value={pref("newNoteFolder")}
       options={[{ value: "", label: t("files-root") }, ...[...tree.folders].sort().map((f) => ({ value: f, label: f }))]}
       onChange={(v) => setPref("newNoteFolder", v)} />
-  )),
-  e("files", ["action-sort", "sort-name-asc", "sort-modified-new", "sort-created-new"], () => (
-    <Select<SortMode> label={t("action-sort")} value={profile.sort}
-      options={(["name-asc", "name-desc", "modified-new", "modified-old", "created-new", "created-old"] as const).map((v) => ({ value: v, label: t(`sort-${v}`) }))}
-      onChange={(v) => updateProfile((p) => { p.sort = v; })} />
-  )),
-  e("files", ["files-confirm-delete"], () => <Toggle label={t("files-confirm-delete")} checked={pref("confirmDelete")} onChange={(v) => setPref("confirmDelete", v)} />),
-  moduleEntry("files", "pdf-support"),
-  moduleEntry("files", "recent-files"),
-
-  // Appearance
-  e("appearance", ["field-theme", ...THEMES.map((x) => `theme-${x}` as MessageKey)], () => (
-    <Select<ThemeId> label={t("field-theme")} value={settings.appearance.theme} options={THEMES.map((v) => ({ value: v, label: t(`theme-${v}`) }))} onChange={changeTheme} />
-  )),
-  e("appearance", ["field-accent"], () => (
-    <Field label={t("field-accent")}>
-      {(id) => <input id={id} type="color" class="color-input" value={settings.appearance.accent} onInput={(ev) => updateSettings((c) => { c.appearance.accent = ev.currentTarget.value; })} />}
-    </Field>
-  )),
-  e("appearance", ["field-glass-blur", "field-glass-opacity", "glass-preview-label"], () => (
-    <>
-      <Range label={t("field-glass-blur")} value={settings.appearance.glassBlur} min={0} max={40} step={1} show={(v) => `${v}px`} onChange={(v) => updateSettings((c) => { c.appearance.glassBlur = v; })} />
-      <Range label={t("field-glass-opacity")} value={settings.appearance.glassOpacity} min={0.2} max={0.95} step={0.01} show={(v) => `${Math.round(v * 100)}%`} onChange={(v) => updateSettings((c) => { c.appearance.glassOpacity = v; })} />
-      <GlassPreview />
-    </>
-  )),
-  e("appearance", ["field-radius", "radius-sharp", "radius-balanced", "radius-soft"], () => (
-    <Choice<RadiusScale> legend={t("field-radius")} value={settings.appearance.radius}
-      options={(["sharp", "balanced", "soft"] as const).map((v) => ({ value: v, label: t(`radius-${v}`) }))}
-      onChange={(v) => updateSettings((c) => { c.appearance.radius = v; })} />
-  )),
-  e("appearance", ["field-density", "density-compact", "density-comfortable"], () => (
-    <Choice<Density> legend={t("field-density")} value={settings.appearance.density}
-      options={(["compact", "comfortable"] as const).map((v) => ({ value: v, label: t(`density-${v}`) }))}
-      onChange={(v) => updateSettings((c) => { c.appearance.density = v; })} />
-  )),
-  e("appearance", ["field-ambient-mesh"], () => <Toggle label={t("field-ambient-mesh")} checked={settings.appearance.ambientMesh} onChange={(v) => updateSettings((c) => { c.appearance.ambientMesh = v; })} />),
-  e("appearance", ["banner-title", "banner-toggle"], () => (
-    <button class="btn" onClick={() => setOverlay("banner")}><Image aria-hidden="true" />{t("banner-title")}</button>
-  )),
-
-  // Daily notes
-  moduleEntry("daily", "daily-calendar"),
-  e("daily", ["daily-folder"], () => (
-    <Field label={t("daily-folder")}>
-      {(id) => <input id={id} class="input" value={pref("dailyFolder")} dir="auto" onChange={(ev) => setPref("dailyFolder", ev.currentTarget.value.trim())} />}
-    </Field>
-  )),
-  e("daily", ["daily-format"], () => (
-    <Field label={t("daily-format")} hint={`YYYY · MM · DD → ${formatDailyName(new Date(), pref("dailyFormat"))}.md`}>
+  ), { tags: "folder location new note where" }),
+  e("files", Trash2, ["files-confirm-delete"], () => <Toggle label={t("files-confirm-delete")} checked={pref("confirmDelete")} onChange={(v) => setPref("confirmDelete", v)} />, { tags: "delete trash remove confirm ask" }),
+  e("files", FileClock, ["pref-history-auto"], () => <PrefToggle k="historyAuto" label={t("pref-history-auto")} />, { tags: "history versions snapshots backup undo" }),
+  e("files", CalendarDays, ["daily-folder"], () => (
+    <Row label={t("daily-folder")}>{(id) => <input id={id} class="input" value={pref("dailyFolder")} dir="auto" onChange={(ev) => setPref("dailyFolder", ev.currentTarget.value.trim())} />}</Row>
+  ), { tags: "daily journal diary folder" }),
+  e("files", CalendarDays, ["daily-format"], () => (
+    <Row label={t("daily-format")} hint={`${formatDailyName(new Date(), pref("dailyFormat"))}.md`}>
       {(id) => <input id={id} class="input" dir="ltr" value={pref("dailyFormat")} onInput={(ev) => setPref("dailyFormat", ev.currentTarget.value)} />}
-    </Field>
-  )),
-  e("daily", ["daily-template", "daily-template-none"], () => (
+    </Row>
+  ), { tags: "daily date format name journal" }),
+  e("files", FileText, ["daily-template", "daily-template-none"], () => (
     <Select<string> label={t("daily-template")} value={pref("dailyTemplate")}
-      hint="{{date}} · {{title}} · {{time}}"
       options={[{ value: "", label: t("daily-template-none") }, ...tree.notes.filter((n) => n.kind === "markdown").map((n) => ({ value: n.path, label: n.path.replace(/\.md$/i, "") }))]}
       onChange={(v) => setPref("dailyTemplate", v)} />
-  )),
-  e("daily", ["daily-open-startup"], () => <Toggle label={t("daily-open-startup")} checked={pref("dailyOnStartup")} onChange={(v) => setPref("dailyOnStartup", v)} />),
+  ), { tags: "daily template journal" }),
+  e("files", Rocket, ["daily-open-startup"], () => <Toggle label={t("daily-open-startup")} checked={pref("dailyOnStartup")} onChange={(v) => setPref("dailyOnStartup", v)} />, { tags: "daily open start launch" }),
 
-  // Editor extras
-  e("editor", ["pref-format-bar"], () => <PrefToggle k="formatBar" label={t("pref-format-bar")} />),
-  e("editor", ["pref-show-properties"], () => <PrefToggle k="showProperties" label={t("pref-show-properties")} />),
-  e("editor", ["pref-props-reader"], () => <PrefToggle k="propsInReader" label={t("pref-props-reader")} />),
-  e("editor", ["pref-scroll-sync"], () => <PrefToggle k="scrollSync" label={t("pref-scroll-sync")} />),
-  e("editor", ["pref-fold-headings"], () => <PrefToggle k="foldHeadings" label={t("pref-fold-headings")} />),
-  e("editor", ["pref-autopair-md"], () => <PrefToggle k="autopairMarkdown" label={t("pref-autopair-md")} hint={t("pref-autopair-md-hint")} />),
-  e("files", ["pref-history-auto"], () => <PrefToggle k="historyAuto" label={t("pref-history-auto")} hint={t("pref-history-auto-hint")} />),
+  // Features
+  e("features", Gauge, ["field-experience", "experience-beginner", "experience-intermediate", "experience-advanced"], () => (
+    <Segmented<ExperienceLevel> label={t("field-experience")} value={settings.experienceLevel}
+      options={(["beginner", "intermediate", "advanced"] as const).map((v) => ({ value: v, label: t(`experience-${v}`) }))}
+      onChange={(v) => updateSettings((c) => { c.experienceLevel = v; })} />
+  ), { tags: "level beginner advanced simple power user" }),
+  e("features", Blocks, (Object.values(MODULE_LABEL) as MessageKey[]), () => <ModuleGrid />, { tags: "modules features enable disable turn on off tools", wide: true }),
+
+  // Calendar
+  e("calendar", CalendarDays, ["cal-show", "cal-google"], () => <CalendarSettings />, { tags: "calendar google events tasks markers sync", wide: true }),
+
+  // Companion
+  e("companion", undefined, ["onboarding-pet", "pet-open", "pet-floating", "pet-model-upload"], () => <PetSettings />, { tags: "pet companion animal model upload 3d", wide: true }),
 
   // Hotkeys
-  e("hotkeys", ["settings-tab-hotkeys", "hotkeys-filter", ...COMMANDS.map((c) => c.label)], () => <Hotkeys />),
+  e("hotkeys", undefined, ["settings-tab-hotkeys", "hotkeys-filter"], () => <Hotkeys />, { tags: "shortcuts keyboard keys bindings", wide: true }),
 
-  // Pet
-  e("pet", ["onboarding-pet", "pet-open", "pet-economy-hint"], () => <PetSettings />),
-
-  // MCP
-  moduleEntry("mcp", "mcp-bridge"),
-  e("mcp", ["settings-tab-mcp", "mcp-enable", "mcp-access", "mcp-port", "mcp-copy-token", "mcp-pending"], () => <McpSettings />),
-
-  // Modules and accessibility
-  e("modules", ["field-screen-reader", "field-screen-reader-hint", "speech-rate", "speech-read-note"], () => (
+  // AI (MCP)
+  e("ai", undefined, ["settings-tab-mcp", "mcp-enable", "mcp-access", "mcp-port", "mcp-copy-token"], () => (
     <>
-      <Toggle label={t("field-screen-reader")} hint={`${t("field-screen-reader-hint")} ${t("speech-shortcuts")}`} checked={settings.accessibility.screenReaderMode} onChange={(v) => updateSettings((c) => { c.accessibility.screenReaderMode = v; })} />
+      <ModuleToggle id="mcp-bridge" />
+      <McpSettings />
+    </>
+  ), { tags: "ai claude chatgpt cursor assistant mcp bridge connect llm", wide: true }),
+
+  // Advanced
+  e("advanced", undefined, ["ribbon-terminal", "dev-system-shell"], () => (
+    <>
+      <ModuleToggle id="integrated-terminal" />
+      <ShellSettings />
+    </>
+  ), { tags: "terminal shell command line console powershell" }),
+  e("advanced", Brush, ["dev-css", "dev-css-enable"], () => <CssSettings />, { tags: "css style custom theme snippet", wide: true }),
+  e("advanced", Blocks, ["dev-plugins", "dev-plugin-add"], () => <PluginSettings />, { tags: "plugins javascript scripts extensions", wide: true }),
+
+  // Accessibility
+  e("access", ScanEye, ["field-screen-reader", "speech-rate", "speech-read-note"], () => (
+    <>
+      <Toggle label={t("field-screen-reader")} checked={settings.accessibility.screenReaderMode} onChange={(v) => updateSettings((c) => { c.accessibility.screenReaderMode = v; })} />
       <Show when={settings.accessibility.screenReaderMode}>
         <Range label={t("speech-rate")} value={settings.accessibility.speechRate} min={0.5} max={2} step={0.1} show={(v) => `${v.toFixed(1)}×`} onChange={(v) => updateSettings((c) => { c.accessibility.speechRate = v; })} />
-        <div class="inline-actions">
-          <button class="btn" onClick={() => readOpenNote()}><Volume2 aria-hidden="true" />{t("speech-read-note")}</button>
-          <button class="btn" onClick={() => stopSpeaking()}><VolumeX aria-hidden="true" />{t("speech-stop")}</button>
+        <div class="set-row">
+          <span class="set-label"><span>{t("speech-read-note")}</span></span>
+          <div class="set-control row">
+            <button class="icon-btn" title={t("speech-read-note")} aria-label={t("speech-read-note")} onClick={() => readOpenNote()}><Volume2 /></button>
+            <button class="icon-btn" title={t("speech-stop")} aria-label={t("speech-stop")} onClick={() => stopSpeaking()}><VolumeX /></button>
+          </div>
         </div>
       </Show>
     </>
-  )),
-  e("modules", ["field-reduce-motion"], () => <Toggle label={t("field-reduce-motion")} checked={settings.accessibility.reduceMotion} onChange={(v) => updateSettings((c) => { c.accessibility.reduceMotion = v; })} />),
-  e("modules", ["modules-hint"], () => <p class="hint">{t("modules-hint")}</p>),
-  ...(Object.keys(MODULE_LABEL) as ModuleId[])
-    .filter((id) => !["mcp-bridge", "developer-extensions", "advanced-ribbon-tools", "integrated-terminal", "daily-calendar", "pdf-support", "recent-files"].includes(id))
-    .map((id) => moduleEntry("modules", id)),
+  ), { tags: "blind screen reader voice speak read aloud tts accessibility" }),
+  e("access", Hand, ["field-reduce-motion"], () => <Toggle label={t("field-reduce-motion")} checked={settings.accessibility.reduceMotion} onChange={(v) => updateSettings((c) => { c.accessibility.reduceMotion = v; })} />, { tags: "animation motion movement calm" }),
 
-  // Developer
-  moduleEntry("developer", "developer-extensions"),
-  moduleEntry("developer", "integrated-terminal"),
-  moduleEntry("developer", "advanced-ribbon-tools"),
-  e("developer", ["dev-system-shell", "dev-system-shell-hint"], () => <ShellSettings />),
-  e("developer", ["dev-css", "dev-css-enable"], () => <CssSettings />),
-  e("developer", ["dev-plugins", "dev-plugins-hint", "dev-plugin-add"], () => <PluginSettings />),
-  e("developer", ["cmd-rebuild-index"], () => <RebuildButton />),
-
-  // Vault and backup
-  e("vault", ["vault-switcher-title"], () => <button class="btn" onClick={() => setOverlay("vaults")}><VaultIcon aria-hidden="true" />{t("vault-switcher-title")}</button>),
-  e("vault", ["banner-title"], () => <button class="btn" onClick={() => setOverlay("banner")}><Image aria-hidden="true" />{t("banner-title")}</button>),
-  e("vault", ["cmd-rebuild-index"], () => <RebuildButton />),
-  e("vault", ["import-files", "export-backup", "export-standalone"], () => <VaultTools />),
-
-  // Device sync
-  e("sync", ["settings-tab-sync", "sync-desc"], () => <SoonCard title={t("settings-tab-sync")} desc={t("sync-desc")} />),
+  // Vault
+  e("vault", VaultIcon, ["vault-switcher-title"], () => (
+    <div class="set-row"><span class="set-label"><span>{t("vault-switcher-title")}</span></span><button class="btn sm" onClick={() => setOverlay("vaults")}><FolderOpen />{t("vault-switch-open")}</button></div>
+  ), { tags: "vault folder switch open change" }),
+  e("vault", undefined, ["import-files", "export-backup", "export-standalone"], () => <VaultTools />, { tags: "backup export import zip html", wide: true }),
+  e("vault", RefreshCw, ["cmd-rebuild-index"], () => (
+    <div class="set-row"><span class="set-label"><span>{t("cmd-rebuild-index")}</span></span><button class="icon-btn" title={t("cmd-rebuild-index")} aria-label={t("cmd-rebuild-index")} onClick={() => void commandById("rebuild-index")?.run()}><RefreshCw /></button></div>
+  ), { tags: "index search rebuild refresh fix" }),
+  e("vault", Monitor, ["settings-rerun-onboarding"], () => (
+    <div class="set-row"><span class="set-label"><span>{t("settings-rerun-onboarding")}</span></span><button class="icon-btn" title={t("settings-rerun-onboarding")} aria-label={t("settings-rerun-onboarding")} onClick={rerunOnboarding}><RotateCcw /></button></div>
+  ), { tags: "setup wizard onboarding start over" }),
 ];
-
-function RebuildButton() {
-  return (
-    <button class="btn" onClick={() => void commandById("rebuild-index")?.run()}>
-      <RefreshCw aria-hidden="true" />{t("cmd-rebuild-index")}
-    </button>
-  );
-}
 
 /** Reset onboarding and reload into the wizard (vaults and notes stay). */
 function rerunOnboarding(): void {
@@ -376,4 +442,3 @@ export function applyFocusProfile(v: FocusProfile): void {
     p.panels = { ...layout[v] };
   });
 }
-

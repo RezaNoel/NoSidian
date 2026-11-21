@@ -21,15 +21,59 @@ export interface MenuItem {
   run: () => void;
 }
 
+interface MenuState { x: number; y: number; items: MenuItem[]; opener: HTMLElement | null; minWidth?: number; listbox?: boolean }
 const menu = createRoot(() => {
-  const [state, setState] = createSignal<{ x: number; y: number; items: MenuItem[]; opener: HTMLElement | null } | null>(null);
+  const [state, setState] = createSignal<MenuState | null>(null);
   return { state, setState };
 });
 
-export function openMenu(e: MouseEvent | { clientX: number; clientY: number }, items: MenuItem[]): void {
+export function openMenu(e: MouseEvent | { clientX: number; clientY: number }, items: MenuItem[], opts: { minWidth?: number; listbox?: boolean } = {}): void {
   if ("preventDefault" in e) { e.preventDefault(); e.stopPropagation(); }
   if (!items.length) return;
-  menu.setState({ x: e.clientX, y: e.clientY, items, opener: document.activeElement as HTMLElement | null });
+  menu.setState({ x: e.clientX, y: e.clientY, items, opener: document.activeElement as HTMLElement | null, ...opts });
+}
+
+/** Native <select> elements keep their value and change events, but open this themed list instead of the browser's. */
+export function installSelectEnhancer(): void {
+  const open = (sel: HTMLSelectElement) => {
+    if (sel.disabled || sel.multiple) return;
+    const r = sel.getBoundingClientRect();
+    const rtl = getComputedStyle(sel).direction === "rtl";
+    sel.focus();
+    const items: MenuItem[] = [];
+    let group: string | null = null;
+    for (const o of Array.from(sel.options)) {
+      const g = o.parentElement instanceof HTMLOptGroupElement ? o.parentElement.label : null;
+      items.push({
+        label: o.label || o.text,
+        mark: o.selected,
+        disabled: o.disabled,
+        sep: g !== group && items.length > 0,
+        run: () => {
+          if (sel.value === o.value) return;
+          sel.value = o.value;
+          sel.dispatchEvent(new Event("input", { bubbles: true }));
+          sel.dispatchEvent(new Event("change", { bubbles: true }));
+        },
+      });
+      group = g;
+    }
+    menu.setState({ x: rtl ? r.right - r.width : r.left, y: r.bottom + 4, items, opener: sel, minWidth: r.width, listbox: true });
+  };
+  window.addEventListener("mousedown", (e) => {
+    const sel = (e.target as HTMLElement | null)?.closest?.("select");
+    if (!sel || e.button !== 0) return;
+    e.preventDefault();
+    open(sel);
+  }, true);
+  window.addEventListener("keydown", (e) => {
+    const sel = e.target instanceof HTMLSelectElement ? e.target : null;
+    if (!sel) return;
+    if (e.key === "Enter" || e.key === " " || (e.altKey && (e.key === "ArrowDown" || e.key === "ArrowUp")) || e.key === "F4") {
+      e.preventDefault();
+      open(sel);
+    }
+  }, true);
 }
 
 /** Replace the open menu's items in place (used by checkbox items). */
@@ -87,7 +131,9 @@ export function ContextMenu() {
           const r = el.getBoundingClientRect();
           el.style.left = `${Math.max(8, Math.min(s.x, window.innerWidth - r.width - 8))}px`;
           el.style.top = `${Math.max(8, Math.min(s.y, window.innerHeight - r.height - 8))}px`;
-          el.querySelector<HTMLElement>("[role^=menuitem]:not(:disabled)")?.focus();
+          const current = el.querySelector<HTMLElement>("[aria-checked=true]:not(:disabled)");
+          (current ?? el.querySelector<HTMLElement>("[role^=menuitem]:not(:disabled)"))?.focus();
+          current?.scrollIntoView({ block: "nearest" });
         });
         return (
           <Portal>
@@ -95,8 +141,9 @@ export function ContextMenu() {
             <div
               ref={el}
               class="glass-modal context-menu"
+              classList={{ listbox: !!s.listbox }}
               role="menu"
-              style={{ left: `${s.x}px`, top: `${s.y}px` }}
+              style={{ left: `${s.x}px`, top: `${s.y}px`, "min-inline-size": s.minWidth ? `${Math.max(160, s.minWidth)}px` : undefined }}
               onKeyDown={(e) => {
                 if (e.key === "Escape" || e.key === "Tab") { e.preventDefault(); close(); return; }
                 rovingKeydown("[role^=menuitem]:not(:disabled)", "vertical")(e);
@@ -109,7 +156,7 @@ export function ContextMenu() {
                     <button
                       role={item.checked !== undefined ? "menuitemcheckbox" : item.mark !== undefined ? "menuitemradio" : "menuitem"}
                       aria-checked={item.checked ?? item.mark}
-                      tabIndex={i() === 0 ? 0 : -1}
+                      tabIndex={i() === 0 || item.mark ? 0 : -1}
                       disabled={item.disabled}
                       classList={{ danger: !!item.danger, check: item.checked !== undefined }}
                       onClick={() => {
