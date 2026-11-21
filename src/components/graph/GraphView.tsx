@@ -91,7 +91,7 @@ export default function GraphView() {
   const palette = () => (g().colorMode === "custom" ? g().customPalette : GRAPH_PALETTE_PRESETS[0].colors);
   const colorOf = (n: N, maxDeg: number, minT: number, maxT: number) => {
     if (n.tag) return "#94a3b8";
-    if (g().colorMode === "monochrome") return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#8b7cf6";
+    if (g().colorMode === "monochrome") return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#3b7ddd";
     if (g().colorMode === "heatmap") return `hsl(${220 - (n.deg / Math.max(1, maxDeg)) * 200},75%,58%)`;
     if (g().colorMode === "age") return `hsl(${200 + ((n.created - minT) / Math.max(1, maxT - minT)) * 120},65%,60%)`;
     const pal = palette();

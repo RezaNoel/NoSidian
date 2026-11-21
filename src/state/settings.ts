@@ -50,6 +50,16 @@ export const initSettings = store.init;
 export const updateSettings = store.update;
 export const resetSettings = store.reset;
 
+/** Text color for labels on an accent fill: white unless the accent is too light for it. */
+export function accentInk(hex: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return "#fff";
+  const n = parseInt(m[1], 16);
+  const lin = (c: number) => { const v = c / 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  const lum = 0.2126 * lin(n >> 16) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+  return 1.05 / (lum + 0.05) >= 3.6 ? "#fff" : "#0b0d12";
+}
+
 /** Push appearance and accessibility settings onto <html> as data attributes and CSS variables. */
 export function applyToDocument(cfg: AppConfig, root: HTMLElement = document.documentElement): void {
   const a = cfg.appearance;
@@ -61,6 +71,7 @@ export function applyToDocument(cfg: AppConfig, root: HTMLElement = document.doc
   root.dataset.a11y = String(acc.screenReaderMode);
   root.dataset.reduceMotion = String(acc.reduceMotion || acc.screenReaderMode);
   root.style.setProperty("--accent", a.accent);
+  root.style.setProperty("--accent-ink", accentInk(a.accent));
   root.style.setProperty("--glass-blur", `${a.glassBlur}px`);
   root.style.setProperty("--glass-opacity", String(a.glassOpacity));
 }

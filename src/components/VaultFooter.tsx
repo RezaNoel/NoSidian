@@ -1,5 +1,5 @@
 // Bottom of the left sidebar: vault switcher, ambient toggle and settings.
-import { Settings, Sparkles, Vault as VaultIcon } from "lucide-solid";
+import { Blend, Settings, Vault as VaultIcon } from "lucide-solid";
 import { t } from "../i18n";
 import { settings, updateSettings } from "../state/settings";
 import { setOverlay } from "../state/ui";
@@ -19,7 +19,7 @@ export function VaultFooter() {
         aria-label={t("footer-ambient")}
         onClick={() => updateSettings((c) => { c.appearance.ambientMesh = !c.appearance.ambientMesh; })}
       >
-        <Sparkles />
+        <Blend />
       </button>
       <button class="icon-btn sm" title={t("footer-settings")} aria-label={t("footer-settings")} aria-haspopup="dialog" onClick={() => setOverlay("settings")}>
         <Settings />

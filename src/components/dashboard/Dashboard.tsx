@@ -2,7 +2,7 @@
 // pet). Edit mode adds, removes, resizes and reorders widgets.
 import { For, Match, Show, Switch, createMemo, createResource, createSignal, onMount } from "solid-js";
 import { ArrowLeft, ArrowRight, Check, Download, Pencil, Plus, Trash2, Upload, X } from "lucide-solid";
-import { t } from "../../i18n";
+import { locale, t } from "../../i18n";
 import { backend } from "../../backend";
 import { DASHBOARD_TEMPLATES, DASHBOARD_WIDGET_CATALOG, createCustomHub, exportDashboardJson, parseImportedDashboardJson, stepWidgetSpan } from "../../core/dashboardPresets";
 import { computeDeadlineCountdown } from "../../core/projects";
@@ -59,6 +59,8 @@ const wordsToday = createMemo(() => {
   return Math.max(0, total - (base?.day === day ? base.words : total));
 });
 
+const num = (n: number) => n.toLocaleString(locale());
+
 function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
   const w = () => props.w;
   const [tags] = createResource(() => indexRev() + 1, () => backend.tags().catch(() => []), { initialValue: [] });
@@ -70,8 +72,8 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
         <div class="w-cover" style={{ "background-image": `url(${coverSrc(w().coverImage)})` }}>
           <div class="w-cover-text">
             <h2 dir="auto">{activeHub() ? hubName(activeHub()!) : ""}</h2>
-            <Show when={props.edit} fallback={<p dir="auto">{w().subtitle || t("dash-cover-subtitle")}</p>}>
-              <input class="input sm" dir="auto" value={w().subtitle ?? ""} placeholder={t("dash-cover-subtitle")} aria-label={t("dash-subtitle")} onChange={(e) => { const v = e.currentTarget.value; updateWidget(w().id, (x) => { x.subtitle = v; }); }} />
+            <Show when={props.edit} fallback={<p dir="auto">{w().subtitle || new Date().toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long" })}</p>}>
+              <input class="input sm" dir="auto" value={w().subtitle ?? ""} placeholder={t("dash-subtitle")} aria-label={t("dash-subtitle")} onChange={(e) => { const v = e.currentTarget.value; updateWidget(w().id, (x) => { x.subtitle = v; }); }} />
               <select class="select sm" aria-label={t("dash-cover-image")} value={w().coverImage ?? ""} onChange={(e) => { const v = e.currentTarget.value; updateWidget(w().id, (x) => { x.coverImage = v; }); }}>
                 <For each={Object.values(COVERS)}>{(c) => <option value={c}>{t(`banner-preset-${c.slice(7)}` as "banner-preset-carbon")}</option>}</For>
               </select>
@@ -81,10 +83,10 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
       </Match>
       <Match when={w().type === "stats"}>
         <dl class="w-stats">
-          <div><dt>{t("dash-stat-notes")}</dt><dd>{tree.notes.filter((n) => n.kind === "markdown").length}</dd></div>
-          <div><dt>{t("dash-stat-words")}</dt><dd>{corpus().reduce((n, x) => n + computeNoteStats(x.content).words, 0).toLocaleString()}</dd></div>
-          <div><dt>{t("dash-stat-tags")}</dt><dd>{tags().length}</dd></div>
-          <div><dt>{t("dash-stat-due")}</dt><dd>{countDeck(null).due}</dd></div>
+          <div><dt>{t("dash-stat-notes")}</dt><dd>{num(tree.notes.filter((n) => n.kind === "markdown").length)}</dd></div>
+          <div><dt>{t("dash-stat-words")}</dt><dd>{num(corpus().reduce((n, x) => n + computeNoteStats(x.content).words, 0))}</dd></div>
+          <div><dt>{t("dash-stat-tags")}</dt><dd>{num(tags().length)}</dd></div>
+          <div><dt>{t("dash-stat-due")}</dt><dd>{num(countDeck(null).due)}</dd></div>
         </dl>
       </Match>
       <Match when={w().type === "recent-notes"}>
@@ -158,8 +160,8 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
       <Match when={w().type === "flashcard-queue"}>
         {(() => { const c = createMemo(() => countDeck(null)); return (
           <div class="w-queue">
-            <div class="w-big">{c().due + Math.min(c().fresh, 20)}</div>
-            <p>{t("dash-queue-detail", { due: c().due, fresh: c().fresh })}</p>
+            <div class="w-big">{num(c().due + Math.min(c().fresh, 20))}</div>
+            <p class="w-queue-label">{t("dash-queue-today")}<span class="muted">{t("dash-queue-detail", { due: c().due, fresh: c().fresh })}</span></p>
             <button class="btn primary sm" onClick={() => void openView("flashcards")}>{t("srs-study")}</button>
           </div>
         ); })()}
@@ -190,7 +192,7 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
       <Match when={w().type === "writing-goal"}>
         {(() => { const goal = () => w().dailyWordTarget ?? 750; const pct = () => Math.min(100, Math.round((wordsToday() / goal()) * 100)); return (
           <div class="w-goal">
-            <div class="w-big">{wordsToday()}<span class="muted"> / {goal()}</span></div>
+            <div class="w-big">{num(wordsToday())}<span class="muted"> / {num(goal())}</span></div>
             <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={pct()} aria-label={t("widget-writing-goal")}><span style={{ width: `${pct()}%` }} /></div>
             <Show when={props.edit}>
               <input class="input sm" type="number" min="50" step="50" value={goal()} aria-label={t("dash-goal-target")} onChange={(e) => { const v = Number(e.currentTarget.value) || 750; updateWidget(w().id, (x) => { x.dailyWordTarget = v; }); }} />

@@ -1,6 +1,6 @@
 // Three ways into a vault (sample, new, existing) plus recently used vaults.
 import { For, Show, createResource, createSignal } from "solid-js";
-import { FolderOpen, FolderPlus, Sparkles, Vault as VaultIcon } from "lucide-solid";
+import { BookOpen, FolderOpen, FolderPlus, Vault as VaultIcon } from "lucide-solid";
 import { t } from "../i18n";
 import { backend } from "../backend";
 import { inTauri } from "../state/backend";
@@ -37,7 +37,7 @@ export function VaultPicker(props: { onDone: (v: Vault) => void; showRecent?: bo
     <div class="vault-picker" aria-busy={busy()}>
       <div class="vault-cards">
         <button class="vault-card glass-card" disabled={busy()} onClick={() => void run(openSampleVault)}>
-          <span class="vault-card-icon accent"><Sparkles /></span>
+          <span class="vault-card-icon accent"><BookOpen /></span>
           <strong>{t("vault-open-default")}</strong>
           <span>{t("vault-open-default-desc")}</span>
         </button>

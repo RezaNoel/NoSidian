@@ -188,7 +188,7 @@ body.resizing { cursor: col-resize; user-select: none; }
 }
 .segmented button svg { inline-size: 14px; block-size: 14px; }
 .segmented button:hover { color: var(--text-primary); }
-.segmented button[aria-checked="true"] { background: var(--accent); color: #fff; box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 40%, transparent); }
+.segmented button[aria-checked="true"] { background: var(--accent); color: var(--accent-ink); }
 
 .panes { flex: 1; min-block-size: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
 .panes[data-mode="split"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -354,7 +354,7 @@ input[type="range"] { accent-color: var(--accent); inline-size: 100%; }
 .vault-card.open { grid-column: 1 / -1; }
 .vault-card span:not(.vault-card-icon), .vault-card-main span:not(.vault-card-icon) { font-size: 0.85em; color: var(--text-muted); }
 .vault-card-icon { display: grid; place-items: center; inline-size: 36px; block-size: 36px; border-radius: 10px; background: rgb(var(--l2) / 0.9); color: var(--accent); margin-block-end: 4px; }
-.vault-card-icon.accent { background: var(--accent); color: #fff; }
+.vault-card-icon.accent { background: var(--accent); color: var(--accent-ink); }
 .vault-card-icon svg { inline-size: 18px; block-size: 18px; }
 .vault-card:disabled { opacity: 0.5; }
 .vault-create { display: flex; flex-direction: column; gap: 8px; padding: 0 16px 16px; }
@@ -397,8 +397,8 @@ input[type="range"] { accent-color: var(--accent); inline-size: 100%; }
   }
   .mnav-btn svg { inline-size: 21px; block-size: 21px; }
   .mnav-btn[aria-current="page"], .mnav-btn[aria-expanded="true"] { color: var(--accent); }
-  .mnav-btn.fab { flex: none; inline-size: 52px; block-size: 52px; border-radius: 16px; background: var(--accent); color: #fff; margin-block-start: -18px;
-    box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 45%, transparent); }
+  .mnav-btn.fab { flex: none; inline-size: 52px; block-size: 52px; border-radius: 16px; background: var(--accent); color: var(--accent-ink); margin-block-start: -18px;
+  }
   .mnav-btn.fab span { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
   .sheet {

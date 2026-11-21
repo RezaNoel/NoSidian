@@ -3,7 +3,7 @@ tags: [flashcards, flashcards/pkm, learning, memory]
 ---
 # Active Recall Flashcard Deck
 
-Any note supports **inline**, **reversible**, **multi-line (`??` / `+++`)**, **cloze**, **code cloze**, **table**, and **image occlusion** cards—with full **headings**, **bold**, and <u>underline</u> rendering!
+Any note supports **inline**, **reversible**, **multi-line (`??` / `+++`)**, **cloze**, **code cloze**, **table**, and **image occlusion** cards. Card text can use **headings**, **bold** and <u>underline</u> like any other note.
 
 ## Multi-line Formatted Cards (`??` & `+++`)
 +++
@@ -11,7 +11,7 @@ Any note supports **inline**, **reversible**, **multi-line (`??` / `+++`)**, **c
 Explain the **delimiter** and <u>card boundary</u> syntax.
 ??
 ### Multi-line Answer
-Place **`??`** on its own line between Front & Back, and separate cards cleanly with **`+++`**!
+Place **`??`** on its own line between Front & Back, and end each card with **`+++`**.
 - Supports **bold**, *italic*, ==highlights==, and <u>underline</u>
 - Supports nested lists, headings, code, images & audio
 +++

@@ -4,7 +4,7 @@ status: in-progress
 ---
 # Product Roadmap Board
 
-Switch to **Kanban** mode in the top bar to drag and drop tasks across columns—every change updates this Markdown file in real time.
+Switch to **Kanban** mode in the top bar to drag and drop tasks across columns. Each move is written back to this Markdown file.
 
 ## To Do
 - [ ] Configure Daily Note template in Settings #ux

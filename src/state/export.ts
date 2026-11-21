@@ -13,8 +13,8 @@ const css = () => {
   const v = (n: string) => vars.getPropertyValue(n).trim();
   return `body{font:16px/1.7 system-ui,"Vazirmatn",sans-serif;max-width:760px;margin:40px auto;padding:0 20px;color:${v("--text-primary") || "#222"};background:${v("--bg-app") || "#fff"}}
 pre{background:rgba(127,127,127,.12);padding:12px;border-radius:8px;overflow:auto}code{font-family:ui-monospace,monospace}
-blockquote{border-inline-start:3px solid ${v("--accent") || "#8b7cf6"};margin:0;padding:4px 16px;opacity:.9}img{max-width:100%}
-table{border-collapse:collapse}td,th{border:1px solid rgba(127,127,127,.3);padding:4px 8px}a{color:${v("--accent") || "#8b7cf6"}}
+blockquote{border-inline-start:3px solid ${v("--accent") || "#3b7ddd"};margin:0;padding:4px 16px;opacity:.9}img{max-width:100%}
+table{border-collapse:collapse}td,th{border:1px solid rgba(127,127,127,.3);padding:4px 8px}a{color:${v("--accent") || "#3b7ddd"}}
 .callout{border-radius:8px;padding:8px 14px;background:rgba(127,127,127,.1);margin:12px 0}.code-copy{display:none}
 @media print{body{margin:0;max-width:none;color:#000;background:#fff}}`;
 };

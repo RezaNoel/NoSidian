@@ -24,7 +24,7 @@ function NewProject(props: { onClose: () => void }) {
   const [name, setName] = createSignal("");
   const [deadline, setDeadline] = createSignal(iso(new Date(Date.now() + 21 * 864e5)));
   const [tpl, setTpl] = createSignal<ProjectTemplateId>("blank");
-  const [color, setColor] = createSignal("#8b7cf6");
+  const [color, setColor] = createSignal("#3b7ddd");
   const create = async () => {
     const n = name().trim();
     if (!n) return;

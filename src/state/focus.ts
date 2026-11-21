@@ -10,7 +10,14 @@ import { petStudyTick, rewardPet } from "./pet";
 import { toast } from "./ui";
 import { t } from "../i18n";
 
-export const zen = appDoc<ZenStudioConfig>("zen", () => normalizeZenConfig(null));
+export const zen = appDoc<ZenStudioConfig>("zen", () => {
+  const z = normalizeZenConfig(null);
+  // The core defaults are English; a new plan uses the interface language.
+  z.goalTitle = t("focus-default-goal");
+  z.rewardText = t("focus-default-reward");
+  z.blocks = z.blocks.map((b) => ({ ...b, label: t(b.kind === "break" ? "focus-break" : "focus-focus") }));
+  return z;
+});
 export const ambient = appDoc<AmbientConfig>("ambient", () => ({ effect: "none", density: 55, wind: 2, maxPileHeight: 28, musicTrack: "none", musicPlaying: false, musicVolume: 0.35 }));
 
 const timer = createRoot(() => {

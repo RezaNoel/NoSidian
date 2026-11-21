@@ -474,7 +474,6 @@ export interface MessageArgs {
   "widget-cat-writing": undefined;
   "widget-cat-projects": undefined;
   "widget-cat-media": undefined;
-  "dash-cover-subtitle": undefined;
   "dash-subtitle": undefined;
   "dash-cover-image": undefined;
   "dash-stat-notes": undefined;
@@ -881,6 +880,10 @@ export interface MessageArgs {
   "pref-history-auto-hint": undefined;
   "pet-hide": undefined;
   "pet-floating": undefined;
+  "focus-default-goal": undefined;
+  "focus-default-reward": undefined;
+  "pet-render-failed": undefined;
+  "dash-queue-today": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -1359,7 +1362,6 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "widget-cat-writing",
   "widget-cat-projects",
   "widget-cat-media",
-  "dash-cover-subtitle",
   "dash-subtitle",
   "dash-cover-image",
   "dash-stat-notes",
@@ -1765,5 +1767,9 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "pref-history-auto",
   "pref-history-auto-hint",
   "pet-hide",
-  "pet-floating"
+  "pet-floating",
+  "focus-default-goal",
+  "focus-default-reward",
+  "pet-render-failed",
+  "dash-queue-today"
 ];

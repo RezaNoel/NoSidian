@@ -61,7 +61,7 @@ pub enum Density {
 #[serde(rename_all = "camelCase", default)]
 pub struct Appearance {
     pub theme: ThemeId,
-    /// CSS hex color, e.g. `#8b7cf6`.
+    /// CSS hex color, e.g. `#3b7ddd`.
     pub accent: String,
     /// Backdrop blur radius in px (0–40).
     pub glass_blur: u8,
@@ -76,7 +76,7 @@ impl Default for Appearance {
     fn default() -> Self {
         Self {
             theme: ThemeId::default(),
-            accent: "#8b7cf6".into(),
+            accent: "#3b7ddd".into(),
             glass_blur: 18,
             glass_opacity: 0.62,
             ambient_mesh: true,

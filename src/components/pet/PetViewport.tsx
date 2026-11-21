@@ -10,6 +10,7 @@ import type { PetActivityState, PetSpecies } from "../../core/types";
 import { applyPoseToStageProps, buildPetStageProps, detectSoftwareWebGL, disposeThreeObjectTree, type PetStageWorldHandles } from "../../core/three/pet3dBuilder";
 import { loadCompanionGltfModel, transitionGltfActivity, type LoadedGltfCompanion } from "../../core/three/petGltfLoader";
 import { settings } from "../../state/settings";
+import { t } from "../../i18n";
 
 type Variant = "mini" | "card" | "studio";
 const CAMERA: Record<Variant, { pos: [number, number, number]; target: [number, number, number]; fov: number }> = {
@@ -205,7 +206,7 @@ export function PetViewport(props: { species: PetSpecies; activity: PetActivityS
 
   return (
     <div class="pet-viewport" role="img" aria-label={props.label} data-ready={ready()}>
-      <Show when={!failed()} fallback={<div class="pet-fallback">🦊</div>}><div ref={mount} class="pet-mount" /></Show>
+      <Show when={!failed()} fallback={<div class="pet-fallback">{t("pet-render-failed")}</div>}><div ref={mount} class="pet-mount" /></Show>
     </div>
   );
 }

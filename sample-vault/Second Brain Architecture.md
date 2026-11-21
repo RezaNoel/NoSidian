@@ -10,5 +10,5 @@ In a **Zettelkasten**, every note captures one atomic idea and links intentional
 
 ## Core Principles
 1. Prefer atomic notes linked with `[[wikilinks]]` such as [[Welcome to NoSidian]].
-2. Review **Unlinked Mentions** in the right sidebar—for example, mentioning Flashcards & Active Recall without brackets automatically surfaces a one-click Link suggestion.
+2. Check **Unlinked mentions** in the right sidebar. If a note names Flashcards & Active Recall without brackets, it shows up there with a button to link it.
 3. Check **Smart Related Notes** below Backlinks to bridge distant ideas automatically.

@@ -88,7 +88,7 @@ async function renderEmbeds(root: HTMLElement, from: string, depth: number) {
       a.className = "wikilink pdf-link";
       a.href = "#";
       a.dataset.target = page ? `${path}#page=${page}` : path;
-      a.textContent = `📄 ${path.split("/").pop()}${page ? ` · p. ${page}` : ""}`;
+      a.textContent = `${path.split("/").pop()}${page ? ` · ${t("media-page", { page })}` : ""}`;
       el.replaceWith(a);
       continue;
     }

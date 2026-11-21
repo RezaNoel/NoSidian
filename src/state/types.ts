@@ -73,7 +73,7 @@ export function defaultConfig(): AppConfig {
     useCase: "general",
     appearance: {
       theme: "obsidian-slate",
-      accent: "#8b7cf6",
+      accent: "#3b7ddd",
       glassBlur: 18,
       glassOpacity: 0.62,
       ambientMesh: true,
