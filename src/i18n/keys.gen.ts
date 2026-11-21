@@ -1001,6 +1001,33 @@ export interface MessageArgs {
   "countdown-age": { days: string | number; months: string | number; years: string | number };
   "countdown-lived": { days: string | number };
   "countdown-in-days": { days: string | number };
+  "amb-effects": undefined;
+  "amb-pile": undefined;
+  "amb-sweep-hint": undefined;
+  "amb-soft-background": undefined;
+  "music-add-link": undefined;
+  "music-add-files": undefined;
+  "music-loading": undefined;
+  "music-kind-built-in": undefined;
+  "music-kind-file": undefined;
+  "music-kind-stream": undefined;
+  "music-kind-youtube": undefined;
+  "music-kind-spotify": undefined;
+  "music-kind-soundcloud": undefined;
+  "music-next": undefined;
+  "music-stop": undefined;
+  "music-built-in": undefined;
+  "music-radio": undefined;
+  "music-mine": undefined;
+  "music-mine-empty": undefined;
+  "music-player": undefined;
+  "music-expand": undefined;
+  "music-minimize": undefined;
+  "music-file-missing": undefined;
+  "music-radio-offline": undefined;
+  "music-add-failed": undefined;
+  "music-link-unsupported": undefined;
+  "amb-sounds": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2005,5 +2032,32 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "countdown-today-short",
   "countdown-age",
   "countdown-lived",
-  "countdown-in-days"
+  "countdown-in-days",
+  "amb-effects",
+  "amb-pile",
+  "amb-sweep-hint",
+  "amb-soft-background",
+  "music-add-link",
+  "music-add-files",
+  "music-loading",
+  "music-kind-built-in",
+  "music-kind-file",
+  "music-kind-stream",
+  "music-kind-youtube",
+  "music-kind-spotify",
+  "music-kind-soundcloud",
+  "music-next",
+  "music-stop",
+  "music-built-in",
+  "music-radio",
+  "music-mine",
+  "music-mine-empty",
+  "music-player",
+  "music-expand",
+  "music-minimize",
+  "music-file-missing",
+  "music-radio-offline",
+  "music-add-failed",
+  "music-link-unsupported",
+  "amb-sounds"
 ];

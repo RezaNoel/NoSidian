@@ -25,6 +25,7 @@ import { enabledModules } from "./state/modules";
 import { Lightbox, SlidesOverlay } from "./components/Overlays";
 import { ZenOverlay } from "./components/focus/ZenOverlay";
 import { AmbientOverlay } from "./components/focus/AmbientOverlay";
+import { AmbiencePopover, MusicDock } from "./components/focus/Ambience";
 import { PetCompanion, PetStudio, openPetStudio } from "./components/pet/PetCard";
 import { TerminalDrawer, terminalOpen } from "./components/terminal/Terminal";
 import { welcome } from "./state/personal";
@@ -105,6 +106,8 @@ export function App() {
             <Suspense><ZenStudioPage onClose={() => setZenPage(false)} /></Suspense>
           </section>
         </Show>
+        <AmbiencePopover />
+        <MusicDock />
         <ZenOverlay />
         <SlidesOverlay />
         <Show when={mods().has("integrated-terminal") && terminalOpen()}><TerminalDrawer /></Show>

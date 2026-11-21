@@ -31,6 +31,12 @@ function logFocusSecond() {
   focusLog.update((l) => { l.days[key] = (l.days[key] ?? 0) + 1; });
 }
 
+// Nothing plays at start-up, whatever was playing when the app closed.
+if (typeof window !== "undefined") {
+  const settle = () => (ambient.ready() ? ambient.update((a) => { a.musicPlaying = false; }) : setTimeout(settle, 100));
+  settle();
+}
+
 const timer = createRoot(() => {
   const [running, setRunning] = createSignal(false);
   const [index, setIndex] = createSignal(0);
@@ -61,7 +67,7 @@ export function startTimer(): void {
   timer.setRunning(true);
   clearInterval(handle);
   handle = setInterval(tick, 1000);
-  syncMusic(true);
+  if (!ambient.state.musicItem && ambient.state.musicTrack !== "none") syncMusic(true);
 }
 
 export function pauseTimer(): void {

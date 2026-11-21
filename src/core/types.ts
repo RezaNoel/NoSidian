@@ -415,6 +415,8 @@ export interface AmbientConfig {
   musicPlaying: boolean;
   musicVolume: number; // 0..1
   customAudioMediaId?: string;
+  /** The library item playing instead of a built-in track. */
+  musicItem?: string;
 }
 
 export type PetSpecies = 'fox' | 'owl' | 'cat' | 'panda' | 'bunny' | 'pup';
