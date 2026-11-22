@@ -777,7 +777,21 @@ label.btn:focus-within { box-shadow: var(--focus-ring); }
 .date-clear { flex: none; }
 .date-pop { position: fixed; z-index: 220; inline-size: 280px; padding: 10px; border-radius: var(--radius-md); box-shadow: var(--shadow); animation: pop 120ms ease-out; }
 .date-pop-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-block-end: 4px; }
-.date-pop-head strong { font-size: 0.95em; }
+.date-pop-title { display: flex; align-items: center; justify-content: center; gap: 4px; min-inline-size: 0; }
+.date-pop-tbtn {
+  border: 0; border-radius: var(--radius-sm); padding: 4px 8px; background: transparent; color: var(--text-primary);
+  font: inherit; font-size: 0.95em; font-weight: 600; cursor: pointer;
+}
+.date-pop-tbtn:hover, .date-pop-tbtn[aria-expanded="true"] { background: rgb(var(--l3) / 0.6); }
+.date-pop-tbtn:focus-visible, .date-cell:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.date-cells { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px 0 8px; }
+.date-cells.years { grid-template-columns: repeat(4, 1fr); }
+.date-cell {
+  border: 0; border-radius: var(--radius-sm); padding: 9px 4px; background: transparent; color: var(--text-primary);
+  font: inherit; font-size: 0.9em; cursor: pointer;
+}
+.date-cell:hover { background: rgb(var(--l3) / 0.6); }
+.date-cell.sel { background: var(--accent); color: var(--accent-ink); }
 .date-grid { inline-size: 100%; margin: 0; }
 .date-day {
   inline-size: 100%; aspect-ratio: 1; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-primary);

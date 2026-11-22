@@ -5,7 +5,7 @@ import { For, Show, createMemo, createSignal, onCleanup, onMount } from "solid-j
 import { Portal } from "solid-js/web";
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-solid";
 import { locale, t } from "../i18n";
-import { calendarFor, intlLocale, isoDate, monthGrid, monthOf, sameDay, shiftMonth, weekStartFor, type MonthRef } from "../lib/dates";
+import { calendarFor, daysOf, intlLocale, isoDate, monthGrid, monthOf, sameDay, shiftMonth, weekStartFor, type MonthRef } from "../lib/dates";
 
 const parse = (v: string): Date | null => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
@@ -64,6 +64,12 @@ function DatePopover(props: { anchor: HTMLElement; value: string; noYear?: boole
   const start = parse(props.value) ?? today;
   const [month, setMonth] = createSignal<MonthRef>(monthOf(start, kind()));
   const [focus, setFocus] = createSignal<Date>(start);
+  // "days" is the calendar; "months" and "years" let you jump far in one click.
+  const [view, setView] = createSignal<"days" | "months" | "years">("days");
+  const [yearStart, setYearStart] = createSignal(0);
+  const monthName = createMemo(() => new Intl.DateTimeFormat(intlLocale(locale()), { month: "long" }).format(daysOf(month())[0]));
+  const numText = (n: number) => new Intl.NumberFormat(intlLocale(locale()), { useGrouping: false }).format(n);
+  const yearText = createMemo(() => numText(month().year));
   const weekStart = () => weekStartFor(locale());
   const weeks = createMemo(() => monthGrid(month(), weekStart()));
   const title = createMemo(() => {
@@ -112,6 +118,23 @@ function DatePopover(props: { anchor: HTMLElement; value: string; noYear?: boole
     window.removeEventListener("scroll", place, true);
   });
 
+  const show = (v: "days" | "months" | "years") => {
+    if (v === "years") setYearStart(month().year - 5);
+    setView(v);
+    requestAnimationFrame(place);
+  };
+  const goTo = (m: MonthRef) => {
+    setMonth(m);
+    const days = monthGrid(m, weekStart()).flat().filter((d): d is Date => !!d);
+    setFocus(days.find((d) => d.getDate() === focus().getDate()) ?? days[0]);
+    setView("days");
+    requestAnimationFrame(() => { place(); refocus(); });
+  };
+  const step = (dir: number) => {
+    if (view() === "days") move(dir);
+    else if (view() === "months") setMonth(shiftMonth(month(), 12 * dir));
+    else setYearStart(yearStart() + 12 * dir);
+  };
   const move = (by: number) => {
     const m = shiftMonth(month(), by);
     setMonth(m);
@@ -142,10 +165,16 @@ function DatePopover(props: { anchor: HTMLElement; value: string; noYear?: boole
     <Portal>
       <div ref={box} class="date-pop glass-modal" role="dialog" aria-label={title()} style={{ left: `${pos().left}px`, top: `${pos().top}px` }} onKeyDown={key}>
         <div class="date-pop-head">
-          <button type="button" class="icon-btn" aria-label={t("calendar-prev")} title={t("calendar-prev")} onClick={() => move(-1)}><ChevronLeft class="flip-rtl" /></button>
-          <strong aria-live="polite">{title()}</strong>
-          <button type="button" class="icon-btn" aria-label={t("calendar-next")} title={t("calendar-next")} onClick={() => move(1)}><ChevronRight class="flip-rtl" /></button>
+          <button type="button" class="icon-btn" aria-label={t("calendar-prev")} title={t("calendar-prev")} onClick={() => step(-1)}><ChevronLeft class="flip-rtl" /></button>
+          <div class="date-pop-title" aria-live="polite">
+            <button type="button" class="date-pop-tbtn" aria-expanded={view() === "months"} title={title()} onClick={() => show(view() === "months" ? "days" : "months")}>{monthName()}</button>
+            <Show when={!props.noYear}>
+              <button type="button" class="date-pop-tbtn" aria-expanded={view() === "years"} onClick={() => show(view() === "years" ? "days" : "years")}>{yearText()}</button>
+            </Show>
+          </div>
+          <button type="button" class="icon-btn" aria-label={t("calendar-next")} title={t("calendar-next")} onClick={() => step(1)}><ChevronRight class="flip-rtl" /></button>
         </div>
+        <Show when={view() === "days"}>
         <table ref={grid} class="cal-grid date-grid" role="grid" aria-label={title()}>
           <thead><tr><For each={weekdays()}>{(w) => <th scope="col" abbr={w.long}>{w.short}</th>}</For></tr></thead>
           <tbody>
@@ -176,6 +205,29 @@ function DatePopover(props: { anchor: HTMLElement; value: string; noYear?: boole
             </For>
           </tbody>
         </table>
+        </Show>
+        <Show when={view() === "months"}>
+          <div class="date-cells" role="group" aria-label={yearText()}>
+            <For each={Array.from({ length: 12 }, (_, i) => i + 1)}>
+              {(m) => (
+                <button type="button" class="date-cell" classList={{ sel: m === month().month }} aria-pressed={m === month().month}
+                  onClick={() => goTo({ ...month(), month: m })}>
+                  {new Intl.DateTimeFormat(intlLocale(locale()), { month: "long" }).format(daysOf({ ...month(), month: m })[0])}
+                </button>
+              )}
+            </For>
+          </div>
+        </Show>
+        <Show when={view() === "years"}>
+          <div class="date-cells years" role="group" aria-label={title()}>
+            <For each={Array.from({ length: 12 }, (_, i) => yearStart() + i)}>
+              {(y) => (
+                <button type="button" class="date-cell" classList={{ sel: y === month().year }} aria-pressed={y === month().year}
+                  onClick={() => goTo({ ...month(), year: y })}>{numText(y)}</button>
+              )}
+            </For>
+          </div>
+        </Show>
         <div class="date-pop-foot">
           <button type="button" class="btn sm" onClick={() => props.onPick(isoDate(today))}>{t("calendar-today")}</button>
         </div>
