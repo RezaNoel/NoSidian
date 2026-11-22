@@ -11,7 +11,7 @@ describe("i18n runtime", () => {
         const msg = bundle.getMessage(key);
         expect(msg?.value, `${code}/${key}`).toBeTruthy();
         const errors: Error[] = [];
-        const out = bundle.formatPattern(msg!.value!, { count: 3, language: "x", theme: "y", detail: "z", minutes: 2, name: "n", path: "p", current: 1, total: 4, query: "q", card: "c", code: "x", coins: 5, column: "c", date: "d", days: 2, done: 1, due: 2, fresh: 3, hours: 1, left: 2, level: 3, links: 4, mood: "m", n: 2, next: "n", nodes: 5, page: 1, pct: 50, reward: 3, size: 4, span: 2, url: "u", watched: 1, xp: 10, owner: "o", tier: "t", time: "t", years: 30, months: 2, reps: 4, lapses: 1, goal: 20, title: "t" }, errors);
+        const out = bundle.formatPattern(msg!.value!, { count: 3, language: "x", theme: "y", detail: "z", minutes: 2, name: "n", path: "p", current: 1, total: 4, query: "q", card: "c", code: "x", coins: 5, column: "c", date: "d", days: 2, done: 1, due: 2, fresh: 3, hours: 1, left: 2, level: 3, links: 4, mood: "m", n: 2, next: "n", nodes: 5, page: 1, pct: 50, reward: 3, size: 4, span: 2, url: "u", watched: 1, xp: 10, owner: "o", tier: "t", time: "t", years: 30, months: 2, reps: 4, lapses: 1, goal: 20, title: "t", rank: 2 }, errors);
         expect(errors, `${code}/${key}`).toEqual([]);
         expect(out.trim().length, `${code}/${key}`).toBeGreaterThan(0);
       }

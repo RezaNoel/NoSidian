@@ -1228,6 +1228,25 @@ export interface MessageArgs {
   "date-clear": undefined;
   "proj-edit": undefined;
   "proj-icon": undefined;
+  "media-score": undefined;
+  "media-cover-choose": undefined;
+  "media-cover-change": undefined;
+  "media-cover-remove": undefined;
+  "media-best": undefined;
+  "media-best-add": undefined;
+  "media-best-remove": undefined;
+  "media-best-rank": { rank: string | number };
+  "media-best-help": undefined;
+  "media-best-empty": undefined;
+  "media-best-up": undefined;
+  "media-best-down": undefined;
+  "media-share": undefined;
+  "media-share-list": undefined;
+  "best-card-books": undefined;
+  "best-card-films": undefined;
+  "media-card-owner": { owner: string | number };
+  "media-card-finished": { date: string | number };
+  "media-card-watched": { date: string | number };
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2459,5 +2478,24 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "date-none",
   "date-clear",
   "proj-edit",
-  "proj-icon"
+  "proj-icon",
+  "media-score",
+  "media-cover-choose",
+  "media-cover-change",
+  "media-cover-remove",
+  "media-best",
+  "media-best-add",
+  "media-best-remove",
+  "media-best-rank",
+  "media-best-help",
+  "media-best-empty",
+  "media-best-up",
+  "media-best-down",
+  "media-share",
+  "media-share-list",
+  "best-card-books",
+  "best-card-films",
+  "media-card-owner",
+  "media-card-finished",
+  "media-card-watched"
 ];

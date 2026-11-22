@@ -701,6 +701,10 @@ export interface CinemaEntry {
   episodesWatched: number;
   episodesTotal: number;
   rating: number; // 0..5
+  /** Personal score out of 10 (one decimal). */
+  score?: number;
+  /** Vault path of a chosen cover or poster image. */
+  cover?: string;
   watchedDate?: string;
   favoriteQuotes: string[];
   notes: string;
@@ -727,6 +731,10 @@ export interface BookEntry {
   totalPages: number;
   genre: string;
   rating: number; // 0..5
+  /** Personal score out of 10 (one decimal). */
+  score?: number;
+  /** Vault path of a chosen cover image. */
+  cover?: string;
   startedDate?: string;
   finishedDate?: string;
   highlights: BookHighlight[];
@@ -741,6 +749,9 @@ export interface MediaLibraryState {
   books: BookEntry[];
   /** Books to finish this year (0 or missing: no goal). */
   readingGoal?: number;
+  /** "Best of my life": ids in personal rank order, best first. */
+  bestBooks?: string[];
+  bestMovies?: string[];
 }
 
 export interface CustomScriptPlugin {

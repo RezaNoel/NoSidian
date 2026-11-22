@@ -1,26 +1,28 @@
 // Cinema and books: a shelf of generated covers, what you are reading or
 // watching now with one-tap progress, a yearly reading goal, and a detail
 // panel for rating, dates, highlights or quotes, notes and the linked note.
-import { For, Show, createMemo, createSignal, type JSX } from "solid-js";
-import { BookOpen, BookmarkPlus, CheckCircle2, Clapperboard, FileText, Film, Minus, Pencil, Plus, Quote, Search, Star, Target, Trash2, Tv } from "lucide-solid";
+import { For, Show, createMemo, createResource, createSignal, type JSX } from "solid-js";
+import { ArrowDown, ArrowUp, BookOpen, BookmarkPlus, CheckCircle2, Clapperboard, FileText, Film, ImagePlus, Minus, Pencil, Plus, Quote, Search, Share2, Star, Target, Trash2, Trophy, Tv, X } from "lucide-solid";
+import { backend } from "../../backend";
+import { blobUrl } from "../../lib/attachments";
+import { copyDroppedFiles } from "../../state/dropFiles";
+import { coverColor, renderBestCard, renderEntryCard, safeName, scoreText, type Entry } from "./mediaCard";
 import { locale, t } from "../../i18n";
 import { addBookHighlight, computeBookProgressPercent, computeSeriesProgressPercent, updateBookReadingPage, updateMovieProgress } from "../../core/mediaLibrary";
 import type { BookEntry, BookReadStatus, CinemaEntry, CinemaWatchStatus } from "../../core/types";
 import { media, openMediaNote } from "../../state/media";
 import { newId } from "../../state/projects";
-import { askText } from "../../state/ui";
+import { askText, toast } from "../../state/ui";
 import { Modal } from "../Modal";
 import { openMenu, type MenuItem } from "../ContextMenu";
 
 type Kind = "books" | "cinema";
 const MOVIE_STATUSES: CinemaWatchStatus[] = ["watching", "watchlist", "watched"];
 const BOOK_STATUSES: BookReadStatus[] = ["reading", "to-read", "finished"];
-// Muted cover colours; the title picks one so a cover keeps its colour.
-const COVERS = ["#35507a", "#6b4a3a", "#2f5d50", "#5a3f6b", "#7a5a2c", "#3e4a5c", "#6a3440", "#2c5566", "#4f5a2e", "#5c4a6e"];
 const num = (n: number) => n.toLocaleString(locale());
 const today = () => new Date().toISOString().slice(0, 10);
 const copy = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
-const coverOf = (title: string) => { let h = 0; for (const c of title) h = (h * 31 + c.charCodeAt(0)) >>> 0; return COVERS[h % COVERS.length]; };
+const coverOf = coverColor;
 const fmtDate = (s?: string) => (s ? new Date(`${s}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "short", day: "numeric" }) : "");
 const statusLabel = (kind: Kind, s: string) => t(kind === "books" ? (`media-book-${s}` as "media-book-reading") : (`media-status-${s}` as "media-status-watched"));
 
@@ -28,6 +30,97 @@ function setBook(next: BookEntry) { media.update((m) => { const i = m.books.find
 function setMovie(next: CinemaEntry) { media.update((m) => { const i = m.movies.findIndex((x) => x.id === next.id); if (i >= 0) m.movies[i] = next; else m.movies.unshift(next); }); }
 const removeBook = (id: string) => media.update((m) => { m.books = m.books.filter((x) => x.id !== id); });
 const removeMovie = (id: string) => media.update((m) => { m.movies = m.movies.filter((x) => x.id !== id); });
+
+// "Best of my life": an ordered list of ids per kind; position is the personal rank.
+const bestKey = (kind: Kind) => (kind === "books" ? "bestBooks" : "bestMovies") as "bestBooks" | "bestMovies";
+const bestIds = (kind: Kind) => media.state[bestKey(kind)] ?? [];
+const rankOf = (kind: Kind, id: string) => { const i = bestIds(kind).indexOf(id); return i < 0 ? null : i + 1; };
+function toggleBest(kind: Kind, id: string) {
+  media.update((m) => {
+    const k = bestKey(kind);
+    const list = m[k] ?? [];
+    m[k] = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+  });
+}
+function moveBest(kind: Kind, id: string, by: number) {
+  media.update((m) => {
+    const k = bestKey(kind);
+    const list = [...(m[k] ?? [])];
+    const i = list.indexOf(id), j = i + by;
+    if (i < 0 || j < 0 || j >= list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+    m[k] = list;
+  });
+}
+const bestEntries = (kind: Kind): Entry[] => {
+  const all: Entry[] = kind === "books" ? media.state.books : media.state.movies;
+  return bestIds(kind).map((id) => all.find((x) => x.id === id)).filter((x): x is Entry => !!x);
+};
+
+async function shareCard(bytes: Promise<Uint8Array>, name: string) {
+  try {
+    if (await backend.saveBytes(safeName(name, "share"), await bytes, "png")) toast(t("pet-card-saved"));
+  } catch { toast(t("pet-card-failed"), true); }
+}
+const shareEntry = (kind: Kind, e: Entry) => shareCard(renderEntryCard(e, rankOf(kind, e.id)), e.title);
+const shareBest = (kind: Kind) => shareCard(renderBestCard(bestEntries(kind), kind === "books" ? "books" : "films"), t(kind === "books" ? "best-card-books" : "best-card-films"));
+
+/** Ask for an image file and copy it into the vault as a cover. */
+function pickCover(): Promise<string | null> {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = async () => {
+      const f = input.files?.[0];
+      if (!f) return resolve(null);
+      const [path] = await copyDroppedFiles([f], "attachments/covers", true);
+      resolve(path ?? null);
+    };
+    input.click();
+  });
+}
+async function chooseCover(kind: Kind, e: Entry) {
+  const path = await pickCover();
+  if (!path) return;
+  if (kind === "books") setBook({ ...copy(e as BookEntry), cover: path, updatedAt: Date.now() });
+  else setMovie({ ...copy(e as CinemaEntry), cover: path, updatedAt: Date.now() });
+}
+function clearCover(kind: Kind, e: Entry) {
+  const next = { ...copy(e), updatedAt: Date.now() };
+  delete next.cover;
+  if (kind === "books") setBook(next as BookEntry); else setMovie(next as CinemaEntry);
+}
+function setScore(kind: Kind, e: Entry, v: number) {
+  const next = { ...copy(e), score: Math.round(Math.max(0, Math.min(10, v)) * 10) / 10 || undefined, updatedAt: Date.now() };
+  if (kind === "books") setBook(next as BookEntry); else setMovie(next as CinemaEntry);
+}
+
+/** Personal score out of ten, with a slider. */
+function ScoreField(props: { kind: Kind; e: Entry }) {
+  return (
+    <label class="score-field">
+      <span>{t("media-score")}</span>
+      <input type="range" min="0" max="10" step="0.5" value={props.e.score ?? 0} aria-label={t("media-score")} onInput={(ev) => setScore(props.kind, props.e, Number(ev.currentTarget.value))} />
+      <strong class="score-num">{props.e.score ? scoreText(props.e.score) : "–"}<span class="muted"> / {num(10)}</span></strong>
+    </label>
+  );
+}
+
+/** Cover actions in the detail view: choose, remove, best of, share. */
+function DetailActions(props: { kind: Kind; e: Entry }) {
+  const rank = () => rankOf(props.kind, props.e.id);
+  return (
+    <div class="row wrap detail-actions">
+      <button class="btn sm" onClick={() => void chooseCover(props.kind, props.e)}><ImagePlus />{props.e.cover ? t("media-cover-change") : t("media-cover-choose")}</button>
+      <Show when={props.e.cover}><button class="icon-btn sm" title={t("media-cover-remove")} aria-label={t("media-cover-remove")} onClick={() => clearCover(props.kind, props.e)}><X /></button></Show>
+      <button class="btn sm" classList={{ on: !!rank() }} aria-pressed={!!rank()} onClick={() => toggleBest(props.kind, props.e.id)}>
+        <Trophy />{rank() ? t("media-best-rank", { rank: rank()! }) : t("media-best-add")}
+      </button>
+      <button class="btn sm" onClick={() => void shareEntry(props.kind, props.e)}><Share2 />{t("media-share")}</button>
+    </div>
+  );
+}
 
 function setBookStatus(b: BookEntry, s: BookReadStatus) {
   const next = { ...copy(b), status: s, updatedAt: Date.now() };
@@ -52,9 +145,11 @@ function Stars(props: { value: number; onChange?: (v: number) => void; label: st
 }
 
 /** A generated cover: a calm colour field with the title set in type. */
-function Cover(props: { title: string; sub?: string; kind: Kind; series?: boolean; progress?: number }) {
+function Cover(props: { title: string; sub?: string; kind: Kind; series?: boolean; progress?: number; image?: string }) {
+  const [url] = createResource(() => props.image, (p) => blobUrl(p).catch(() => ""));
   return (
-    <div class="cover" classList={{ poster: props.kind === "cinema" }} style={{ "--cover": coverOf(props.title || "?") }} aria-hidden="true">
+    <div class="cover" classList={{ poster: props.kind === "cinema", "has-image": !!url() }} style={{ "--cover": coverOf(props.title || "?") }} aria-hidden="true">
+      <Show when={url()}>{(u) => <img class="cover-img" src={u()} alt="" draggable={false} />}</Show>
       <span class="cover-icon">{props.kind === "books" ? <BookOpen /> : props.series ? <Tv /> : <Film />}</span>
       <strong dir="auto">{props.title}</strong>
       <Show when={props.sub}><span class="cover-sub" dir="auto">{props.sub}</span></Show>
@@ -68,6 +163,9 @@ function bookMenu(e: MouseEvent, b: BookEntry, open: () => void) {
     { label: t("media-details"), icon: <Pencil />, run: open },
     { label: t("media-open-note"), icon: <FileText />, run: () => void openMediaNote("book", b) },
     ...BOOK_STATUSES.map((s, i) => ({ label: t(`media-book-${s}`), mark: b.status === s, sep: i === 0, run: () => setBookStatus(b, s) })),
+    { label: rankOf("books", b.id) ? t("media-best-remove") : t("media-best-add"), icon: <Trophy />, sep: true, run: () => toggleBest("books", b.id) },
+    { label: t("media-cover-choose"), icon: <ImagePlus />, run: () => void chooseCover("books", b) },
+    { label: t("media-share"), icon: <Share2 />, run: () => void shareEntry("books", b) },
     { label: t("action-delete"), icon: <Trash2 />, danger: true, sep: true, run: () => removeBook(b.id) },
   ];
   openMenu(e, items);
@@ -77,6 +175,9 @@ function movieMenu(e: MouseEvent, m: CinemaEntry, open: () => void) {
     { label: t("media-details"), icon: <Pencil />, run: open },
     { label: t("media-open-note"), icon: <FileText />, run: () => void openMediaNote("movie", m) },
     ...MOVIE_STATUSES.map((s, i) => ({ label: t(`media-status-${s}`), mark: m.status === s, sep: i === 0, run: () => setMovieStatus(m, s) })),
+    { label: rankOf("cinema", m.id) ? t("media-best-remove") : t("media-best-add"), icon: <Trophy />, sep: true, run: () => toggleBest("cinema", m.id) },
+    { label: t("media-cover-choose"), icon: <ImagePlus />, run: () => void chooseCover("cinema", m) },
+    { label: t("media-share"), icon: <Share2 />, run: () => void shareEntry("cinema", m) },
     { label: t("action-delete"), icon: <Trash2 />, danger: true, sep: true, run: () => removeMovie(m.id) },
   ];
   openMenu(e, items);
@@ -138,7 +239,7 @@ function BookDetail(props: { id: string; onClose: () => void }) {
       {(bk) => (
         <Modal title={bk().title} onClose={props.onClose} class="media-detail">
           <div class="detail-top">
-            <Cover title={bk().title} sub={bk().author} kind="books" />
+            <div class="detail-cover"><Cover title={bk().title} sub={bk().author} kind="books" image={bk().cover} /></div>
             <div class="stack">
               <div class="segmented" role="radiogroup" aria-label={t("media-status")}>
                 <For each={BOOK_STATUSES}>{(s) => <button type="button" role="radio" aria-checked={bk().status === s} onClick={() => setBookStatus(bk(), s)}>{t(`media-book-${s}`)}</button>}</For>
@@ -150,9 +251,10 @@ function BookDetail(props: { id: string; onClose: () => void }) {
               </div>
               <div class="meter" role="progressbar" aria-label={bk().title} aria-valuenow={computeBookProgressPercent(bk())} aria-valuemin="0" aria-valuemax="100"><span style={{ width: `${computeBookProgressPercent(bk())}%` }} /></div>
               <Stars label={t("media-rating")} value={bk().rating} onChange={(v) => setBook({ ...copy(bk()), rating: v })} />
+              <ScoreField kind="books" e={bk()} />
+              <DetailActions kind="books" e={bk()} />
               <p class="muted sm">
-                <Show when={bk().startedDate}>{t("media-started", { date: fmtDate(bk().startedDate) })} </Show>
-                <Show when={bk().finishedDate}>· {t("media-finished-on", { date: fmtDate(bk().finishedDate) })}</Show>
+                {[bk().startedDate && t("media-started", { date: fmtDate(bk().startedDate) }), bk().finishedDate && t("media-finished-on", { date: fmtDate(bk().finishedDate) })].filter(Boolean).join(" · ")}
               </p>
               <div class="row wrap">
                 <button class="btn sm" onClick={() => void openMediaNote("book", bk())}><FileText />{t("media-open-note")}</button>
@@ -198,7 +300,7 @@ function MovieDetail(props: { id: string; onClose: () => void }) {
       {(mv) => (
         <Modal title={mv().title} onClose={props.onClose} class="media-detail">
           <div class="detail-top">
-            <Cover title={mv().title} sub={[mv().year, mv().director].filter(Boolean).join(" · ")} kind="cinema" series={mv().mediaType === "series"} />
+            <div class="detail-cover"><Cover title={mv().title} sub={[mv().year, mv().director].filter(Boolean).join(" · ")} kind="cinema" series={mv().mediaType === "series"} image={mv().cover} /></div>
             <div class="stack">
               <div class="segmented" role="radiogroup" aria-label={t("media-status")}>
                 <For each={MOVIE_STATUSES}>{(s) => <button type="button" role="radio" aria-checked={mv().status === s} onClick={() => setMovieStatus(mv(), s)}>{t(`media-status-${s}`)}</button>}</For>
@@ -212,6 +314,8 @@ function MovieDetail(props: { id: string; onClose: () => void }) {
                 <div class="meter" role="progressbar" aria-label={mv().title} aria-valuenow={computeSeriesProgressPercent(mv())} aria-valuemin="0" aria-valuemax="100"><span style={{ width: `${computeSeriesProgressPercent(mv())}%` }} /></div>
               </Show>
               <Stars label={t("media-rating")} value={mv().rating} onChange={(v) => setMovie({ ...copy(mv()), rating: v })} />
+              <ScoreField kind="cinema" e={mv()} />
+              <DetailActions kind="cinema" e={mv()} />
               <Show when={mv().watchedDate}><p class="muted sm">{t("media-watched-on", { date: fmtDate(mv().watchedDate) })}</p></Show>
               <div class="row wrap">
                 <button class="btn sm" onClick={() => void openMediaNote("movie", mv())}><FileText />{t("media-open-note")}</button>
@@ -250,6 +354,42 @@ function MovieDetail(props: { id: string; onClose: () => void }) {
   );
 }
 
+/** "Best of my life": a ranked list with move up/down, remove and share. */
+function BestList(props: { kind: Kind; open: (id: string) => void }) {
+  const list = () => bestEntries(props.kind);
+  return (
+    <section class="best-list stack">
+      <div class="best-head">
+        <p class="muted sm">{t("media-best-help")}</p>
+        <button class="btn sm" disabled={!list().length} onClick={() => void shareBest(props.kind)}><Share2 />{t("media-share-list")}</button>
+      </div>
+      <ol class="best-rows">
+        <For each={list()} fallback={<li class="empty-state"><Trophy /><p>{t("media-best-empty")}</p></li>}>
+          {(e, i) => (
+            <li class="best-row" classList={{ top: i() < 3 }}>
+              <span class="best-rank">{num(i() + 1)}</span>
+              <button class="best-main" onClick={() => props.open(e.id)} onContextMenu={(ev) => (props.kind === "books" ? bookMenu(ev, e as BookEntry, () => props.open(e.id)) : movieMenu(ev, e as CinemaEntry, () => props.open(e.id)))}>
+                <Cover title={e.title} kind={props.kind} image={e.cover} series={"mediaType" in e && e.mediaType === "series"} />
+                <span class="stack">
+                  <strong dir="auto" class="ellipsis">{e.title}</strong>
+                  <span class="muted sm ellipsis" dir="auto">{"author" in e ? e.author : [e.year, e.director].filter(Boolean).join(" · ")}</span>
+                  <Show when={e.rating}><Stars small label="" value={e.rating} /></Show>
+                </span>
+              </button>
+              <Show when={e.score}><strong class="best-score">{scoreText(e.score!)}</strong></Show>
+              <span class="best-tools">
+                <button class="icon-btn sm" aria-label={t("media-best-up")} title={t("media-best-up")} disabled={i() === 0} onClick={() => moveBest(props.kind, e.id, -1)}><ArrowUp /></button>
+                <button class="icon-btn sm" aria-label={t("media-best-down")} title={t("media-best-down")} disabled={i() === list().length - 1} onClick={() => moveBest(props.kind, e.id, 1)}><ArrowDown /></button>
+                <button class="icon-btn sm" aria-label={t("media-best-remove")} title={t("media-best-remove")} onClick={() => toggleBest(props.kind, e.id)}><X /></button>
+              </span>
+            </li>
+          )}
+        </For>
+      </ol>
+    </section>
+  );
+}
+
 function Stat(props: { icon: JSX.Element; value: number; label: string }) {
   return <div class="stat-tile">{props.icon}<strong>{num(props.value)}</strong><span>{props.label}</span></div>;
 }
@@ -271,7 +411,7 @@ export default function MediaShelf() {
   const pagesRead = () => media.state.books.reduce((n, b) => n + (b.status === "finished" ? b.totalPages : b.currentPage), 0);
   const episodes = () => media.state.movies.reduce((n, m) => n + (m.mediaType === "series" ? m.episodesWatched : 0), 0);
   const avgRating = () => { const r = media.state.movies.filter((m) => m.rating > 0); return r.length ? Math.round((r.reduce((n, m) => n + m.rating, 0) / r.length) * 10) / 10 : 0; };
-  const count = (s: string) => (kind() === "books" ? media.state.books : media.state.movies).filter((x) => s === "all" || x.status === s).length;
+  const count = (s: string) => (s === "best" ? bestIds(kind()).length : (kind() === "books" ? media.state.books : media.state.movies).filter((x) => s === "all" || x.status === s).length);
   const goal = () => media.state.readingGoal ?? 0;
   const setGoal = async () => { const v = await askText(t("media-goal-set"), String(goal() || 12), t("action-save")); if (v !== null) media.update((m) => { m.readingGoal = Math.max(0, Math.round(Number(v) || 0)); }); };
   const switchKind = (k: Kind) => { setKind(k); setFilter("all"); };
@@ -314,7 +454,7 @@ export default function MediaShelf() {
             <Show when={kind() === "books"} fallback={
               <For each={nowMovies()}>{(m) => (
                 <article class="now-card card glass-soft" onContextMenu={(e) => movieMenu(e, m, () => setOpen(m.id))}>
-                  <button class="cover-btn" onClick={() => setOpen(m.id)} aria-label={m.title}><Cover title={m.title} kind="cinema" series={m.mediaType === "series"} /></button>
+                  <button class="cover-btn" onClick={() => setOpen(m.id)} aria-label={m.title}><Cover title={m.title} kind="cinema" series={m.mediaType === "series"} image={m.cover} /></button>
                   <div class="stack">
                     <strong dir="auto">{m.title}</strong>
                     <span class="muted sm" dir="auto">{[m.year, m.director].filter(Boolean).join(" · ")}</span>
@@ -332,7 +472,7 @@ export default function MediaShelf() {
             }>
               <For each={nowBooks()}>{(b) => (
                 <article class="now-card card glass-soft" onContextMenu={(e) => bookMenu(e, b, () => setOpen(b.id))}>
-                  <button class="cover-btn" onClick={() => setOpen(b.id)} aria-label={b.title}><Cover title={b.title} kind="books" /></button>
+                  <button class="cover-btn" onClick={() => setOpen(b.id)} aria-label={b.title}><Cover title={b.title} kind="books" image={b.cover} /></button>
                   <div class="stack">
                     <strong dir="auto">{b.title}</strong>
                     <span class="muted sm" dir="auto">{b.author}</span>
@@ -352,19 +492,22 @@ export default function MediaShelf() {
 
       <div class="shelf-bar">
         <div class="chip-row" role="tablist" aria-label={t("media-status")}>
-          <For each={["all", ...(kind() === "books" ? BOOK_STATUSES : MOVIE_STATUSES)]}>
-            {(s) => <button class="chip" role="tab" aria-selected={filter() === s} onClick={() => setFilter(s)}>{s === "all" ? t("media-all") : statusLabel(kind(), s)}<span class="count">{num(count(s))}</span></button>}
+          <For each={["all", ...(kind() === "books" ? BOOK_STATUSES : MOVIE_STATUSES), "best"]}>
+            {(s) => <button class="chip" classList={{ "chip-best": s === "best" }} role="tab" aria-selected={filter() === s} onClick={() => setFilter(s)}>{s === "best" ? <Trophy aria-hidden="true" /> : null}{s === "all" ? t("media-all") : s === "best" ? t("media-best") : statusLabel(kind(), s)}<span class="count">{num(count(s))}</span></button>}
           </For>
         </div>
         <label class="search-field"><Search aria-hidden="true" /><input class="input sm" type="search" dir="auto" placeholder={t("media-search")} aria-label={t("media-search")} value={q()} onInput={(e) => setQ(e.currentTarget.value)} /></label>
       </div>
 
+      <Show when={filter() !== "best"} fallback={<BestList kind={kind()} open={setOpen} />}>
       <Show when={kind() === "books"} fallback={
         <div class="shelf" classList={{ posters: true }}>
           <For each={movies()} fallback={<div class="empty-state"><Clapperboard /><p>{media.state.movies.length ? t("no-results") : t("media-empty-cinema")}</p><Show when={!media.state.movies.length}><button class="btn primary" onClick={() => setAdding(true)}><Plus />{t("media-add-movie")}</button></Show></div>}>
             {(m) => (
-              <button class="shelf-item" onClick={() => setOpen(m.id)} onContextMenu={(e) => movieMenu(e, m, () => setOpen(m.id))}>
-                <Cover title={m.title} sub={m.year} kind="cinema" series={m.mediaType === "series"} progress={m.mediaType === "series" ? computeSeriesProgressPercent(m) : undefined} />
+              <button class="shelf-item" classList={{ done: m.status === "watched" }} onClick={() => setOpen(m.id)} onContextMenu={(e) => movieMenu(e, m, () => setOpen(m.id))}>
+                <Cover title={m.title} sub={m.year} kind="cinema" series={m.mediaType === "series"} image={m.cover} progress={m.mediaType === "series" ? computeSeriesProgressPercent(m) : undefined} />
+                <Show when={m.status === "watched"}><span class="done-badge" aria-hidden="true"><CheckCircle2 /></span></Show>
+                <Show when={rankOf("cinema", m.id)}>{(r) => <span class="rank-badge">#{num(r())}</span>}</Show>
                 <span class="shelf-title" dir="auto">{m.title}</span>
                 <span class="shelf-meta"><span class={`dot ${m.status}`} />{t(`media-status-${m.status}`)}<Show when={m.rating}><Stars small label="" value={m.rating} /></Show></span>
               </button>
@@ -375,14 +518,17 @@ export default function MediaShelf() {
         <div class="shelf">
           <For each={books()} fallback={<div class="empty-state"><BookOpen /><p>{media.state.books.length ? t("no-results") : t("media-empty-books")}</p><Show when={!media.state.books.length}><button class="btn primary" onClick={() => setAdding(true)}><Plus />{t("media-add-book")}</button></Show></div>}>
             {(b) => (
-              <button class="shelf-item" onClick={() => setOpen(b.id)} onContextMenu={(e) => bookMenu(e, b, () => setOpen(b.id))}>
-                <Cover title={b.title} sub={b.author} kind="books" progress={computeBookProgressPercent(b)} />
+              <button class="shelf-item" classList={{ done: b.status === "finished" }} onClick={() => setOpen(b.id)} onContextMenu={(e) => bookMenu(e, b, () => setOpen(b.id))}>
+                <Cover title={b.title} sub={b.author} kind="books" image={b.cover} progress={computeBookProgressPercent(b)} />
+                <Show when={b.status === "finished"}><span class="done-badge" aria-hidden="true"><CheckCircle2 /></span></Show>
+                <Show when={rankOf("books", b.id)}>{(r) => <span class="rank-badge">#{num(r())}</span>}</Show>
                 <span class="shelf-title" dir="auto">{b.title}</span>
                 <span class="shelf-meta"><span class={`dot ${b.status}`} />{t(`media-book-${b.status}`)}<Show when={b.rating}><Stars small label="" value={b.rating} /></Show></span>
               </button>
             )}
           </For>
         </div>
+      </Show>
       </Show>
 
       <Show when={adding()}><AddEntry kind={kind()} onClose={() => setAdding(false)} onAdded={() => undefined} /></Show>
