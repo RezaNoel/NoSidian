@@ -8,23 +8,19 @@ import type { AmbientMusicTrack } from "../core/types";
 import { appDoc } from "./persist";
 import { ambient, syncMusic } from "./focus";
 import { toast } from "./ui";
+import Hls from "hls.js";
 
 export type MusicKind = "file" | "stream" | "youtube" | "spotify" | "soundcloud";
 export interface MusicItem { id: string; kind: MusicKind; name: string; /** File: storage key; stream: URL; embeds: embed URL. */ ref: string; source?: string; /** Other addresses for the same stream, tried in turn. */ alts?: string[] }
 
 export const musicLibrary = appDoc<{ items: MusicItem[] }>("music", () => ({ items: [] }));
 
-// SomaFM serves every channel from several relays; try them in turn.
-const soma = (ch: string) => ["ice2", "ice1", "ice4", "ice6"].flatMap((h) => [`https://${h}.somafm.com/${ch}-128-mp3`]).concat(`http://ice1.somafm.com/${ch}-128-mp3`);
+// A station can list several addresses; they are tried in turn.
 const station = (id: string, name: string, source: string, urls: string[]): MusicItem => ({ id, kind: "stream", name, source, ref: urls[0], alts: urls.slice(1) });
 
 /** Free internet radio (needs a connection). */
 export const RADIO: MusicItem[] = [
-  station("radio-groovesalad", "Groove Salad", "SomaFM", soma("groovesalad")),
-  station("radio-dronezone", "Drone Zone", "SomaFM", soma("dronezone")),
-  station("radio-lush", "Lush", "SomaFM", soma("lush")),
-  station("radio-deepspaceone", "Deep Space One", "SomaFM", soma("deepspaceone")),
-  station("radio-fluid", "Fluid", "SomaFM", soma("fluid")),
+  station("radio-javan", "Radio Javan", "Radio Javan", ["https://radio.sr-api.ir/hls/stream.m3u8", "https://radio2.sr-api.ir/hls/stream.m3u8", "https://51.254.225.31/hls/stream.m3u8", "https://rjtvhls.wns.live/hls/stream.m3u8"]),
   station("radio-rp-mellow", "Mellow mix", "Radio Paradise", ["https://stream.radioparadise.com/mellow-128", "http://stream.radioparadise.com/mellow-128", "https://stream.radioparadise.com/mellow-64"]),
   station("radio-rp-main", "Main mix", "Radio Paradise", ["https://stream.radioparadise.com/mp3-128", "http://stream.radioparadise.com/mp3-128", "https://stream.radioparadise.com/aac-64"]),
   station("radio-nightride", "Nightride", "Nightride FM", ["https://stream.nightride.fm/nightride.mp3", "https://stream.nightride.fm/nightride.m4a"]),
@@ -45,6 +41,8 @@ export const findItem = (id: string | undefined) => (id ? allItems().find((x) =>
 export const currentItem = () => findItem(ambient.state.musicItem);
 
 let audio: HTMLAudioElement | null = null;
+/** Plays HLS (.m3u8) streams, which the browser audio element cannot play by itself. */
+let hls: Hls | null = null;
 let objectUrl: string | null = null;
 
 // Position of the playing file, for the seek bar.
@@ -69,11 +67,27 @@ export function seekTo(sec: number): void {
 
 function stopAudio() {
   attempt++; // stops a stream that is still trying its addresses
+  hls?.destroy();
+  hls = null;
   if (audio) { audio.pause(); audio.removeAttribute("src"); audio.load(); }
   if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
 }
 
 let attempt = 0;
+function attachStream(el: HTMLAudioElement, url: string) {
+  hls?.destroy();
+  hls = null;
+  if (/\.m3u8(\?|$)/i.test(url) && Hls.isSupported()) {
+    const h = new Hls();
+    hls = h;
+    h.on(Hls.Events.ERROR, (_e, d) => { if (d.fatal) el.dispatchEvent(new Event("error")); });
+    h.loadSource(url);
+    h.attachMedia(el);
+    return;
+  }
+  el.src = url;
+}
+
 async function playAudioItem(item: MusicItem) {
   audio ??= new Audio();
   stopAudio();
@@ -107,7 +121,7 @@ async function playAudioItem(item: MusicItem) {
       const timer = setTimeout(() => resolve(false), 12_000);
       el.onplaying = () => { clearTimeout(timer); resolve(true); };
       el.onerror = () => { clearTimeout(timer); resolve(false); };
-      el.src = url;
+      attachStream(el, url);
       void el.play().catch((e: DOMException) => { if (e?.name !== "AbortError") { clearTimeout(timer); resolve(false); } });
     });
     if (run !== attempt) return;
