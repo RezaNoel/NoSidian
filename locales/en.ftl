@@ -1258,3 +1258,13 @@ drop-copied = { $count ->
     [one] Added 1 file
    *[other] Added { $count } files
 }
+player-back = Back 10 seconds
+player-forward = Forward 10 seconds
+player-seek = Position
+player-speed = Playback speed
+player-mute = Mute
+player-unmute = Unmute
+player-fullscreen = Full screen
+image-zoom-in = Zoom in
+image-zoom-out = Zoom out
+image-zoom-reset = Actual size

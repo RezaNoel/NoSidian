@@ -1213,6 +1213,16 @@ export interface MessageArgs {
   "drop-too-big": { name: string | number };
   "drop-failed": { name: string | number };
   "drop-copied": { count: string | number };
+  "player-back": undefined;
+  "player-forward": undefined;
+  "player-seek": undefined;
+  "player-speed": undefined;
+  "player-mute": undefined;
+  "player-unmute": undefined;
+  "player-fullscreen": undefined;
+  "image-zoom-in": undefined;
+  "image-zoom-out": undefined;
+  "image-zoom-reset": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2429,5 +2439,15 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "entry-style-reset",
   "drop-too-big",
   "drop-failed",
-  "drop-copied"
+  "drop-copied",
+  "player-back",
+  "player-forward",
+  "player-seek",
+  "player-speed",
+  "player-mute",
+  "player-unmute",
+  "player-fullscreen",
+  "image-zoom-in",
+  "image-zoom-out",
+  "image-zoom-reset"
 ];

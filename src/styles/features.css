@@ -168,11 +168,50 @@ details.callout[open] > summary::after { transform: rotate(90deg); }
 
 /* ---------- Overlays ---------- */
 .lightbox {
-  position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; padding: 32px;
-  background: rgb(0 0 0 / 0.82); cursor: zoom-out; animation: pop 140ms ease-out;
+  position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; padding: 32px; overflow: hidden;
+  background: rgb(0 0 0 / 0.86); cursor: zoom-out; animation: pop 140ms ease-out; touch-action: none;
 }
-.lightbox img { max-inline-size: 100%; max-block-size: 100%; border-radius: var(--radius-md); box-shadow: 0 20px 60px rgb(0 0 0 / 0.6); }
-.lightbox-close { position: absolute; inset-block-start: 16px; inset-inline-end: 16px; color: #fff; background: rgb(255 255 255 / 0.12); }
+.lightbox img {
+  max-inline-size: 100%; max-block-size: 100%; border-radius: var(--radius-md); box-shadow: 0 20px 60px rgb(0 0 0 / 0.6);
+  cursor: zoom-in; transition: transform 120ms ease-out; user-select: none; transform-origin: center;
+}
+.lightbox.zoomed, .lightbox.zoomed img { cursor: grab; }
+.lightbox.zoomed:active img { cursor: grabbing; transition: none; }
+.lightbox-tools {
+  position: absolute; inset-block-end: 20px; inset-inline-start: 50%; translate: -50% 0; display: flex; align-items: center; gap: 2px;
+  padding: 4px; border-radius: 999px; background: rgb(20 20 24 / 0.78); border: 1px solid rgb(255 255 255 / 0.12); cursor: default;
+}
+[dir="rtl"] .lightbox-tools { translate: 50% 0; }
+.lightbox-tools .icon-btn { color: #fff; border-radius: 999px; }
+.lightbox-tools .icon-btn:hover { background: rgb(255 255 255 / 0.14); }
+.lightbox-pct { min-inline-size: 54px; color: #fff; font-variant-numeric: tabular-nums; font-size: 12px; background: none; border: 0; border-radius: 999px; padding: 6px; }
+.lightbox-pct:hover { background: rgb(255 255 255 / 0.14); }
+
+/* Audio and video embedded in notes */
+.media-embed { display: block; margin-block: 10px; }
+.media-player {
+  display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: var(--bg-secondary); max-inline-size: 720px; outline: none; container-type: inline-size;
+}
+.media-player:focus-visible { box-shadow: var(--focus-ring); }
+.media-player video { inline-size: 100%; max-block-size: 70vh; border-radius: calc(var(--radius-md) - 3px); background: #000; display: block; cursor: pointer; }
+.media-player audio { display: none; }
+.media-player:fullscreen { max-inline-size: none; justify-content: center; background: #000; border: 0; border-radius: 0; }
+.media-player:fullscreen video { flex: 1; max-block-size: none; border-radius: 0; }
+.media-player:fullscreen .mp-bar { color: #fff; }
+.mp-name { font-weight: 600; font-size: 13px; padding-inline: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-inline-size: 0; }
+.mp-bar .icon-btn { flex: none; inline-size: 30px; block-size: 30px; }
+.mp-bar .mp-play { background: var(--accent); color: var(--accent-ink); border-radius: 999px; }
+.mp-bar .mp-play:hover { background: var(--accent); }
+.mp-time { flex: none; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; min-inline-size: 36px; text-align: center; }
+.mp-seek { flex: 1; min-inline-size: 40px; }
+.mp-speed { flex: none; font-size: 12px; font-variant-numeric: tabular-nums; min-inline-size: 38px; padding: 4px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); }
+.mp-speed:hover { border-color: var(--accent); }
+@container (max-width: 440px) {
+  .mp-seek { order: -1; flex: 1 1 100%; }
+  .mp-bar .mp-time:first-of-type { margin-inline-start: auto; }
+}
 .slides { position: fixed; inset: 0; z-index: 125; display: flex; flex-direction: column; background: var(--bg-primary); }
 .slide { flex: 1; overflow: auto; display: flex; flex-direction: column; justify-content: center; padding: 6vh 10vw; font-size: clamp(18px, 2.4vw, 30px); line-height: 1.5; }
 .slide h1 { font-size: 2.2em; margin: 0 0 0.4em; }

@@ -1,6 +1,6 @@
 // Full-screen overlays: the image lightbox and the slide presenter.
 import { Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
-import { ChevronLeft, ChevronRight, X } from "lucide-solid";
+import { ChevronLeft, ChevronRight, Maximize2, X, ZoomIn, ZoomOut } from "lucide-solid";
 import { t } from "../i18n";
 import { renderMarkdown, splitSlides } from "../lib/markdown";
 import { setSlidesFor, setZoomImage, slidesFor, zoomImage } from "../state/ui";
@@ -17,14 +17,55 @@ export function Lightbox() {
     <Show when={zoomImage()} keyed>
       {(img) => {
         let btn!: HTMLButtonElement;
+        let host!: HTMLDivElement;
         const back = document.activeElement as HTMLElement | null;
-        const close = () => { setZoomImage(null); back?.focus(); };
+        const [scale, setScale] = createSignal(1);
+        const [pan, setPan] = createSignal({ x: 0, y: 0 });
+        let drag: { x: number; y: number; px: number; py: number; moved: boolean } | null = null;
+        const close = () => { setZoomImage(null); if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined); back?.focus(); };
+        const zoomTo = (s: number) => {
+          const next = Math.max(1, Math.min(8, s));
+          setScale(next);
+          if (next === 1) setPan({ x: 0, y: 0 });
+        };
+        const full = () => (document.fullscreenElement ? void document.exitFullscreen() : void host.requestFullscreen?.().catch(() => undefined));
         useEscape(close);
         onMount(() => btn.focus());
+        const key = (e: KeyboardEvent) => {
+          if (e.key === "+" || e.key === "=") { e.preventDefault(); zoomTo(scale() * 1.25); }
+          else if (e.key === "-") { e.preventDefault(); zoomTo(scale() / 1.25); }
+          else if (e.key === "0") zoomTo(1);
+          else if (e.key === "f") full();
+        };
+        const wheel = (e: WheelEvent) => { e.preventDefault(); zoomTo(scale() * (e.deltaY < 0 ? 1.15 : 1 / 1.15)); };
+        const down = (e: PointerEvent) => {
+          if (e.button !== 0) return;
+          drag = { x: e.clientX, y: e.clientY, px: pan().x, py: pan().y, moved: false };
+          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        };
+        const move = (e: PointerEvent) => {
+          if (!drag || scale() === 1) return;
+          const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+          if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+          setPan({ x: drag.px + dx, y: drag.py + dy });
+        };
+        const up = (e: PointerEvent) => {
+          const d = drag;
+          drag = null;
+          if (d && !d.moved && e.target === e.currentTarget) close();
+        };
         return (
-          <div class="lightbox" role="dialog" aria-modal="true" aria-label={img.alt || t("image-zoom")} onClick={close}>
-            <img src={img.src} alt={img.alt} />
-            <button ref={btn} class="icon-btn lightbox-close" aria-label={t("action-close")} onClick={close}><X /></button>
+          <div ref={host} class="lightbox" classList={{ zoomed: scale() > 1 }} role="dialog" aria-modal="true" aria-label={img.alt || t("image-zoom")}
+            onKeyDown={key} onWheel={wheel} onPointerDown={down} onPointerMove={move} onPointerUp={up}>
+            <img src={img.src} alt={img.alt} draggable={false} style={{ transform: `translate(${pan().x}px, ${pan().y}px) scale(${scale()})` }}
+              onDblClick={() => zoomTo(scale() > 1 ? 1 : 2.5)} />
+            <div class="lightbox-tools" onPointerDown={(e) => e.stopPropagation()} onPointerUp={(e) => e.stopPropagation()}>
+              <button class="icon-btn" aria-label={t("image-zoom-out")} title={t("image-zoom-out")} disabled={scale() <= 1} onClick={() => zoomTo(scale() / 1.25)}><ZoomOut /></button>
+              <button class="lightbox-pct" aria-label={t("image-zoom-reset")} title={t("image-zoom-reset")} onClick={() => zoomTo(1)}>{Math.round(scale() * 100)}%</button>
+              <button class="icon-btn" aria-label={t("image-zoom-in")} title={t("image-zoom-in")} disabled={scale() >= 8} onClick={() => zoomTo(scale() * 1.25)}><ZoomIn /></button>
+              <button class="icon-btn" aria-label={t("player-fullscreen")} title={t("player-fullscreen")} onClick={full}><Maximize2 /></button>
+              <button ref={btn} class="icon-btn" aria-label={t("action-close")} title={t("action-close")} onClick={close}><X /></button>
+            </div>
           </div>
         );
       }}

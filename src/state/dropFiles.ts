@@ -17,7 +17,7 @@ function toBase64(buf: ArrayBuffer): string {
 }
 
 /** Copy dropped files into `folder` ("" is the vault root). Returns the new paths. */
-export async function copyDroppedFiles(files: FileList | File[], folder: string): Promise<string[]> {
+export async function copyDroppedFiles(files: FileList | File[], folder: string, quiet = false): Promise<string[]> {
   const out: string[] = [];
   for (const f of Array.from(files)) {
     if (f.size > MAX_BYTES) { toast(t("drop-too-big", { name: f.name }), true); continue; }
@@ -29,7 +29,28 @@ export async function copyDroppedFiles(files: FileList | File[], folder: string)
   }
   if (out.length) {
     await refresh();
-    toast(t("drop-copied", { count: out.length }));
+    if (!quiet) toast(t("drop-copied", { count: out.length }));
   }
   return out;
+}
+
+/** Folder that files dropped or pasted into notes are saved in. */
+export const ATTACH_FOLDER = "attachments";
+
+/**
+ * Save files dropped or pasted into a note and return the Markdown that
+ * embeds them: images, audio, video and PDFs as `![[...]]`, anything else as
+ * a link.
+ */
+export async function embedDroppedFiles(files: FileList | File[]): Promise<string> {
+  const { fileKind, reloadAttachments } = await import("../lib/attachments");
+  const named = Array.from(files).map((f, i) =>
+    // Pasted screenshots come in as "image.png"; give them a dated name.
+    f.name && f.name !== "image.png" ? f : new File([f], `Pasted image ${new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-")}${i ? `-${i}` : ""}.${(f.type.split("/")[1] || "png").replace("jpeg", "jpg")}`, { type: f.type }),
+  );
+  const paths = await copyDroppedFiles(named, ATTACH_FOLDER, true);
+  if (paths.length) await reloadAttachments();
+  return paths
+    .map((p) => (fileKind(p) ? `![[${p}]]` : `[${p.split("/").pop()}](<${p}>)`))
+    .join("\n");
 }

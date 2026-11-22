@@ -1,5 +1,6 @@
 // Context panel: links (backlinks, outgoing, unlinked), outline, and tabs for
 // focus, history and review stats that arrive in later phases.
+import { fileKind } from "../lib/attachments";
 import { For, Match, Show, Switch, createMemo, createResource } from "solid-js";
 import { History, Link2, ListTree, Brain, Timer, ArrowUpRight, CircleDashed } from "lucide-solid";
 import { t } from "../i18n";
@@ -74,7 +75,8 @@ const EMPTY_LINKS: NoteLinks = { backlinks: [], outgoing: [], unlinked: [] };
 
 function LinksPanel(props: { path: string }) {
   const [links] = createResource(() => ({ path: props.path, rev: indexRev() }), ({ path }) => backend.links(path), { initialValue: EMPTY_LINKS });
-  const out = () => links().outgoing;
+  // Embedded images, audio and video are files, not notes to create.
+  const out = () => links().outgoing.filter((o) => o.path || !/^(image|audio|video)$/.test(fileKind(o.target) ?? ""));
   return (
     <>
       <MentionList title={t("links-backlinks")} items={links().backlinks} />

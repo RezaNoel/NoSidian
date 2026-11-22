@@ -17,6 +17,7 @@ import { backend } from "../backend";
 import { formatDailyName } from "../lib/dates";
 import { createResource } from "solid-js";
 import { pref } from "../state/prefs";
+import { embedDroppedFiles, hasOsFiles } from "../state/dropFiles";
 
 const highlight = HighlightStyle.define([
   { tag: tg.heading1, fontSize: "1.4em", fontWeight: "700", color: "var(--text-primary)" },
@@ -194,7 +195,30 @@ export function Editor(props: { path: string }) {
             if (u.docChanged && !syncing) setContent(props.path, u.state.doc.toString());
             if (u.focusChanged && u.view.hasFocus) { activeView = u.view; activeViewPath = props.path; }
           }),
-          EditorView.domEventHandlers({ scroll: (_e, v) => { syncReaderScroll(v); } }),
+          EditorView.domEventHandlers({
+            scroll: (_e, v) => { syncReaderScroll(v); },
+            // Files from the system: save them under attachments/ and embed them where they land.
+            dragover: (e) => {
+              if (!hasOsFiles(e)) return false;
+              e.preventDefault();
+              if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+              return true;
+            },
+            drop: (e, v) => {
+              if (!e.dataTransfer?.files.length) return false;
+              e.preventDefault();
+              const at = v.posAtCoords({ x: e.clientX, y: e.clientY }) ?? v.state.selection.main.head;
+              void insertFiles(v, e.dataTransfer.files, at);
+              return true;
+            },
+            paste: (e, v) => {
+              const files = e.clipboardData?.files;
+              if (!files?.length) return false;
+              e.preventDefault();
+              void insertFiles(v, files, v.state.selection.main.head);
+              return true;
+            },
+          }),
         ],
       }),
     });
@@ -235,6 +259,18 @@ export function Editor(props: { path: string }) {
   });
 
   return <div ref={host} class="editor-host" />;
+}
+
+async function insertFiles(v: EditorView, files: FileList, at: number) {
+  const md = await embedDroppedFiles(Array.from(files));
+  if (!md) return;
+  const line = v.state.doc.lineAt(Math.min(at, v.state.doc.length));
+  // Put embeds on their own line so they render as a block.
+  const before = at > line.from ? "\n" : "";
+  const after = at < line.to ? "\n" : "";
+  const insert = `${before}${md}${after}`;
+  v.dispatch({ changes: { from: at, insert }, selection: { anchor: at + insert.length } });
+  v.focus();
 }
 
 /** Split view: keep the reader roughly aligned with the editor's top line. */

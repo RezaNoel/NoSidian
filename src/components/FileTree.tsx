@@ -220,7 +220,7 @@ export function FileTree() {
   };
   const onDragOver = (e: DragEvent, folder: string) => {
     const from = dragging();
-    if (!from && hasOsFiles(e) && inTauri()) {
+    if (!from && hasOsFiles(e)) {
       e.preventDefault();
       e.stopPropagation();
       if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";

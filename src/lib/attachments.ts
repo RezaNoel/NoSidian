@@ -5,11 +5,13 @@ import { backend } from "../backend";
 import { indexRev, tree } from "../state/vault";
 
 const store = createRoot(() => {
-  const [list] = createResource(() => indexRev() + 1, () => backend.attachments().catch(() => [] as string[]), { initialValue: [] });
-  return { list };
+  const [list, { refetch }] = createResource(() => indexRev() + 1, () => backend.attachments().catch(() => [] as string[]), { initialValue: [] });
+  return { list, refetch };
 });
 
 export const attachmentList = store.list;
+/** Re-read the attachment list now (after adding files), resolved once loaded. */
+export const reloadAttachments = async (): Promise<void> => { await store.refetch(); };
 
 const KIND: [RegExp, "image" | "audio" | "video" | "pdf"][] = [
   [/\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i, "image"],
