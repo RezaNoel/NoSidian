@@ -70,8 +70,11 @@ fn now() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
 }
 
+/// Kept in its own folder: the app's JSON documents live next to it as
+/// `<name>.json`, and the calendar settings document is also called "google",
+/// which used to overwrite the sign-in and sign the user out on every restart.
 fn token_file(app: &AppHandle) -> CmdResult<PathBuf> {
-    Ok(app.path().app_config_dir().map_err(internal)?.join("google.json"))
+    Ok(app.path().app_config_dir().map_err(internal)?.join("auth").join("google.json"))
 }
 
 fn load(app: &AppHandle, g: &Google) -> CmdResult<()> {
@@ -81,6 +84,12 @@ fn load(app: &AppHandle, g: &Google) -> CmdResult<()> {
     let path = token_file(app)?;
     if let Ok(text) = std::fs::read_to_string(&path) {
         if let Ok(t) = serde_json::from_str::<Tokens>(&text) {
+            *g.tokens.lock().map_err(internal)? = Some(t);
+        }
+    } else if let Ok(text) = std::fs::read_to_string(app.path().app_config_dir().map_err(internal)?.join("google.json")) {
+        // Sign-in saved by an older version, if the settings document hasn't replaced it yet.
+        if let Ok(t) = serde_json::from_str::<Tokens>(&text) {
+            save(app, Some(&t))?;
             *g.tokens.lock().map_err(internal)? = Some(t);
         }
     }

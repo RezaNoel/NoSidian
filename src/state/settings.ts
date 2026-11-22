@@ -5,6 +5,7 @@ import { createStore, produce, reconcile } from "solid-js/store";
 import { setLocale } from "../i18n";
 import { detectLanguage } from "../i18n/languages";
 import { loadConfig, saveConfig } from "./backend";
+import { onFlush } from "./flush";
 import { defaultConfig, type AppConfig } from "./types";
 
 const SAVE_DELAY_MS = 300;
@@ -14,12 +15,20 @@ const store = createRoot(() => {
   let loaded = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  const persist = () => {
+  let dirty = false;
+  const flush = async () => {
     clearTimeout(timer);
-    timer = setTimeout(() => {
-      // Plain copy: the store proxy can't cross the IPC boundary.
-      void saveConfig(JSON.parse(JSON.stringify(config)));
-    }, SAVE_DELAY_MS);
+    timer = undefined;
+    if (!dirty) return;
+    dirty = false;
+    // Plain copy: the store proxy can't cross the IPC boundary.
+    await saveConfig(JSON.parse(JSON.stringify(config))).catch(() => { dirty = true; });
+  };
+  onFlush(flush);
+  const persist = () => {
+    dirty = true;
+    clearTimeout(timer);
+    timer = setTimeout(() => void flush(), SAVE_DELAY_MS);
   };
 
   createEffect(() => applyToDocument(config));

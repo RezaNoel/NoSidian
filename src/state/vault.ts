@@ -9,6 +9,7 @@ import { loadProfile, profile, updateProfile } from "./workspace";
 import { toast } from "./ui";
 import type { Vault, VaultTree } from "./types";
 import { loadVaultDocs } from "./persist";
+import { onFlush } from "./flush";
 import { pref } from "./prefs";
 import { isAppView, tabTitle } from "./views";
 
@@ -105,27 +106,34 @@ export function closeTab(path: string): void {
   });
 }
 
+const pendingText = new Map<string, string>();
+
+async function writeNow(path: string): Promise<void> {
+  clearTimeout(v.timers.get(path));
+  v.timers.delete(path);
+  const text = pendingText.get(path);
+  if (text === undefined) return;
+  pendingText.delete(path);
+  try {
+    await backend.write(path, text);
+    const now = Date.now();
+    v.setTree("notes", (n) => n.path === path, "modified", now);
+    bumpIndex(400);
+    autoSnapshot(path, text, now);
+  } catch (e) {
+    reportError(e);
+  } finally {
+    if (v.timers.size === 0) v.setSaving(false);
+  }
+}
+onFlush(() => Promise.all([...pendingText.keys()].map(writeNow)).then(() => undefined));
+
 export function setContent(path: string, text: string): void {
   v.setContents(path, text);
   v.setSaving(true);
+  pendingText.set(path, text);
   clearTimeout(v.timers.get(path));
-  v.timers.set(
-    path,
-    setTimeout(async () => {
-      v.timers.delete(path);
-      try {
-        await backend.write(path, text);
-        const now = Date.now();
-        v.setTree("notes", (n) => n.path === path, "modified", now);
-        bumpIndex(400);
-        autoSnapshot(path, text, now);
-      } catch (e) {
-        reportError(e);
-      } finally {
-        if (v.timers.size === 0) v.setSaving(false);
-      }
-    }, SAVE_DELAY_MS),
-  );
+  v.timers.set(path, setTimeout(() => void writeNow(path), SAVE_DELAY_MS));
 }
 
 const lastSnap = new Map<string, number>();
