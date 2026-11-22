@@ -207,6 +207,9 @@ export const memoryBackend: VaultBackend = {
   async fileWrite(path) {
     throw { code: "io", detail: path };
   },
+  async fileAdd(_folder, name) {
+    throw { code: "io", detail: name };
+  },
   async importFiles() {
     return [];
   },

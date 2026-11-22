@@ -1205,6 +1205,14 @@ export interface MessageArgs {
   "startup-dashboard": undefined;
   "vault-close": undefined;
   "glass-preview-badge": undefined;
+  "entry-style-title": undefined;
+  "entry-style-color": undefined;
+  "entry-style-icon": undefined;
+  "entry-style-default": undefined;
+  "entry-style-reset": undefined;
+  "drop-too-big": { name: string | number };
+  "drop-failed": { name: string | number };
+  "drop-copied": { count: string | number };
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2413,5 +2421,13 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "start-open-dashboard",
   "startup-dashboard",
   "vault-close",
-  "glass-preview-badge"
+  "glass-preview-badge",
+  "entry-style-title",
+  "entry-style-color",
+  "entry-style-icon",
+  "entry-style-default",
+  "entry-style-reset",
+  "drop-too-big",
+  "drop-failed",
+  "drop-copied"
 ];

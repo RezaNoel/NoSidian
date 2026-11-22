@@ -69,6 +69,7 @@ pub fn run() {
             commands::file_read,
             commands::file_write,
             commands::files_import,
+            commands::file_add,
             commands::export_text,
             commands::export_bytes,
             google::google_status,

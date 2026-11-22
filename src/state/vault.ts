@@ -203,6 +203,7 @@ async function relocate(from: string, to: string): Promise<boolean> {
         p.recent = p.recent.map((r) => ({ ...r, path: move(r.path) }));
         p.collapsedFolders = p.collapsedFolders.map(move);
         p.noteModes = Object.fromEntries(Object.entries(p.noteModes).map(([k, m]) => [move(k), m]));
+        p.fileStyles = Object.fromEntries(Object.entries(p.fileStyles ?? {}).map(([k, m]) => [move(k), m]));
       });
     });
     await refresh();

@@ -52,6 +52,8 @@ export interface VaultBackend {
   attachments(): Promise<string[]>;
   fileRead(path: string): Promise<Uint8Array>;
   fileWrite(path: string, base64: string): Promise<void>;
+  /** Save a dropped file under a free name in `folder`; returns its path. */
+  fileAdd(folder: string, name: string, base64: string): Promise<string>;
   /** Ask for files on disk and copy them into `folder`. */
   importFiles(folder: string): Promise<string[]>;
   /** Ask where to save and write text there. Returns false if cancelled. */
@@ -121,6 +123,7 @@ const tauriBackend: VaultBackend = {
     return buf instanceof ArrayBuffer ? new Uint8Array(buf) : Uint8Array.from(buf);
   },
   fileWrite: (path, data) => invoke("file_write", { path, data }),
+  fileAdd: (folder, name, data) => invoke("file_add", { folder, name, data }),
   async importFiles(folder) {
     const { open } = await import("@tauri-apps/plugin-dialog");
     const res = await open({ multiple: true, filters: [{ name: "Markdown / PDF / media", extensions: ["md", "markdown", "pdf", "png", "jpg", "jpeg", "gif", "webp", "svg", "mp3", "wav", "ogg", "m4a", "mp4", "webm"] }] });

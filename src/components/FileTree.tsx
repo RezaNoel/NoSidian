@@ -3,7 +3,7 @@
 import { For, Show, createMemo, createResource, createSignal } from "solid-js";
 import {
   ArrowUpDown, ChevronDown, ChevronRight, ChevronsDownUp, Crosshair, FilePlus, FileText, FileType,
-  Copy, CopyPlus, ExternalLink, Folder, FolderInput, FolderOpen, FolderPlus, FolderSearch, Link, Pencil, SlidersHorizontal, Star, Trash2,
+  Copy, CopyPlus, ExternalLink, Folder, FolderInput, FolderOpen, FolderPlus, FolderSearch, Link, Palette, Pencil, SlidersHorizontal, Star, Trash2,
 } from "lucide-solid";
 import { inTauri } from "../state/backend";
 import { locale, t } from "../i18n";
@@ -15,7 +15,11 @@ import { profile, updateProfile } from "../state/workspace";
 import { askConfirm, askText, isMobile, setDrawer, toast } from "../state/ui";
 import type { NoteSummary, SortMode } from "../state/types";
 import { openMenu } from "./ContextMenu";
+import { Dynamic } from "solid-js/web";
+import { HoverPreview, hoverRow, leaveRow } from "./HoverPreview";
+import { ENTRY_ICONS, EntryStyleDialog, entryStyle, openEntryStyle } from "./EntryStyle";
 import { pref } from "../state/prefs";
+import { copyDroppedFiles, hasOsFiles } from "../state/dropFiles";
 
 type DisplayKey = "updated" | "last-opened" | "words" | "backlinks" | "tags";
 const DISPLAY: DisplayKey[] = ["updated", "last-opened", "words", "backlinks", "tags"];
@@ -138,7 +142,8 @@ export function FileTree() {
       { label: t("menu-copy-link"), icon: <Link />, sep: true, run: () => void copyText(n.kind === "folder" ? n.path : `[[${n.kind === "markdown" ? n.path.replace(/\.md$/i, "") : n.path}]]`) },
       { label: t("menu-copy-location"), icon: <Copy />, run: () => void backend.absPath(n.path).then(copyText) },
       ...(desktop ? [{ label: t("menu-reveal-os"), icon: <FolderSearch />, run: () => void backend.revealInOs(n.path).catch(() => toast(t("menu-failed"))) }] : []),
-      { label: t("action-rename"), icon: <Pencil />, sep: true, run: () => void promptRename(n) },
+      { label: t("entry-style-title"), icon: <Palette />, sep: true, run: () => openEntryStyle(n.path) },
+      { label: t("action-rename"), icon: <Pencil />, run: () => void promptRename(n) },
       { label: t("action-move-to"), icon: <FolderInput />, run: () => queueMicrotask(() => moveMenu(e, n)) },
       { label: t("action-delete"), icon: <Trash2 />, danger: true, sep: true, run: () => void confirmTrash(n) },
     ]);
@@ -215,6 +220,13 @@ export function FileTree() {
   };
   const onDragOver = (e: DragEvent, folder: string) => {
     const from = dragging();
+    if (!from && hasOsFiles(e) && inTauri()) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+      setDropOn(folder);
+      return;
+    }
     if (!from || !canMoveInto(from, folder)) return;
     e.preventDefault();
     e.stopPropagation();
@@ -227,6 +239,11 @@ export function FileTree() {
     const from = e.dataTransfer?.getData(DRAG_TYPE) || dragging();
     setDropOn(null);
     setDragging(null);
+    if (!from && e.dataTransfer?.files.length) {
+      void copyDroppedFiles(e.dataTransfer.files, folder);
+      if (folder) toggle(folder, true);
+      return;
+    }
     if (from && canMoveInto(from, folder)) {
       void moveEntry(from, folder);
       if (folder) toggle(folder, true);
@@ -249,6 +266,8 @@ export function FileTree() {
 
   return (
     <div class="panel files-panel">
+      <EntryStyleDialog />
+      <HoverPreview />
       <div class="panel-head tools-only" onContextMenu={areaMenu}>
         <h2 class="sr-only">{t("tab-files")}</h2>
         <div class="panel-tools" role="toolbar" aria-label={t("tab-files")}>
@@ -288,6 +307,8 @@ export function FileTree() {
                   onKeyDown={(e) => onKey(e, n)}
                   onFocus={() => setFocused(n.path)}
                   onContextMenu={(e) => menuFor(e, n)}
+                  onMouseMove={(e) => hoverRow(e, n.path)}
+                  onMouseLeave={leaveRow}
                   onTouchStart={(e) => onTouchStart(e, n)}
                   onTouchEnd={cancelPress}
                   onTouchMove={cancelPress}
@@ -295,8 +316,13 @@ export function FileTree() {
                   <span class="tree-chevron" aria-hidden="true">
                     <Show when={isFolder}>{open() ? <ChevronDown /> : <ChevronRight class="flip-rtl" />}</Show>
                   </span>
-                  <span class="tree-icon" aria-hidden="true">
-                    {isFolder ? (open() ? <FolderOpen /> : <Folder />) : n.kind === "pdf" ? <FileType /> : <FileText />}
+                  <span class="tree-icon" aria-hidden="true" style={{ color: entryStyle(n.path)?.color }}>
+                    {(() => {
+                      const custom = entryStyle(n.path)?.icon;
+                      const I = custom ? ENTRY_ICONS[custom] : undefined;
+                      if (I) return <Dynamic component={I} />;
+                      return isFolder ? (open() ? <FolderOpen /> : <Folder />) : n.kind === "pdf" ? <FileType /> : <FileText />;
+                    })()}
                   </span>
                   <span class="tree-label">
                     <span class="tree-name" dir="auto">{n.kind === "markdown" ? noteTitle(n.path) : n.name}</span>

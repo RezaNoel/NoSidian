@@ -745,3 +745,21 @@ label.btn:focus-within { box-shadow: var(--focus-ring); }
 .vault-current { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-block-end: 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: rgb(var(--l2) / 0.45); }
 .vault-current > svg { inline-size: 18px; block-size: 18px; color: var(--accent); flex: none; }
 .vault-current .list-title { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+
+/* Colour and icon for files and folders */
+.entry-style { display: flex; flex-direction: column; gap: 10px; }
+.entry-colors { display: flex; flex-wrap: wrap; gap: 8px; }
+.entry-color { inline-size: 28px; block-size: 28px; border-radius: 50%; border: 2px solid transparent; padding: 0; display: grid; place-items: center; cursor: pointer; }
+.entry-color.none { background: transparent; border-color: var(--border-strong); color: var(--text-muted); }
+.entry-color.none svg { inline-size: 14px; block-size: 14px; }
+.entry-color[aria-checked="true"] { box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--text-primary); }
+.entry-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 6px; }
+.entry-icon { aspect-ratio: 1; display: grid; place-items: center; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; }
+.entry-icon svg { inline-size: 18px; block-size: 18px; }
+.entry-icon:hover { background: var(--hover); }
+.entry-icon[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); }
+
+/* Ctrl + hover preview of a note */
+.hover-preview { position: fixed; z-index: 300; inline-size: 320px; max-block-size: 260px; overflow: hidden; padding: 12px 14px; border-radius: var(--radius-md); box-shadow: var(--shadow); pointer-events: none; display: flex; flex-direction: column; gap: 6px; }
+.hover-preview strong { font-size: 0.95em; }
+.hover-preview p { margin: 0; white-space: pre-wrap; font-size: 0.84em; line-height: 1.45; color: var(--text-secondary); overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 9; }

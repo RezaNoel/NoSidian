@@ -313,6 +313,17 @@ pub fn file_write(state: State<'_, AppState>, path: String, data: String) -> Cmd
     Ok(files::write_file(&active_root(&state)?, &path, &bytes)?)
 }
 
+/// A file dropped from outside the app, saved under a free name in `folder`.
+#[tauri::command]
+pub fn file_add(state: State<'_, AppState>, folder: String, name: String, data: String) -> CmdResult<String> {
+    use base64::Engine;
+    let bytes = base64::engine::general_purpose::STANDARD.decode(data.trim()).map_err(|_| CommandError { code: "invalid-path", detail: name.clone() })?;
+    let root = active_root(&state)?;
+    let rel = files::add_file(&root, &folder, &name, &bytes)?;
+    touch_index(&state, &root, &[rel.as_str()]);
+    Ok(rel)
+}
+
 #[tauri::command]
 pub fn files_import(state: State<'_, AppState>, sources: Vec<PathBuf>, folder: String) -> CmdResult<Vec<String>> {
     let root = active_root(&state)?;

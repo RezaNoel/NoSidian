@@ -1247,3 +1247,14 @@ start-open-dashboard = Open the dashboard
 startup-dashboard = Dashboard
 vault-close = Close vault
 glass-preview-badge = Preview
+entry-style-title = Colour and icon
+entry-style-color = Colour
+entry-style-icon = Icon
+entry-style-default = Default
+entry-style-reset = Reset
+drop-too-big = { $name } is larger than 200 MB and was not added.
+drop-failed = Could not add { $name }.
+drop-copied = { $count ->
+    [one] Added 1 file
+   *[other] Added { $count } files
+}
