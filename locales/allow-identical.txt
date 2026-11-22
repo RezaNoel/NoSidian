@@ -84,3 +84,10 @@ de:stab-editor
 es:stab-editor
 it:stab-editor
 pt-BR:stab-editor
+fr:player-seek
+de:player-seek
+de:startup-dashboard
+it:startup-dashboard
+de:widget-plugin
+pt-BR:widget-plugin
+it:widget-plugin

@@ -1359,6 +1359,8 @@ export interface MessageArgs {
   "pt-theme-2": undefined;
   "pt-theme-3": undefined;
   "pt-theme-4": undefined;
+  "pt-theme-5": undefined;
+  "pt-theme-6": undefined;
   "pt-focus-done-1": undefined;
   "pt-focus-done-2": undefined;
   "pt-focus-done-3": undefined;
@@ -2751,6 +2753,8 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "pt-theme-2",
   "pt-theme-3",
   "pt-theme-4",
+  "pt-theme-5",
+  "pt-theme-6",
   "pt-focus-done-1",
   "pt-focus-done-2",
   "pt-focus-done-3",

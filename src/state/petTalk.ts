@@ -16,7 +16,7 @@ const LINES = {
   bored: 6, sleepy: 5, hungry: 5, woke: 4, busy: 4,
   note: 5, folder: 4, time30: 3, time60: 3, time120: 3,
   "cards-easy": 4, "cards-hard": 4, "cards-done": 4, "cards-none": 3,
-  "todo-added": 4, "todo-done": 5, "project-new": 4, "project-done": 4, theme: 4, "focus-done": 4,
+  "todo-added": 4, "todo-done": 5, "project-new": 4, "project-done": 4, theme: 6, "focus-done": 4,
 } as const;
 export type TalkCategory = keyof typeof LINES;
 /** Things that happen in the app that the pet can react to. */
