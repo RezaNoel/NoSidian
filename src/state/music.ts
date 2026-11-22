@@ -21,6 +21,7 @@ const station = (id: string, name: string, source: string, urls: string[]): Musi
 /** Free internet radio (needs a connection). */
 export const RADIO: MusicItem[] = [
   station("radio-javan", "Radio Javan", "Radio Javan", ["https://radio.sr-api.ir/hls/stream.m3u8", "https://radio2.sr-api.ir/hls/stream.m3u8", "https://51.254.225.31/hls/stream.m3u8", "https://rjtvhls.wns.live/hls/stream.m3u8"]),
+  station("radio-faaz", "Radio Faaz", "Radio Faaz", ["http://www.radiofaaz.com:8000/radiofaaz.m3u"]),
   station("radio-rp-mellow", "Mellow mix", "Radio Paradise", ["https://stream.radioparadise.com/mellow-128", "http://stream.radioparadise.com/mellow-128", "https://stream.radioparadise.com/mellow-64"]),
   station("radio-rp-main", "Main mix", "Radio Paradise", ["https://stream.radioparadise.com/mp3-128", "http://stream.radioparadise.com/mp3-128", "https://stream.radioparadise.com/aac-64"]),
   station("radio-nightride", "Nightride", "Nightride FM", ["https://stream.nightride.fm/nightride.mp3", "https://stream.nightride.fm/nightride.m4a"]),
@@ -74,6 +75,14 @@ function stopAudio() {
 }
 
 let attempt = 0;
+/** A .m3u link is a text playlist: return the first real stream address in it. */
+async function resolveStream(url: string): Promise<string | null> {
+  if (!/\.m3u(\?|$)/i.test(url)) return url;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) return null;
+  const line = (await res.text()).split(/\r?\n/).map((l) => l.trim()).find((l) => /^https?:\/\//i.test(l));
+  return line ?? null;
+}
 function attachStream(el: HTMLAudioElement, url: string) {
   hls?.destroy();
   hls = null;
@@ -117,11 +126,14 @@ async function playAudioItem(item: MusicItem) {
   sig.setLoading(true);
   for (const url of urls) {
     if (run !== attempt) return;
+    const target = await resolveStream(url).catch(() => null);
+    if (run !== attempt) return;
+    if (!target) continue;
     const ok = await new Promise<boolean>((resolve) => {
       const timer = setTimeout(() => resolve(false), 12_000);
       el.onplaying = () => { clearTimeout(timer); resolve(true); };
       el.onerror = () => { clearTimeout(timer); resolve(false); };
-      attachStream(el, url);
+      attachStream(el, target);
       void el.play().catch((e: DOMException) => { if (e?.name !== "AbortError") { clearTimeout(timer); resolve(false); } });
     });
     if (run !== attempt) return;
