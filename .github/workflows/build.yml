@@ -96,7 +96,7 @@ jobs:
         run: |
           # Release build for arm64 only: small enough to download and install.
           npx tauri android build --apk --target aarch64 --ci
-          APK_DIR=src-tauri/gen/android/app/build/outputs/apk/arm64/release
+          APK_DIR=src-tauri/gen/android/app/build/outputs/apk/universal/release
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           if [ -n "$KEYSTORE_B64" ]; then
             echo "$KEYSTORE_B64" | base64 -d > release.jks
