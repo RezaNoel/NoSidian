@@ -1437,3 +1437,4 @@ font-group-bundled = NoSidian 自带
 font-group-system = 本机
 font-load-system = 显示本机字体
 font-none = 没有符合搜索的字体。
+more-customize = 选择工具

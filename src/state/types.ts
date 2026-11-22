@@ -134,6 +134,8 @@ export interface WorkspaceProfile {
   ribbonOrder: string[];
   /** Ribbon tools the user hid with the right-click menu. */
   ribbonHidden: string[];
+  /** Tools left out of the phone's More sheet. */
+  moreHidden?: string[];
   /** Folders that are opened as projects. */
   projectFolders: string[];
 }

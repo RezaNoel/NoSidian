@@ -1437,3 +1437,4 @@ font-group-bundled = NoSidian に同梱
 font-group-system = このコンピューター
 font-load-system = このコンピューターのフォントを表示
 font-none = 検索に一致するフォントはありません。
+more-customize = ツールを選択

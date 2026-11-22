@@ -1450,3 +1450,4 @@ font-group-bundled = مُدمجة مع NoSidian
 font-group-system = على هذا الحاسوب
 font-load-system = عرض الخطوط الموجودة على هذا الحاسوب
 font-none = لا يوجد خط يطابق بحثك.
+more-customize = اختيار الأدوات

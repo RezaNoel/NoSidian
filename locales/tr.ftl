@@ -1442,3 +1442,4 @@ font-group-bundled = NoSidian ile birlikte gelenler
 font-group-system = Bu bilgisayarda
 font-load-system = Bu bilgisayarın yazı tiplerini göster
 font-none = Aramanla eşleşen yazı tipi yok.
+more-customize = Araçları seç

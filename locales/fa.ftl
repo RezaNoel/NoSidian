@@ -1442,3 +1442,4 @@ font-group-bundled = همراه با NoSidian
 font-group-system = روی این کامپیوتر
 font-load-system = نمایش فونت‌های این کامپیوتر
 font-none = هیچ فونتی با جست‌وجوی شما نمی‌خواند.
+more-customize = انتخاب ابزارها

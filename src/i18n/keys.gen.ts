@@ -1399,6 +1399,7 @@ export interface MessageArgs {
   "font-group-system": undefined;
   "font-load-system": undefined;
   "font-none": undefined;
+  "more-customize": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2801,5 +2802,6 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "font-group-bundled",
   "font-group-system",
   "font-load-system",
-  "font-none"
+  "font-none",
+  "more-customize"
 ];

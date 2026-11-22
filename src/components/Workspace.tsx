@@ -1,7 +1,7 @@
 // The main workspace: ribbon | left sidebar | note area | context panel, with a
 // status bar. On phones the sidebars become drawers and a bottom bar appears.
-import { For, Show, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
-import { Settings, Vault as VaultIcon, X } from "lucide-solid";
+import { For, Show, createEffect, createSignal, on, onCleanup } from "solid-js";
+import { Settings, SlidersHorizontal, Vault as VaultIcon, X } from "lucide-solid";
 import { t } from "../i18n";
 import { profile, updateProfile } from "../state/workspace";
 import { drawer, isMobile, setDrawer, setOverlay } from "../state/ui";
@@ -15,17 +15,34 @@ import { StatusBar } from "./StatusBar";
 import { TabBar } from "./TabBar";
 import { hasTitleBar } from "./TitleBar";
 import { openSettings } from "./settings/SettingsWindow";
+import { openMenu } from "./ContextMenu";
 
 function MoreSheet() {
-  const tools = createMemo(availableTools);
+  const shown = () => availableTools().filter((tool) => !(profile.moreHidden ?? []).includes(tool.key as string));
   const pick = (fn: () => void) => { setDrawer("none"); fn(); };
+  // Choose which tools appear here. The menu stays open while ticking.
+  const customize = (e: MouseEvent) => openMenu(e, availableTools().map((tool) => {
+    const on = !(profile.moreHidden ?? []).includes(tool.key as string);
+    return {
+      label: toolLabel(tool),
+      icon: <tool.icon />,
+      checked: on,
+      run: () => updateProfile((p) => {
+        const hidden = (p.moreHidden ?? []).filter((k) => k !== tool.key);
+        p.moreHidden = on ? [...hidden, tool.key as string] : hidden;
+      }),
+    };
+  }), { minWidth: 220 });
   return (
     <div class="sheet glass-modal" role="dialog" aria-label={t("nav-more")}>
       <div class="sheet-grip" aria-hidden="true" />
       <div class="sheet-grid">
         <button class="sheet-item" onClick={() => pick(() => setOverlay("vaults"))}><VaultIcon /><span>{t("vault-switcher-title")}</span></button>
         <button class="sheet-item" onClick={() => pick(() => openSettings("you"))}><Settings /><span>{t("footer-settings")}</span></button>
-        <For each={tools()}>{(tool) => <button class="sheet-item" onClick={() => pick(tool.run ?? later)}><tool.icon /><span>{toolLabel(tool)}</span></button>}</For>
+        <For each={shown()}>{(tool) => <button class="sheet-item" onClick={() => pick(tool.run ?? later)}><tool.icon /><span>{toolLabel(tool)}</span></button>}</For>
+      </div>
+      <div class="sheet-foot">
+        <button class="btn sm" onClick={(e) => customize(e)}><SlidersHorizontal />{t("more-customize")}</button>
       </div>
     </div>
   );

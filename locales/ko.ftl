@@ -1437,3 +1437,4 @@ font-group-bundled = NoSidian에 포함
 font-group-system = 이 컴퓨터
 font-load-system = 이 컴퓨터의 글꼴 보기
 font-none = 검색과 일치하는 글꼴이 없습니다.
+more-customize = 도구 선택

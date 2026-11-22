@@ -1442,3 +1442,4 @@ font-group-bundled = Incluidas con NoSidian
 font-group-system = En este ordenador
 font-load-system = Mostrar las fuentes de este ordenador
 font-none = Ninguna fuente coincide con tu búsqueda.
+more-customize = Elegir herramientas
