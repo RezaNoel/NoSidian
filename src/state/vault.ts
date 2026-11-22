@@ -181,6 +181,7 @@ export async function createFolder(name: string, parent?: string): Promise<void>
   try {
     await backend.createFolder(joinPath(parent, clean));
     await refresh();
+    window.dispatchEvent(new CustomEvent("nosidian:talk", { detail: "folder" }));
   } catch (e) {
     reportError(e);
   }

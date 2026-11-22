@@ -36,6 +36,8 @@ export interface Prefs {
   /** Allow the terminal to run real shell commands (Advanced; off by default). */
   systemShell: boolean;
   petFloating: boolean;
+  /** The companion says short lines on its own and reacts to events. */
+  petTalk: boolean;
   terminalShell: string;
   /** Command id → shortcut ("Mod+K"); "" means unbound. Only overrides are stored. */
   hotkeys: Record<string, string>;
@@ -70,6 +72,7 @@ export const DEFAULT_PREFS: Prefs = {
   historyAuto: true,
   systemShell: false,
   petFloating: true,
+  petTalk: true,
   terminalShell: "powershell",
   hotkeys: {},
 };

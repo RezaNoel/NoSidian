@@ -1,5 +1,6 @@
 // Focus: the Zen/Pomodoro block sequence and its timer, the ambient sound
 // mixer and music, and the falling-particle effect settings.
+import { petEvent } from "./petTalk";
 import { createRoot, createSignal } from "solid-js";
 import { appDoc } from "./persist";
 import { claimZenReward, computeZenSequenceProgress, normalizeZenConfig } from "../core/zenMode";
@@ -95,6 +96,7 @@ function advance() {
     timer.setRemaining(0);
     const coins = rewardPet("zen-complete");
     toast(t("focus-session-done", { coins }));
+    petEvent("focus-done");
     return;
   }
   timer.setIndex(next);

@@ -1,7 +1,8 @@
 // Companion card and studio: stats, feeding, play, sleep, renaming, species,
 // accessory shop and custom glTF/GLB models. Coins come from studying.
+import { dismissPetLine, petLine } from "../../state/petTalk";
 import { For, Show, createSignal } from "solid-js";
-import { Cake, Coins, Gamepad2, Heart, Moon, Pencil, Share2, Smile, Star, Sun, Upload, X } from "lucide-solid";
+import { Cake, Coins, Gamepad2, Heart, Moon, PawPrint, Pencil, Share2, Smile, Star, Sun, Upload, X } from "lucide-solid";
 import { locale, t } from "../../i18n";
 import { PET_ACCESSORY_SHOP, PET_FOOD_MENU, PET_SPECIES_INFO, buyOrToggleAccessory, feedPet, getPetMoodLabel, petAgeDays, petBondTier, petSatisfaction, performPetPlay, petInteractionSleep, petInteractionWake, renamePet, setPetActivity, xpNeededForLevel } from "../../core/pet";
 import type { Pet3DInteractAction } from "../../core/pet3dKinematics";
@@ -161,6 +162,21 @@ export function PetModelControls() {
 /** Small always-visible companion in the corner of the workspace. */
 /** The start page has its own running companion, so the corner one steps aside. */
 const onStartPage = () => { const a = activePath(); return !a || a === "app:start"; };
+
+/** What the companion is saying: above the floating pet, or as a small card when it's hidden. */
+export function PetBubble() {
+  const floating = () => pref("petFloating") && !studioOpen() && !onStartPage() && !isMobile();
+  return (
+    <Show when={petLine()} keyed>
+      {(l) => (
+        <div class="pet-bubble glass-modal" classList={{ docked: floating() }} role="status" aria-live="polite" onClick={dismissPetLine}>
+          <Show when={!floating()}><span class="pet-bubble-avatar" aria-hidden="true"><PawPrint /></span></Show>
+          <span class="pet-bubble-text" dir="auto"><strong>{pet.state.name}</strong>{l.text}</span>
+        </div>
+      )}
+    </Show>
+  );
+}
 
 export function PetCompanion() {
   return (

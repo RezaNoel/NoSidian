@@ -1,5 +1,6 @@
 // Dashboard: switchable hubs of widgets (notes, tasks, study, focus, media,
 // pet). Edit mode adds, removes, resizes and reorders widgets.
+import { petEvent } from "../../state/petTalk";
 import { For, Match, Show, Switch, createMemo, createResource, createSignal, onMount, type Component } from "solid-js";
 import {
   ArrowLeft, ArrowRight, BarChart3, BookOpen, Brain, CalendarCheck, CalendarDays, CalendarHeart, Check, Clapperboard, Code2, Download, FilePlus2, FileText, FolderOpen,
@@ -118,13 +119,13 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
           <For each={w().todos ?? []}>
             {(item, i) => (
               <li classList={{ done: item.done }}>
-                <label><input type="checkbox" checked={item.done} onChange={(e) => { const v = e.currentTarget.checked; updateWidget(w().id, (x) => { x.todos![i()].done = v; }); }} /><span dir="auto">{item.text}</span></label>
+                <label><input type="checkbox" checked={item.done} onChange={(e) => { const v = e.currentTarget.checked; updateWidget(w().id, (x) => { x.todos![i()].done = v; }); if (v) petEvent("todo-done"); }} /><span dir="auto">{item.text}</span></label>
                 <button class="icon-btn sm ghost" aria-label={t("action-delete")} onClick={() => updateWidget(w().id, (x) => { x.todos!.splice(i(), 1); })}><X /></button>
               </li>
             )}
           </For>
         </ul>
-        <form onSubmit={(e) => { e.preventDefault(); const v = todo().trim(); if (!v) return; updateWidget(w().id, (x) => { (x.todos ??= []).push({ id: `td-${Date.now()}`, text: v, done: false }); }); setTodo(""); }}>
+        <form onSubmit={(e) => { e.preventDefault(); const v = todo().trim(); if (!v) return; updateWidget(w().id, (x) => { (x.todos ??= []).push({ id: `td-${Date.now()}`, text: v, done: false }); }); setTodo(""); petEvent("todo-added"); }}>
           <input class="input sm" dir="auto" placeholder={t("dash-todo-add")} aria-label={t("dash-todo-add")} value={todo()} onInput={(e) => setTodo(e.currentTarget.value)} />
         </form>
       </Match>

@@ -1,5 +1,6 @@
 // Root: boots into the first-launch wizard or straight into the last vault.
-import { For, Match, Show, Switch, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { petEvent, petWelcome, startPetTalk } from "./state/petTalk";
+import { For, Match, Show, Switch, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
 import { t } from "./i18n";
 import { LiveAnnouncer } from "./a11y/announcer";
 import { settings } from "./state/settings";
@@ -26,7 +27,7 @@ import { Lightbox, SlidesOverlay } from "./components/Overlays";
 import { ZenOverlay } from "./components/focus/ZenOverlay";
 import { AmbientOverlay } from "./components/focus/AmbientOverlay";
 import { AmbiencePopover, MusicDock } from "./components/focus/Ambience";
-import { PetCompanion, PetStudio, openPetStudio } from "./components/pet/PetCard";
+import { PetBubble, PetCompanion, PetStudio, openPetStudio } from "./components/pet/PetCard";
 import { TerminalDrawer, terminalOpen } from "./components/terminal/Terminal";
 import { welcome } from "./state/personal";
 import { toast } from "./state/ui";
@@ -52,7 +53,11 @@ export function App() {
   onCleanup(() => window.removeEventListener("nosidian:pet", onPet));
   createEffect(() => { if (dev.ready()) applyCustomCss(); });
   // Start sound and greeting once the app has opened (onboarding done).
-  createEffect(() => { if (phase() !== "onboarding" && settings.onboarding.completed) void welcome(toast, announce); });
+  // Wait for the workspace so the companion is there to say it.
+  createEffect(() => { if (inWorkspace() && settings.onboarding.completed) void welcome(toast, announce, petWelcome); });
+  startPetTalk();
+  // The companion notices a new theme (not the one the app opened with).
+  createEffect(on(() => settings.appearance.theme, () => petEvent("theme"), { defer: true }));
   let pluginsStarted = false;
   createEffect(() => {
     if (!inWorkspace() || !dev.ready() || pluginsStarted) return;
@@ -117,6 +122,7 @@ export function App() {
         <Show when={mods().has("integrated-terminal") && terminalOpen()}><TerminalDrawer /></Show>
         <Show when={mods().has("companion-pet") && settings.petEnabled}>
           <PetCompanion />
+          <PetBubble />
           <PetStudio />
         </Show>
       </Show>

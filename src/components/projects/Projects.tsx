@@ -2,6 +2,7 @@
 // board fed by Markdown checkboxes and tag rules, a list with sprints, a day
 // planner with time blocks and a task timer, a dependency graph with blocker
 // editing, templates and tag rules. Linked notes open beside the board.
+import { petEvent } from "../../state/petTalk";
 import { DatePicker } from "../DatePicker";
 import { Dynamic } from "solid-js/web";
 import { ENTRY_ICONS } from "../EntryStyle";
@@ -98,6 +99,7 @@ async function deleteProject(p: ProjectItem) {
 }
 /** Change a project's field: manual projects in the project file, folder projects in their _project.md front matter. */
 async function setProjectField(p: ProjectItem, key: "name" | "deadline" | "color" | "status" | "icon", value: string) {
+  if (key === "status" && value === "completed" && p.status !== "completed") petEvent("project-done");
   if (!p.fromFolderProject) {
     projectState.update((s) => { const x = s.projects.find((y) => y.id === p.id); if (x) (x as unknown as Record<string, string>)[key] = value; });
     return;
@@ -235,6 +237,7 @@ function NewProject(props: { template?: ProjectTemplateId; onClose: () => void; 
     const main = files.find((f) => /_project\.md$/i.test(f.path)) ?? files[0];
     const id = buildFolderProjectId(main.path.slice(0, main.path.lastIndexOf("/")));
     projectState.update((s) => { if (!s.spotlightProjectId) s.spotlightProjectId = id; });
+    petEvent("project-new");
     props.onCreated(id);
     props.onClose();
   };
@@ -356,6 +359,7 @@ function Board(props: { tasks: ProjectTask[]; project: string | null; onEdit: (t
   const add = async (status: ProjectTaskStatus) => {
     const title = await askText(t("proj-add-task"), "", t("action-add"));
     if (!title?.trim()) return;
+    petEvent("todo-added");
     upsertTask({ id: newId("task"), projectId: props.project ?? primaryProject()?.id ?? "inbox", title: title.trim(), done: status === "done", status, priority: "medium", sourceType: "manual", createdAt: Date.now() });
   };
   return (

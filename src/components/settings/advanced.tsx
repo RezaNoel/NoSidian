@@ -25,6 +25,7 @@ export function PetSettings() {
     <div class="stack">
       <Toggle label={t("onboarding-pet")} checked={settings.petEnabled} onChange={(v) => updateSettings((c) => { c.petEnabled = v; })} />
       <PrefToggle k="petFloating" label={t("pet-floating")} />
+      <PrefToggle k="petTalk" label={t("pet-talk")} hint={t("pet-talk-help")} />
       <button class="btn" onClick={openPetStudio}>{t("pet-open")}</button>
       <h3 class="set-sub">{t("pet-model-title")}</h3>
       <PetModelControls />

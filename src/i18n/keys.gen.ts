@@ -1247,6 +1247,124 @@ export interface MessageArgs {
   "media-card-owner": { owner: string | number };
   "media-card-finished": { date: string | number };
   "media-card-watched": { date: string | number };
+  "pt-welcome-morning-1": undefined;
+  "pt-welcome-morning-2": undefined;
+  "pt-welcome-morning-3": undefined;
+  "pt-welcome-morning-4": undefined;
+  "pt-welcome-morning-5": undefined;
+  "pt-welcome-morning-6": undefined;
+  "pt-welcome-afternoon-1": undefined;
+  "pt-welcome-afternoon-2": undefined;
+  "pt-welcome-afternoon-3": undefined;
+  "pt-welcome-afternoon-4": undefined;
+  "pt-welcome-afternoon-5": undefined;
+  "pt-welcome-afternoon-6": undefined;
+  "pt-welcome-evening-1": undefined;
+  "pt-welcome-evening-2": undefined;
+  "pt-welcome-evening-3": undefined;
+  "pt-welcome-evening-4": undefined;
+  "pt-welcome-evening-5": undefined;
+  "pt-welcome-evening-6": undefined;
+  "pt-welcome-night-1": undefined;
+  "pt-welcome-night-2": undefined;
+  "pt-welcome-night-3": undefined;
+  "pt-welcome-night-4": undefined;
+  "pt-welcome-night-5": undefined;
+  "pt-welcome-night-6": undefined;
+  "pt-welcome-named-1": { name: string | number };
+  "pt-welcome-named-2": { name: string | number };
+  "pt-welcome-named-3": { name: string | number };
+  "pt-welcome-named-4": { name: string | number };
+  "pt-welcome-named-5": { name: string | number };
+  "pt-welcome-named-6": { name: string | number };
+  "pt-welcome-back-1": undefined;
+  "pt-welcome-back-2": undefined;
+  "pt-welcome-back-3": undefined;
+  "pt-welcome-back-4": undefined;
+  "pt-bored-1": undefined;
+  "pt-bored-2": undefined;
+  "pt-bored-3": undefined;
+  "pt-bored-4": undefined;
+  "pt-bored-5": undefined;
+  "pt-bored-6": undefined;
+  "pt-sleepy-1": undefined;
+  "pt-sleepy-2": undefined;
+  "pt-sleepy-3": undefined;
+  "pt-sleepy-4": undefined;
+  "pt-sleepy-5": undefined;
+  "pt-hungry-1": undefined;
+  "pt-hungry-2": undefined;
+  "pt-hungry-3": undefined;
+  "pt-hungry-4": undefined;
+  "pt-hungry-5": undefined;
+  "pt-woke-1": undefined;
+  "pt-woke-2": undefined;
+  "pt-woke-3": undefined;
+  "pt-woke-4": undefined;
+  "pt-busy-1": undefined;
+  "pt-busy-2": undefined;
+  "pt-busy-3": undefined;
+  "pt-busy-4": undefined;
+  "pt-note-1": undefined;
+  "pt-note-2": undefined;
+  "pt-note-3": undefined;
+  "pt-note-4": undefined;
+  "pt-note-5": undefined;
+  "pt-folder-1": undefined;
+  "pt-folder-2": undefined;
+  "pt-folder-3": undefined;
+  "pt-folder-4": undefined;
+  "pt-time30-1": undefined;
+  "pt-time30-2": undefined;
+  "pt-time30-3": undefined;
+  "pt-time60-1": undefined;
+  "pt-time60-2": undefined;
+  "pt-time60-3": undefined;
+  "pt-time120-1": undefined;
+  "pt-time120-2": undefined;
+  "pt-time120-3": undefined;
+  "pt-cards-easy-1": undefined;
+  "pt-cards-easy-2": undefined;
+  "pt-cards-easy-3": undefined;
+  "pt-cards-easy-4": undefined;
+  "pt-cards-hard-1": undefined;
+  "pt-cards-hard-2": undefined;
+  "pt-cards-hard-3": undefined;
+  "pt-cards-hard-4": undefined;
+  "pt-cards-done-1": undefined;
+  "pt-cards-done-2": undefined;
+  "pt-cards-done-3": undefined;
+  "pt-cards-done-4": undefined;
+  "pt-cards-none-1": undefined;
+  "pt-cards-none-2": undefined;
+  "pt-cards-none-3": undefined;
+  "pt-todo-added-1": undefined;
+  "pt-todo-added-2": undefined;
+  "pt-todo-added-3": undefined;
+  "pt-todo-added-4": undefined;
+  "pt-todo-done-1": undefined;
+  "pt-todo-done-2": undefined;
+  "pt-todo-done-3": undefined;
+  "pt-todo-done-4": undefined;
+  "pt-todo-done-5": undefined;
+  "pt-project-new-1": undefined;
+  "pt-project-new-2": undefined;
+  "pt-project-new-3": undefined;
+  "pt-project-new-4": undefined;
+  "pt-project-done-1": undefined;
+  "pt-project-done-2": undefined;
+  "pt-project-done-3": undefined;
+  "pt-project-done-4": undefined;
+  "pt-theme-1": undefined;
+  "pt-theme-2": undefined;
+  "pt-theme-3": undefined;
+  "pt-theme-4": undefined;
+  "pt-focus-done-1": undefined;
+  "pt-focus-done-2": undefined;
+  "pt-focus-done-3": undefined;
+  "pt-focus-done-4": undefined;
+  "pet-talk": undefined;
+  "pet-talk-help": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2497,5 +2615,123 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "best-card-films",
   "media-card-owner",
   "media-card-finished",
-  "media-card-watched"
+  "media-card-watched",
+  "pt-welcome-morning-1",
+  "pt-welcome-morning-2",
+  "pt-welcome-morning-3",
+  "pt-welcome-morning-4",
+  "pt-welcome-morning-5",
+  "pt-welcome-morning-6",
+  "pt-welcome-afternoon-1",
+  "pt-welcome-afternoon-2",
+  "pt-welcome-afternoon-3",
+  "pt-welcome-afternoon-4",
+  "pt-welcome-afternoon-5",
+  "pt-welcome-afternoon-6",
+  "pt-welcome-evening-1",
+  "pt-welcome-evening-2",
+  "pt-welcome-evening-3",
+  "pt-welcome-evening-4",
+  "pt-welcome-evening-5",
+  "pt-welcome-evening-6",
+  "pt-welcome-night-1",
+  "pt-welcome-night-2",
+  "pt-welcome-night-3",
+  "pt-welcome-night-4",
+  "pt-welcome-night-5",
+  "pt-welcome-night-6",
+  "pt-welcome-named-1",
+  "pt-welcome-named-2",
+  "pt-welcome-named-3",
+  "pt-welcome-named-4",
+  "pt-welcome-named-5",
+  "pt-welcome-named-6",
+  "pt-welcome-back-1",
+  "pt-welcome-back-2",
+  "pt-welcome-back-3",
+  "pt-welcome-back-4",
+  "pt-bored-1",
+  "pt-bored-2",
+  "pt-bored-3",
+  "pt-bored-4",
+  "pt-bored-5",
+  "pt-bored-6",
+  "pt-sleepy-1",
+  "pt-sleepy-2",
+  "pt-sleepy-3",
+  "pt-sleepy-4",
+  "pt-sleepy-5",
+  "pt-hungry-1",
+  "pt-hungry-2",
+  "pt-hungry-3",
+  "pt-hungry-4",
+  "pt-hungry-5",
+  "pt-woke-1",
+  "pt-woke-2",
+  "pt-woke-3",
+  "pt-woke-4",
+  "pt-busy-1",
+  "pt-busy-2",
+  "pt-busy-3",
+  "pt-busy-4",
+  "pt-note-1",
+  "pt-note-2",
+  "pt-note-3",
+  "pt-note-4",
+  "pt-note-5",
+  "pt-folder-1",
+  "pt-folder-2",
+  "pt-folder-3",
+  "pt-folder-4",
+  "pt-time30-1",
+  "pt-time30-2",
+  "pt-time30-3",
+  "pt-time60-1",
+  "pt-time60-2",
+  "pt-time60-3",
+  "pt-time120-1",
+  "pt-time120-2",
+  "pt-time120-3",
+  "pt-cards-easy-1",
+  "pt-cards-easy-2",
+  "pt-cards-easy-3",
+  "pt-cards-easy-4",
+  "pt-cards-hard-1",
+  "pt-cards-hard-2",
+  "pt-cards-hard-3",
+  "pt-cards-hard-4",
+  "pt-cards-done-1",
+  "pt-cards-done-2",
+  "pt-cards-done-3",
+  "pt-cards-done-4",
+  "pt-cards-none-1",
+  "pt-cards-none-2",
+  "pt-cards-none-3",
+  "pt-todo-added-1",
+  "pt-todo-added-2",
+  "pt-todo-added-3",
+  "pt-todo-added-4",
+  "pt-todo-done-1",
+  "pt-todo-done-2",
+  "pt-todo-done-3",
+  "pt-todo-done-4",
+  "pt-todo-done-5",
+  "pt-project-new-1",
+  "pt-project-new-2",
+  "pt-project-new-3",
+  "pt-project-new-4",
+  "pt-project-done-1",
+  "pt-project-done-2",
+  "pt-project-done-3",
+  "pt-project-done-4",
+  "pt-theme-1",
+  "pt-theme-2",
+  "pt-theme-3",
+  "pt-theme-4",
+  "pt-focus-done-1",
+  "pt-focus-done-2",
+  "pt-focus-done-3",
+  "pt-focus-done-4",
+  "pet-talk",
+  "pet-talk-help"
 ];
