@@ -1426,3 +1426,14 @@ dev-plugin-home-added = { $name }을(를) 홈에 추가했습니다.
 dev-plugin-icon = 리본 아이콘
 dev-plugin-description = 짧은 설명
 dev-plugin-api-hint = nosidian.listNotes(), getActiveNote(), createNote(path, text), appendToNote(path, text), openNote(path), showToast(text)를 사용하세요. console.log로 출력한 줄은 홈 위젯에 표시됩니다.
+
+## Review 5
+field-ui-font = 인터페이스 글꼴
+field-ui-font-size = 인터페이스 글자 크기
+editor-typeface = 편집기 글꼴
+font-app-default = 기본값 (앱 글꼴)
+font-search = 글꼴 검색
+font-group-bundled = NoSidian에 포함
+font-group-system = 이 컴퓨터
+font-load-system = 이 컴퓨터의 글꼴 보기
+font-none = 검색과 일치하는 글꼴이 없습니다.

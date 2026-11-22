@@ -1426,3 +1426,14 @@ dev-plugin-home-added = 已将 { $name } 添加到主页。
 dev-plugin-icon = 工具栏图标
 dev-plugin-description = 简短描述
 dev-plugin-api-hint = 可使用 nosidian.listNotes()、getActiveNote()、createNote(path, text)、appendToNote(path, text)、openNote(path) 和 showToast(text)。用 console.log 输出的行会显示在主页小组件中。
+
+## Review 5
+field-ui-font = 界面字体
+field-ui-font-size = 界面文字大小
+editor-typeface = 编辑器字体
+font-app-default = 默认（应用字体）
+font-search = 搜索字体
+font-group-bundled = NoSidian 自带
+font-group-system = 本机
+font-load-system = 显示本机字体
+font-none = 没有符合搜索的字体。

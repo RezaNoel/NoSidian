@@ -1440,3 +1440,14 @@ dev-plugin-home-added = { $name } добавлен на главную.
 dev-plugin-icon = Значок на ленте
 dev-plugin-description = Краткое описание
 dev-plugin-api-hint = Используйте nosidian.listNotes(), getActiveNote(), createNote(path, text), appendToNote(path, text), openNote(path) и showToast(text). Строки, выведенные через console.log, появляются в виджете на главной.
+
+## Review 5
+field-ui-font = Шрифт интерфейса
+field-ui-font-size = Размер текста интерфейса
+editor-typeface = Шрифт редактора
+font-app-default = По умолчанию (шрифт приложения)
+font-search = Поиск шрифтов
+font-group-bundled = Входят в NoSidian
+font-group-system = На этом компьютере
+font-load-system = Показать шрифты этого компьютера
+font-none = Ни один шрифт не подходит под поиск.

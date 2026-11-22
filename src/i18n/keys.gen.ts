@@ -1390,6 +1390,15 @@ export interface MessageArgs {
   "dev-plugin-icon": undefined;
   "dev-plugin-description": undefined;
   "dev-plugin-api-hint": undefined;
+  "field-ui-font": undefined;
+  "field-ui-font-size": undefined;
+  "editor-typeface": undefined;
+  "font-app-default": undefined;
+  "font-search": undefined;
+  "font-group-bundled": undefined;
+  "font-group-system": undefined;
+  "font-load-system": undefined;
+  "font-none": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2783,5 +2792,14 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "dev-plugin-home-added",
   "dev-plugin-icon",
   "dev-plugin-description",
-  "dev-plugin-api-hint"
+  "dev-plugin-api-hint",
+  "field-ui-font",
+  "field-ui-font-size",
+  "editor-typeface",
+  "font-app-default",
+  "font-search",
+  "font-group-bundled",
+  "font-group-system",
+  "font-load-system",
+  "font-none"
 ];

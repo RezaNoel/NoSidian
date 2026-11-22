@@ -1,3 +1,4 @@
+import type { CustomFontDef } from "../core/types";
 // Mirrors the Rust types in crates/nosidian-core (serde camelCase / kebab-case).
 import type { LanguageCode } from "../i18n/languages";
 
@@ -29,6 +30,11 @@ export interface Appearance {
   ambientMesh: boolean;
   radius: RadiusScale;
   density: Density;
+  /** Interface typeface: "google:<family>", "sys:<family>" or "custom:<id>". */
+  uiFont: string;
+  /** Interface text size in px. */
+  uiFontSize: number;
+  customFonts?: CustomFontDef[];
 }
 
 export interface Accessibility {
@@ -79,6 +85,8 @@ export function defaultConfig(): AppConfig {
       ambientMesh: true,
       radius: "balanced",
       density: "comfortable",
+      uiFont: "jakarta",
+      uiFontSize: 16,
     },
     accessibility: { screenReaderMode: false, reduceMotion: false, speechCues: false, soundCues: false, speechRate: 1 },
     petEnabled: true,

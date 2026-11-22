@@ -1426,3 +1426,14 @@ dev-plugin-home-added = { $name } をホームに追加しました。
 dev-plugin-icon = リボンのアイコン
 dev-plugin-description = 短い説明
 dev-plugin-api-hint = nosidian.listNotes()、getActiveNote()、createNote(path, text)、appendToNote(path, text)、openNote(path)、showToast(text) を使えます。console.log で出力した行はホームのウィジェットに表示されます。
+
+## Review 5
+field-ui-font = インターフェースのフォント
+field-ui-font-size = インターフェースの文字サイズ
+editor-typeface = エディターのフォント
+font-app-default = 既定（アプリのフォント）
+font-search = フォントを検索
+font-group-bundled = NoSidian に同梱
+font-group-system = このコンピューター
+font-load-system = このコンピューターのフォントを表示
+font-none = 検索に一致するフォントはありません。

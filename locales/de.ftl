@@ -1431,3 +1431,14 @@ dev-plugin-home-added = { $name } wurde zur Startseite hinzugefügt.
 dev-plugin-icon = Symbol in der Werkzeugleiste
 dev-plugin-description = Kurze Beschreibung
 dev-plugin-api-hint = Nutze nosidian.listNotes(), getActiveNote(), createNote(path, text), appendToNote(path, text), openNote(path) und showToast(text). Mit console.log ausgegebene Zeilen erscheinen im Startseiten-Widget.
+
+## Review 5
+field-ui-font = Schriftart der Oberfläche
+field-ui-font-size = Textgröße der Oberfläche
+editor-typeface = Schriftart des Editors
+font-app-default = Standard (App-Schrift)
+font-search = Schriftarten suchen
+font-group-bundled = Im Lieferumfang von NoSidian
+font-group-system = Auf diesem Computer
+font-load-system = Schriftarten dieses Computers anzeigen
+font-none = Keine Schriftart passt zu deiner Suche.

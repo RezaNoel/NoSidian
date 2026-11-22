@@ -1431,3 +1431,14 @@ dev-plugin-home-added = { $name } आपके होम में जोड़�
 dev-plugin-icon = रिबन आइकन
 dev-plugin-description = छोटा विवरण
 dev-plugin-api-hint = nosidian.listNotes(), getActiveNote(), createNote(path, text), appendToNote(path, text), openNote(path) और showToast(text) का उपयोग करें। console.log से छपी पंक्तियाँ होम विजेट में दिखती हैं।
+
+## Review 5
+field-ui-font = इंटरफ़ेस फ़ॉन्ट
+field-ui-font-size = इंटरफ़ेस टेक्स्ट का आकार
+editor-typeface = एडिटर फ़ॉन्ट
+font-app-default = डिफ़ॉल्ट (ऐप का फ़ॉन्ट)
+font-search = फ़ॉन्ट खोजें
+font-group-bundled = NoSidian के साथ शामिल
+font-group-system = इस कंप्यूटर पर
+font-load-system = इस कंप्यूटर के फ़ॉन्ट दिखाएँ
+font-none = आपकी खोज से कोई फ़ॉन्ट मेल नहीं खाता।

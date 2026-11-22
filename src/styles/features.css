@@ -1059,3 +1059,20 @@ svg.star.on { color: #f5b83d; fill: #f5b83d; }
 .amb-seek { display: flex; align-items: center; gap: 6px; }
 .amb-seek input { flex: 1; min-inline-size: 60px; }
 .amb-time { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; min-inline-size: 32px; text-align: center; }
+
+/* Font chooser in settings. */
+.font-picker { position: relative; inline-size: 100%; min-inline-size: 0; }
+.font-current { display: flex; align-items: center; justify-content: space-between; gap: 8px; inline-size: 100%; text-align: start; }
+.font-current-name { font-size: 1.05em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
+.font-panel { margin-block-start: 6px; padding: 8px; border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 6px; }
+.font-list { max-block-size: 340px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 2px; }
+.font-group { margin: 8px 6px 2px; font-size: 0.8em; color: var(--text-muted); }
+.font-opt {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; inline-size: 100%; min-inline-size: 0;
+  padding: 7px 10px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-primary); text-align: start;
+}
+.font-opt:hover { background: rgb(var(--l3) / 0.6); }
+.font-opt.sel { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent-border); }
+.font-opt-name { font-size: 1.05em; max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.font-opt-sample { font-size: 0.85em; color: var(--text-muted); max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.font-load { align-self: flex-start; }

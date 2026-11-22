@@ -1431,3 +1431,14 @@ dev-plugin-home-added = { $name } a été ajouté à votre accueil.
 dev-plugin-icon = Icône du ruban
 dev-plugin-description = Courte description
 dev-plugin-api-hint = Utilisez nosidian.listNotes(), getActiveNote(), createNote(path, text), appendToNote(path, text), openNote(path) et showToast(text). Les lignes affichées avec console.log apparaissent dans le widget d’accueil.
+
+## Review 5
+field-ui-font = Police de l’interface
+field-ui-font-size = Taille du texte de l’interface
+editor-typeface = Police de l’éditeur
+font-app-default = Par défaut (police de l’app)
+font-search = Rechercher une police
+font-group-bundled = Incluses avec NoSidian
+font-group-system = Sur cet ordinateur
+font-load-system = Afficher les polices de cet ordinateur
+font-none = Aucune police ne correspond à votre recherche.

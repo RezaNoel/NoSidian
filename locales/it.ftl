@@ -1431,3 +1431,14 @@ dev-plugin-home-added = { $name } è stato aggiunto alla tua home.
 dev-plugin-icon = Icona nella barra
 dev-plugin-description = Breve descrizione
 dev-plugin-api-hint = Usa nosidian.listNotes(), getActiveNote(), createNote(path, text), appendToNote(path, text), openNote(path) e showToast(text). Le righe stampate con console.log appaiono nel widget della home.
+
+## Review 5
+field-ui-font = Carattere dell’interfaccia
+field-ui-font-size = Dimensione del testo dell’interfaccia
+editor-typeface = Carattere dell’editor
+font-app-default = Predefinito (carattere dell’app)
+font-search = Cerca caratteri
+font-group-bundled = Inclusi in NoSidian
+font-group-system = Su questo computer
+font-load-system = Mostra i caratteri di questo computer
+font-none = Nessun carattere corrisponde alla ricerca.

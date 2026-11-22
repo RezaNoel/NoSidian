@@ -82,6 +82,8 @@ export interface AppearanceConfig {
   ambientMesh: boolean;
   meshIntensity: number;
   uiFont: string;
+  /** Interface text size in px (the base for everything set in em). */
+  uiFontSize?: number;
   customFonts?: CustomFontDef[];
   editorFontSize: number;
   editorLineHeight: number;

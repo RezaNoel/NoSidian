@@ -1,3 +1,4 @@
+import { syncAppearanceFont } from "../core/fonts";
 // Global reactive settings store. Every change is applied to the document
 // immediately and saved (debounced) through the backend.
 import { createRoot, createEffect } from "solid-js";
@@ -83,4 +84,6 @@ export function applyToDocument(cfg: AppConfig, root: HTMLElement = document.doc
   root.style.setProperty("--accent-ink", accentInk(a.accent));
   root.style.setProperty("--glass-blur", `${a.glassBlur}px`);
   root.style.setProperty("--glass-opacity", String(a.glassOpacity));
+  root.style.setProperty("--ui-font-size", `${a.uiFontSize ?? 16}px`);
+  root.style.setProperty("--font-ui", syncAppearanceFont(a.uiFont || "google:Plus Jakarta Sans", a.customFonts));
 }

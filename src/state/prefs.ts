@@ -2,6 +2,7 @@
 // hotkey preferences. Missing or invalid values fall back to the defaults, so
 // an older or hand-edited config can't break the UI.
 import { settings, updateSettings } from "./settings";
+import { resolveUiFontStack } from "../core/fonts";
 
 export type StartupScreen = "last" | "empty" | "daily" | "dashboard";
 export type DefaultMode = "editor" | "split" | "reader" | "mindmap" | "kanban";
@@ -16,6 +17,8 @@ export interface Prefs {
   spellcheck: boolean;
   strictBreaks: boolean;
   fontSize: number;
+  /** Editor typeface: "" uses the interface font; otherwise a stored font value. */
+  editorFont: string;
   lineHeight: number;
   newNoteFolder: string;
   confirmDelete: boolean;
@@ -55,6 +58,7 @@ export const DEFAULT_PREFS: Prefs = {
   spellcheck: false,
   strictBreaks: false,
   fontSize: 15,
+  editorFont: "",
   lineHeight: 1.8,
   newNoteFolder: "",
   confirmDelete: true,
@@ -133,6 +137,7 @@ export function resetPref(key: keyof Prefs): void {
 /** Editor typography preferences as CSS variables on <html>. */
 export function applyPrefsToDocument(root: HTMLElement = document.documentElement): void {
   root.style.setProperty("--editor-font-size", `${pref("fontSize")}px`);
+  root.style.setProperty("--font-editor", pref("editorFont") ? resolveUiFontStack(pref("editorFont")) : "var(--font-ui)");
   root.style.setProperty("--editor-line-height", String(pref("lineHeight")));
   root.style.setProperty("--editor-max-width", pref("readableLine") ? "760px" : "none");
 }

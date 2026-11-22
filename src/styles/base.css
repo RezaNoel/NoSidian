@@ -2,7 +2,7 @@
 html, body, #root { block-size: 100%; margin: 0; }
 body {
   background: var(--bg-primary); color: var(--text-primary);
-  font-family: var(--font-ui); line-height: 1.5; overflow: hidden;
+  font-family: var(--font-ui); font-size: var(--ui-font-size, 16px); line-height: 1.5; overflow: hidden;
   -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
 }
 button, input, select, textarea { font: inherit; color: inherit; }

@@ -1431,3 +1431,14 @@ dev-plugin-home-added = { $name } به خانه اضافه شد.
 dev-plugin-icon = آیکون نوار ابزار
 dev-plugin-description = توضیح کوتاه
 dev-plugin-api-hint = از nosidian.listNotes()، getActiveNote()، createNote(path, text)، appendToNote(path, text)، openNote(path) و showToast(text) استفاده کنید. خط‌هایی که با console.log چاپ شوند در ویجت خانه دیده می‌شوند.
+
+## Review 5
+field-ui-font = رابط کاربری فونت
+field-ui-font-size = اندازهٔ متن رابط کاربری
+editor-typeface = فونت ویرایشگر
+font-app-default = پیش‌فرض (فونت برنامه)
+font-search = جست‌وجوی فونت
+font-group-bundled = همراه با NoSidian
+font-group-system = روی این کامپیوتر
+font-load-system = نمایش فونت‌های این کامپیوتر
+font-none = هیچ فونتی با جست‌وجوی شما نمی‌خواند.

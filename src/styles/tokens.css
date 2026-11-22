@@ -5,6 +5,7 @@
 :root {
   --font-ui: "Plus Jakarta Sans", "Vazirmatn", system-ui, -apple-system, "Segoe UI", "Noto Sans",
     "Noto Sans Arabic", "Noto Sans CJK SC", "Noto Sans Devanagari", sans-serif;
+  --font-editor: var(--font-ui);
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --accent: #3b7ddd;
   --accent-ink: #fff;

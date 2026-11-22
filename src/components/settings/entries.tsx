@@ -2,6 +2,7 @@
 // extra English words it can be found by, and how to render it. Settings are
 // rows: icon and label at the start, the control at the end.
 import { DatePicker } from "../DatePicker";
+import { FontPicker } from "./FontPicker";
 import { For, Index, Show, type JSX } from "solid-js";
 import {
   AlignJustify, ArrowDownUp, Blocks, BookOpenCheck, Brush, CalendarDays, CaseSensitive, Columns2, Contrast, Droplets,
@@ -281,6 +282,12 @@ export const ENTRIES: Entry[] = [
   // Appearance
   e("appearance", undefined, ["field-theme", ...THEMES.map((x) => `theme-${x}` as MessageKey)], () => <ThemePicker />, { tags: "dark light color colour mode night", wide: true }),
   e("appearance", Palette, ["field-accent", "accent-custom"], () => <AccentPicker />, { tags: "color colour highlight tint brand" }),
+  e("appearance", Type, ["field-ui-font", "font-search", "font-load-system"], () => (
+    <Row label={t("field-ui-font")}>{() => <FontPicker label={t("field-ui-font")} value={settings.appearance.uiFont} onChange={(v) => updateSettings((c) => { c.appearance.uiFont = v; })} />}</Row>
+  ), { tags: "font typeface family typography face system google", wide: true }),
+  e("appearance", Type, ["field-ui-font-size"], () => (
+    <Range label={t("field-ui-font-size")} value={settings.appearance.uiFontSize ?? 16} min={12} max={20} step={1} show={(v) => `${v}px`} onChange={(v) => updateSettings((c) => { c.appearance.uiFontSize = v; })} />
+  ), { tags: "text size bigger smaller menus interface" }),
   e("appearance", Droplets, ["field-glass-blur"], () => (
     <Range label={t("field-glass-blur")} value={settings.appearance.glassBlur} min={0} max={40} step={1} show={(v) => `${v}px`} onChange={(v) => updateSettings((c) => { c.appearance.glassBlur = v; })} />
   ), { tags: "glass frosted blur transparency" }),
@@ -314,6 +321,9 @@ export const ENTRIES: Entry[] = [
       options={([["editor", FileText], ["split", Columns2], ["reader", BookOpenCheck]] as const).map(([v, icon]) => ({ value: v, label: t(`mode-${v}`), icon }))}
       onChange={(v) => setPref("editorDefaultMode", v)} />
   ), { tags: "view preview read edit split open" }),
+  e("editor", Type, ["editor-typeface", "font-app-default", "font-search"], () => (
+    <Row label={t("editor-typeface")}>{() => <FontPicker label={t("editor-typeface")} allowDefault value={pref("editorFont")} onChange={(v) => setPref("editorFont", v)} />}</Row>
+  ), { tags: "font typeface family typography face writing", wide: true }),
   e("editor", Type, ["editor-font-size"], () => <Range label={t("editor-font-size")} value={pref("fontSize")} min={11} max={26} step={1} show={(v) => `${v}px`} onChange={(v) => setPref("fontSize", v)} />, { tags: "text size bigger smaller zoom" }),
   e("editor", AlignJustify, ["editor-line-height"], () => <Range label={t("editor-line-height")} value={pref("lineHeight")} min={1.2} max={2.4} step={0.1} show={(v) => v.toFixed(1)} onChange={(v) => setPref("lineHeight", v)} />, { tags: "spacing leading lines" }),
   e("editor", Ruler, ["editor-readable"], () => <Toggle label={t("editor-readable")} checked={pref("readableLine")} onChange={(v) => setPref("readableLine", v)} />, { tags: "width narrow column wide" }),

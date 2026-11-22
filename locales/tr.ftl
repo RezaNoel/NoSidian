@@ -1431,3 +1431,14 @@ dev-plugin-home-added = { $name } ana sayfana eklendi.
 dev-plugin-icon = Şerit simgesi
 dev-plugin-description = Kısa açıklama
 dev-plugin-api-hint = nosidian.listNotes(), getActiveNote(), createNote(path, text), appendToNote(path, text), openNote(path) ve showToast(text) kullanabilirsin. console.log ile yazılan satırlar ana sayfa öğesinde görünür.
+
+## Review 5
+field-ui-font = Arayüz yazı tipi
+field-ui-font-size = Arayüz yazı boyutu
+editor-typeface = Düzenleyici yazı tipi
+font-app-default = Varsayılan (uygulama yazı tipi)
+font-search = Yazı tipi ara
+font-group-bundled = NoSidian ile birlikte gelenler
+font-group-system = Bu bilgisayarda
+font-load-system = Bu bilgisayarın yazı tiplerini göster
+font-none = Aramanla eşleşen yazı tipi yok.

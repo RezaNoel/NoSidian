@@ -1439,3 +1439,14 @@ dev-plugin-home-added = أُضيفت { $name } إلى صفحتك الرئيسي�
 dev-plugin-icon = أيقونة شريط الأدوات
 dev-plugin-description = وصف قصير
 dev-plugin-api-hint = استخدم nosidian.listNotes() و getActiveNote() و createNote(path, text) و appendToNote(path, text) و openNote(path) و showToast(text). تظهر الأسطر المطبوعة عبر console.log في عنصر الصفحة الرئيسية.
+
+## Review 5
+field-ui-font = خط الواجهة
+field-ui-font-size = حجم نص الواجهة
+editor-typeface = خط المحرر
+font-app-default = افتراضي (خط التطبيق)
+font-search = ابحث عن خط
+font-group-bundled = مُدمجة مع NoSidian
+font-group-system = على هذا الحاسوب
+font-load-system = عرض الخطوط الموجودة على هذا الحاسوب
+font-none = لا يوجد خط يطابق بحثك.

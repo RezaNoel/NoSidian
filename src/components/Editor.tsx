@@ -35,7 +35,7 @@ const highlight = HighlightStyle.define([
 
 const theme = EditorView.theme({
   "&": { height: "100%", backgroundColor: "transparent", color: "var(--text-primary)", fontSize: "var(--editor-font-size)" },
-  ".cm-scroller": { fontFamily: "var(--font-ui)", lineHeight: "var(--editor-line-height)", overflow: "auto" },
+  ".cm-scroller": { fontFamily: "var(--font-editor)", lineHeight: "var(--editor-line-height)", overflow: "auto" },
   ".cm-content": { maxWidth: "var(--editor-max-width)", margin: "0 auto", padding: "28px 28px 40vh", caretColor: "var(--accent)" },
   ".cm-line": { padding: "0" },
   ".cm-cursor": { borderInlineStartColor: "var(--accent)", borderInlineStartWidth: "2px" },
