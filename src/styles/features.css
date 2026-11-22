@@ -439,9 +439,13 @@ details.callout[open] > summary::after { transform: rotate(90deg); }
 .filter-bar .input, .quick-add .input { flex: 1 1 200px; min-inline-size: 0; }
 .color-dot { display: inline-block; inline-size: 12px; block-size: 12px; border-radius: 50%; flex: none; }
 .color-dot.lg { inline-size: 24px; block-size: 24px; border: 2px solid transparent; cursor: pointer; padding: 0; }
+.color-pick .color-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.color-dot.lg[aria-checked="true"],
 .color-dot.lg[aria-pressed="true"] { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--bg-primary) inset; }
-.color-pick { display: flex; gap: 8px; align-items: center; border: 0; padding: 0; margin: 0; flex-wrap: wrap; }
-.color-pick legend { font-size: 0.85em; color: var(--text-secondary); margin-block-end: 6px; padding: 0; }
+.color-pick { display: block; border: 0; padding: 0; margin: 0 0 14px; min-inline-size: 0; }
+.color-pick legend { font-size: 0.85em; font-weight: 600; color: var(--text-secondary); margin-block-end: 8px; padding: 0; }
+.color-pick .color-row { justify-content: flex-start; padding: 2px; }
+.choice-grid > legend { font-size: 0.85em; font-weight: 600; color: var(--text-secondary); margin-block-end: 8px; padding: 0; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
 .align-start { align-self: flex-start; }
 .icon-btn.xs { inline-size: 22px; block-size: 22px; padding: 3px; }
@@ -984,3 +988,7 @@ svg.star.on { color: #f5b83d; fill: #f5b83d; }
 .sc-tile span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; line-height: 1.25; max-inline-size: 100%; }
 .widget-choice { align-items: flex-start; }
 .widget-choice > svg { inline-size: 20px; block-size: 20px; color: var(--accent); margin-block-end: 2px; }
+
+.proj-icons { grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); }
+.proj-icon { inline-size: 15px; block-size: 15px; flex: none; color: var(--col, var(--accent)); }
+.proj-hero .proj-icon { inline-size: 20px; block-size: 20px; }

@@ -313,6 +313,8 @@ export interface ProjectItem {
   name: string;
   description: string;
   color: string;
+  /** Icon id from the explorer icon set (ENTRY_ICONS). */
+  icon?: string;
   deadline: string; // ISO YYYY-MM-DD
   isPrimary: boolean;
   status: 'active' | 'on-hold' | 'completed';

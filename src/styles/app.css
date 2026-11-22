@@ -763,3 +763,28 @@ label.btn:focus-within { box-shadow: var(--focus-ring); }
 .hover-preview { position: fixed; z-index: 300; inline-size: 320px; max-block-size: 260px; overflow: hidden; padding: 12px 14px; border-radius: var(--radius-md); box-shadow: var(--shadow); pointer-events: none; display: flex; flex-direction: column; gap: 6px; }
 .hover-preview strong { font-size: 0.95em; }
 .hover-preview p { margin: 0; white-space: pre-wrap; font-size: 0.84em; line-height: 1.45; color: var(--text-secondary); overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 9; }
+
+/* Date picker */
+.date-field { display: inline-flex; align-items: center; gap: 4px; min-inline-size: 0; max-inline-size: 100%; }
+.date-btn { display: inline-flex; align-items: center; gap: 8px; text-align: start; cursor: pointer; min-inline-size: 150px; inline-size: 100%; }
+.date-btn svg { inline-size: 16px; block-size: 16px; flex: none; color: var(--text-muted); }
+.date-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.date-btn.empty span { color: var(--text-muted); }
+.date-btn:hover:not(:disabled) { border-color: var(--accent-border, var(--accent)); }
+.date-btn:disabled { opacity: 0.55; cursor: default; }
+.date-btn.sm { min-inline-size: 128px; }
+.field .date-field { display: flex; }
+.date-clear { flex: none; }
+.date-pop { position: fixed; z-index: 220; inline-size: 280px; padding: 10px; border-radius: var(--radius-md); box-shadow: var(--shadow); animation: pop 120ms ease-out; }
+.date-pop-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-block-end: 4px; }
+.date-pop-head strong { font-size: 0.95em; }
+.date-grid { inline-size: 100%; margin: 0; }
+.date-day {
+  inline-size: 100%; aspect-ratio: 1; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-primary);
+  font-size: 13px; font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.date-day:hover { background: var(--accent-soft); }
+.date-day.today { box-shadow: inset 0 0 0 1px var(--accent); }
+.date-day.sel { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.date-day:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+.date-pop-foot { display: flex; justify-content: center; margin-block-start: 6px; }

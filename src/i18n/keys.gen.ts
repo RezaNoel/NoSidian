@@ -1223,6 +1223,11 @@ export interface MessageArgs {
   "image-zoom-in": undefined;
   "image-zoom-out": undefined;
   "image-zoom-reset": undefined;
+  "date-pick": undefined;
+  "date-none": undefined;
+  "date-clear": undefined;
+  "proj-edit": undefined;
+  "proj-icon": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2449,5 +2454,10 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "player-fullscreen",
   "image-zoom-in",
   "image-zoom-out",
-  "image-zoom-reset"
+  "image-zoom-reset",
+  "date-pick",
+  "date-none",
+  "date-clear",
+  "proj-edit",
+  "proj-icon"
 ];

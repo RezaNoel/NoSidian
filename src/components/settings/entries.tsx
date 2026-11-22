@@ -1,6 +1,7 @@
 // Every setting as a searchable entry: its tab, an icon, the message keys and
 // extra English words it can be found by, and how to render it. Settings are
 // rows: icon and label at the start, the control at the end.
+import { DatePicker } from "../DatePicker";
 import { For, Index, Show, type JSX } from "solid-js";
 import {
   AlignJustify, ArrowDownUp, Blocks, BookOpenCheck, Brush, CalendarDays, CaseSensitive, Columns2, Contrast, Droplets,
@@ -220,8 +221,8 @@ function ImportantDates() {
             <li>
               <input class="input sm" dir="auto" placeholder={t("personal-date-label")} aria-label={t("personal-date-label")} value={d().label}
                 onChange={(ev) => { const v = ev.currentTarget.value; personal.update((p) => { p.dates[i].label = v; }); }} />
-              <input class="input sm" type="date" aria-label={t("personal-date-when")} value={d().date.length === 5 ? `2000-${d().date}` : d().date}
-                onChange={(ev) => { const v = ev.currentTarget.value; personal.update((p) => { p.dates[i].date = v.slice(5); }); }} />
+              <DatePicker size="sm" noYear label={t("personal-date-when")} value={d().date.length === 5 ? `2000-${d().date}` : d().date}
+                onChange={(v) => { if (v) personal.update((p) => { p.dates[i].date = v.slice(5); }); }} />
               <button class="icon-btn sm" title={t("action-delete")} aria-label={t("action-delete")} onClick={() => personal.update((p) => { p.dates.splice(i, 1); })}><Trash2 /></button>
             </li>
           )}
@@ -248,7 +249,7 @@ export const ENTRIES: Entry[] = [
   ), { tags: "name nickname greeting profile me" }),
   e("you", Cake, ["personal-birthday"], () => (
     <Row label={t("personal-birthday")}>
-      {(id) => <input id={id} class="input" type="date" value={personal.state.birthday} onChange={(ev) => { const v = ev.currentTarget.value; personal.update((p) => { p.birthday = v; }); }} />}
+      {(id) => <DatePicker id={id} value={personal.state.birthday} onChange={(v) => personal.update((p) => { p.birthday = v; })} clearable />}
     </Row>
   ), { tags: "birthday born age date of birth" }),
   e("you", PartyPopper, ["personal-dates", "personal-date-add"], () => <ImportantDates />, { tags: "anniversary event countdown reminder", wide: true }),

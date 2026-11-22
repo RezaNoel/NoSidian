@@ -184,6 +184,7 @@ export function discoverFolderProjects(notes: Note[]): ProjectItem[] {
       name,
       description: str('description') || firstParagraph.slice(0, 140),
       color,
+      icon: str('icon') || undefined,
       deadline,
       isPrimary: false,
       status,
