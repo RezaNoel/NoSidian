@@ -1051,3 +1051,6 @@ svg.star.on { color: #f5b83d; fill: #f5b83d; }
 @keyframes pet-say { from { opacity: 0; transform: translateY(6px) scale(0.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .pet-bubble { animation: none; } }
 @media (max-width: 767px) { html:not([data-desktop]) .pet-bubble { inset-block-end: calc(var(--mobile-nav-height) + 16px); inset-inline: 16px; max-inline-size: none; } }
+.amb-seek { display: flex; align-items: center; gap: 6px; }
+.amb-seek input { flex: 1; min-inline-size: 60px; }
+.amb-time { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; min-inline-size: 32px; text-align: center; }

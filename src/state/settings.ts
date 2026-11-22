@@ -76,7 +76,7 @@ export function applyToDocument(cfg: AppConfig, root: HTMLElement = document.doc
   root.dataset.theme = a.theme;
   root.dataset.radius = a.radius;
   root.dataset.density = a.density;
-  root.dataset.mesh = String(a.ambientMesh && !acc.reduceMotion);
+  root.dataset.mesh = !a.ambientMesh ? "false" : acc.reduceMotion ? "static" : "true";
   root.dataset.a11y = String(acc.screenReaderMode);
   root.dataset.reduceMotion = String(acc.reduceMotion || acc.screenReaderMode);
   root.style.setProperty("--accent", a.accent);

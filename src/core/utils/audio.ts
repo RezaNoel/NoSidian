@@ -24,13 +24,41 @@ export function createDefaultSoundChannels(): Record<SoundChannel, number> {
   };
 }
 
+/** Real recordings for these channels (public/sounds, see CREDITS.md); the rest are generated. */
+const RECORDINGS: Partial<Record<SoundChannel, { url: string; gain: number }>> = {
+  cafe: { url: 'sounds/cafe.ogg', gain: 0.55 },
+  waves: { url: 'sounds/waves.ogg', gain: 1.05 },
+  fireplace: { url: 'sounds/fireplace.ogg', gain: 3.2 },
+  birds: { url: 'sounds/birds.ogg', gain: 2.0 },
+  rain: { url: 'sounds/rain.ogg', gain: 1.25 },
+  wind: { url: 'sounds/wind.ogg', gain: 0.9 },
+};
+
+/** Make a loop seamless: blend the last `sec` seconds into the start and drop them from the end. */
+function crossfadeLoop(ctx: AudioContext, src: AudioBuffer, sec: number): AudioBuffer {
+  const fade = Math.min(Math.floor(sec * src.sampleRate), Math.floor(src.length / 4));
+  const len = src.length - fade;
+  const out = ctx.createBuffer(src.numberOfChannels, len, src.sampleRate);
+  for (let c = 0; c < src.numberOfChannels; c++) {
+    const a = src.getChannelData(c);
+    const b = out.getChannelData(c);
+    b.set(a.subarray(0, len));
+    for (let i = 0; i < fade; i++) {
+      const x = i / fade;
+      // Equal-power crossfade from the tail into the head.
+      b[i] = a[i] * Math.sin((x * Math.PI) / 2) + a[len + i] * Math.cos((x * Math.PI) / 2);
+    }
+  }
+  return out;
+}
+
 class FocusAudioEngine {
   private ctx: AudioContext | null = null;
   private sources: Partial<
     Record<
       SoundChannel,
       {
-        node: AudioBufferSourceNode;
+        node?: AudioBufferSourceNode;
         gain: GainNode;
         lfo?: OscillatorNode;
         lfoGain?: GainNode;
@@ -67,7 +95,8 @@ class FocusAudioEngine {
       }
       const entry = this.sources[channel];
       if (entry) {
-        const gainScale = channel === 'waves' || channel === 'cafe' ? 0.36 : 0.32;
+        const rec = RECORDINGS[channel];
+        const gainScale = rec ? rec.gain * 0.5 : channel === 'waves' || channel === 'cafe' ? 0.36 : 0.32;
         entry.gain.gain.setTargetAtTime(clamped * gainScale, ctx.currentTime, 0.06);
       }
     } else if (this.sources[channel]) {
@@ -86,6 +115,40 @@ class FocusAudioEngine {
   }
 
   private startChannel(ctx: AudioContext, channel: SoundChannel): void {
+    const rec = RECORDINGS[channel];
+    if (rec) {
+      // A recording: start silent, fade in once it has loaded.
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+      gain.connect(ctx.destination);
+      const entry: { node?: AudioBufferSourceNode; gain: GainNode } = { gain };
+      this.sources[channel] = entry;
+      void fetch(rec.url)
+        .then((r) => r.arrayBuffer())
+        .then((data) => ctx.decodeAudioData(data))
+        .then((buf) => {
+          if (this.sources[channel] !== entry) return;
+          const node = ctx.createBufferSource();
+          node.buffer = crossfadeLoop(ctx, buf, 1.5);
+          node.loop = true;
+          node.connect(gain);
+          node.start();
+          entry.node = node;
+        })
+        .catch(() => {
+          // Couldn't load the file: fall back to the generated sound.
+          if (this.sources[channel] !== entry) return;
+          gain.disconnect();
+          delete this.sources[channel];
+          this.startSynth(ctx, channel);
+          this.setVolume(channel, this.volumes[channel]);
+        });
+      return;
+    }
+    this.startSynth(ctx, channel);
+  }
+
+  private startSynth(ctx: AudioContext, channel: SoundChannel): void {
     const durationSec = channel === 'waves' || channel === 'birds' ? 5 : 3;
     const bufferSize = ctx.sampleRate * durationSec;
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);

@@ -1,7 +1,9 @@
 // Background weather drawn on one canvas above the UI (it never takes clicks).
 // Snow and leaves settle into a pile at the bottom of the window, capped in
-// height; rain collects as a shallow pool. Moving the mouse along the bottom
-// sweeps the pile away or stirs the water. Off with reduced motion.
+// height; rain runs to the middle and gathers as a puddle whose size follows
+// the same "pile at the bottom" setting. Moving the mouse along the bottom
+// shovels snow, sweeps leaves (the pointer turns into a shovel or a broom) or
+// stirs the water. Off with reduced motion.
 import { Show, createEffect, on, onCleanup } from "solid-js";
 import { ambient } from "../../state/focus";
 import { settings } from "../../state/settings";
@@ -10,6 +12,30 @@ interface P { x: number; y: number; vx: number; vy: number; r: number; a: number
 interface Leaf { x: number; y: number; r: number; a: number; hue: number }
 
 const COL = 3; // pile column width in px
+
+// Pointer shapes while sweeping (Lucide shovel and broom, outlined so they show on any background).
+const cursorSvg = (paths: string[]) => {
+  const d = paths.map((p) => `<path d='${p}'/>`).join("");
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke-linecap='round' stroke-linejoin='round'><g stroke='white' stroke-width='4'>${d}</g><g stroke='%231b1f27' stroke-width='1.8'>${d}</g></svg>`;
+  return `url("data:image/svg+xml,${svg.replace(/"/g, "'").replace(/</g, "%3C").replace(/>/g, "%3E")}")`;
+};
+const SHOVEL = cursorSvg([
+  "M21.56 4.56a1.5 1.5 0 0 1 0 2.122l-.47.47a3 3 0 0 1-4.212-.03 3 3 0 0 1 0-4.243l.44-.44a1.5 1.5 0 0 1 2.121 0z",
+  "M3 22a1 1 0 0 1-1-1v-3.586a1 1 0 0 1 .293-.707l3.355-3.355a1.205 1.205 0 0 1 1.704 0l3.296 3.296a1.205 1.205 0 0 1 0 1.704l-3.355 3.355a1 1 0 0 1-.707.293z",
+  "m9 15 7.879-7.878",
+]);
+const BROOM = cursorSvg([
+  "M13.5 10.5 22 2",
+  "M14.734 13.841a2 2 0 00-.314-2.42L12.58 9.58a2 2 0 00-2.421-.314l-7.657 4.461A1 1 0 002.3 15.3l6.403 6.403a1 1 0 001.571-.204z",
+  "m5 18 2-2",
+  "m7.699 10.7 5.602 5.601",
+]);
+function setSweepCursor(tool: "shovel" | "broom" | null) {
+  const root = document.documentElement;
+  if ((root.dataset.sweep ?? "") === (tool ?? "")) return;
+  if (tool) { root.dataset.sweep = tool; root.style.setProperty("--sweep-cursor", `${tool === "shovel" ? SHOVEL : BROOM} ${tool === "shovel" ? "4 28" : "4 21"}, auto`); }
+  else { delete root.dataset.sweep; root.style.removeProperty("--sweep-cursor"); }
+}
 
 const LEAF_COLOR = (kind: string, hue: number, alpha = 0.92) =>
   kind === "sakura" ? `hsla(${335 + hue * 12},80%,${80 + hue * 6}%,${alpha})` : `hsla(${12 + hue * 34},${70 + hue * 15}%,${42 + hue * 12}%,${alpha})`;
@@ -40,7 +66,7 @@ export function AmbientOverlay() {
         let heights = new Float32Array(0); // pile height per column (snow, leaves)
         let leaves: Leaf[] = []; // settled leaves, drawn on the pile
         let wave = new Float32Array(0), waveV = new Float32Array(0); // water surface (rain)
-        let water = 0;
+        let water = 0; // depth of the puddle at its middle, in px
         let splashes: P[] = [];
         let w = 0, h = 0;
         const mouse = { x: -1, y: -1, px: -1, py: -1 };
@@ -64,6 +90,17 @@ export function AmbientOverlay() {
 
         const colAt = (x: number) => Math.max(0, Math.min(heights.length - 1, Math.round(x / COL)));
         const groundAt = (x: number) => h - heights[colAt(x)];
+
+        // The puddle: a shallow lens in the middle that widens as it deepens.
+        // At the deepest the setting allows, it spans about 70% of the window.
+        const maxWater = () => cap() * 0.6;
+        const halfWidth = () => (maxWater() > 0 ? (water / maxWater()) * w * 0.35 + (water > 0 ? 40 : 0) : 0);
+        const depthAt = (x: number) => {
+          const hw = halfWidth();
+          if (hw <= 0) return 0;
+          const u = (x - w / 2) / hw;
+          return u <= -1 || u >= 1 ? 0 : water * (1 - u * u);
+        };
 
         /** Add material to the pile around x, spread over a few columns. */
         const deposit = (x: number, amount: number, spread: number) => {
@@ -90,27 +127,31 @@ export function AmbientOverlay() {
           const dx = mouse.x - mouse.px, dy = mouse.y - mouse.py;
           const speed = Math.hypot(dx, dy);
           mouse.px = mouse.x; mouse.py = mouse.y;
-          if (speed < 2) return;
-          const reach = kind === "rain" ? water + 24 : cap() + 22;
+          // Even a slow, careful stroke moves something.
+          if (speed < 0.3) return;
+          const reach = kind === "rain" ? depthAt(mouse.x) + 24 : cap() + 22;
           if (mouse.y < h - reach) return;
           const radius = 26 + Math.min(40, speed);
           if (kind === "rain") {
+            if (depthAt(mouse.x) <= 0) return;
             const c = colAt(mouse.x);
             for (let i = -8; i <= 8; i++) { const j = c + i; if (j >= 0 && j < waveV.length) waveV[j] += (dx > 0 ? 1 : -1) * Math.min(6, speed * 0.25) * (1 - Math.abs(i) / 9); }
             return;
           }
           const c0 = colAt(mouse.x - radius), c1 = colAt(mouse.x + radius);
           let removed = 0;
+          const strength = Math.max(1.4, speed * 0.45);
           for (let j = c0; j <= c1; j++) {
             const f = 1 - Math.abs(j * COL - mouse.x) / radius;
             if (f <= 0) continue;
-            const take = Math.min(heights[j], speed * 0.4 * f);
+            const take = Math.min(heights[j], strength * f);
             heights[j] -= take;
             removed += take;
           }
           const dir = dx === 0 ? 1 : Math.sign(dx);
           if (kind === "snow") {
-            const n = Math.min(24, Math.round(removed * 0.6));
+            // A little snow flies off the shovel; most of what is moved is gone.
+            const n = Math.min(14, Math.round(removed * 0.2));
             for (let i = 0; i < n; i++) {
               splashes.push({ x: mouse.x + (Math.random() - 0.5) * radius, y: h - Math.random() * cap() * 0.6, vx: dir * (Math.random() * speed * 0.18 + 0.5), vy: -(Math.random() * 3 + 1), r: Math.random() * 1.8 + 0.8, a: 0, s: 0, hue: 0, kicked: true });
             }
@@ -155,11 +196,13 @@ export function AmbientOverlay() {
                 if (leaves.length > 900) leaves.splice(0, leaves.length - 900);
               }
               landed = true;
-            } else if (pool && p.y >= h - water) {
-              water = Math.min(cap() * 0.7, water + 0.004);
+            } else if (pool && p.y >= h - depthAt(p.x)) {
+              // Every drop runs to the middle; the puddle deepens up to the setting.
+              water = Math.min(maxWater(), water + 0.006);
+              const inside = depthAt(p.x) > 0;
               const c = colAt(p.x);
-              if (c < waveV.length) waveV[c] -= 0.6;
-              if (Math.random() < 0.25) splashes.push({ x: p.x, y: h - water, vx: (Math.random() - 0.5) * 1.6, vy: -(Math.random() * 1.6 + 0.6), r: 1, a: 0, s: 0, hue: 0, kicked: true });
+              if (inside && c < waveV.length) waveV[c] -= 0.6;
+              if (Math.random() < 0.25) splashes.push({ x: p.x, y: h - depthAt(p.x), vx: (Math.random() - 0.5) * 1.6, vy: -(Math.random() * 1.6 + 0.6), r: 1, a: 0, s: 0, hue: 0, kicked: true });
               landed = true;
             }
             if (landed || p.y > h + 20 || p.y < -30 || p.x < -30 || p.x > w + 30) {
@@ -178,11 +221,11 @@ export function AmbientOverlay() {
           splashes = splashes.filter((s) => {
             s.vy += 0.16; s.vx *= 0.985; s.x += s.vx + wind * 0.5; s.y += s.vy; s.a += s.vx * 0.05;
             if (kind === "rain") {
-              if (s.y > h - water) return false;
+              if (s.y > h - depthAt(s.x)) return false;
               ctx.fillStyle = "rgba(190,215,255,0.6)"; ctx.fillRect(s.x, s.y, 1.2, 1.2); return true;
             }
             if (s.vy > 0 && s.y >= groundAt(s.x)) {
-              if (kind === "snow") deposit(s.x, s.r * 0.6, 2);
+              if (kind === "snow") deposit(s.x, s.r * 0.15, 1);
               else leaves.push({ x: s.x, y: groundAt(s.x) - s.r * 0.3, r: s.r, a: s.a, hue: s.hue });
               return false;
             }
@@ -212,17 +255,23 @@ export function AmbientOverlay() {
               }
             }
           }
-          if (pool && water > 0.5) {
-            // Damped wave equation along the surface.
+          // Lowering the setting shrinks the puddle right away; off means no water.
+          if (water > maxWater()) water = maxWater();
+          if (!pool && water > 0) water = Math.max(0, water - 0.4);
+          if (water > 0.5) {
+            // Damped wave equation along the surface; waves fade towards the shallow edges.
             for (let i = 1; i < wave.length - 1; i++) waveV[i] += (wave[i - 1] + wave[i + 1] - 2 * wave[i]) * 0.18;
             for (let i = 0; i < wave.length; i++) { waveV[i] *= 0.965; wave[i] += waveV[i]; }
-            ctx.fillStyle = "rgba(110,150,215,0.28)";
-            ctx.beginPath(); ctx.moveTo(0, h);
-            for (let i = 0; i < wave.length; i++) ctx.lineTo(i * COL, h - water + wave[i]);
-            ctx.lineTo(w, h); ctx.closePath(); ctx.fill();
-            ctx.strokeStyle = "rgba(200,222,255,0.55)"; ctx.lineWidth = 1;
+            const hw = halfWidth();
+            const c0 = Math.max(0, colAt(w / 2 - hw)), c1 = Math.min(wave.length - 1, colAt(w / 2 + hw));
+            const surf = (i: number) => { const d = depthAt(i * COL); return h - d + wave[i] * Math.min(1, d / 6); };
+            ctx.fillStyle = "rgba(110,150,215,0.32)";
+            ctx.beginPath(); ctx.moveTo(c0 * COL, h);
+            for (let i = c0; i <= c1; i++) ctx.lineTo(i * COL, surf(i));
+            ctx.lineTo(c1 * COL, h); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = "rgba(200,222,255,0.6)"; ctx.lineWidth = 1;
             ctx.beginPath();
-            for (let i = 0; i < wave.length; i++) ctx[i ? "lineTo" : "moveTo"](i * COL, h - water + wave[i]);
+            for (let i = c0; i <= c1; i++) ctx[i > c0 ? "lineTo" : "moveTo"](i * COL, surf(i));
             ctx.stroke();
           }
           raf = requestAnimationFrame(frame);
@@ -230,13 +279,18 @@ export function AmbientOverlay() {
         const move = (e: PointerEvent) => {
           if (mouse.px < 0) { mouse.px = e.clientX; mouse.py = e.clientY; }
           mouse.x = e.clientX; mouse.y = e.clientY;
+          // Over the pile, the pointer becomes the tool.
+          const kind = kindNow();
+          const tool = kind === "snow" ? "shovel" : kind === "autumn" || kind === "sakura" ? "broom" : null;
+          const top = heights.length ? Math.max(heights[colAt(mouse.x - 12)], heights[colAt(mouse.x)], heights[colAt(mouse.x + 12)]) : 0;
+          setSweepCursor(tool && piling() && top > 0.8 && mouse.y >= h - top - 20 ? tool : null);
         };
-        const leave = () => { mouse.px = -1; };
+        const leave = () => { mouse.px = -1; setSweepCursor(null); };
         queueMicrotask(() => { reset(); raf = requestAnimationFrame(frame); });
         addEventListener("resize", resize);
         addEventListener("pointermove", move, { passive: true });
         document.addEventListener("pointerleave", leave);
-        onCleanup(() => { cancelAnimationFrame(raf); removeEventListener("resize", resize); removeEventListener("pointermove", move); document.removeEventListener("pointerleave", leave); });
+        onCleanup(() => { setSweepCursor(null); cancelAnimationFrame(raf); removeEventListener("resize", resize); removeEventListener("pointermove", move); document.removeEventListener("pointerleave", leave); });
         return <canvas ref={canvas} class="ambient-canvas" aria-hidden="true" />;
       })()}
     </Show>
