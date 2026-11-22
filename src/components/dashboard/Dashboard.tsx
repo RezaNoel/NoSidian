@@ -3,7 +3,7 @@
 import { petEvent } from "../../state/petTalk";
 import { For, Match, Show, Switch, createMemo, createResource, createSignal, onMount, type Component } from "solid-js";
 import {
-  ArrowLeft, ArrowRight, BarChart3, BookOpen, Brain, CalendarCheck, CalendarDays, CalendarHeart, Check, Clapperboard, Code2, Download, FilePlus2, FileText, FolderOpen,
+  ArrowLeft, ArrowRight, BarChart3, Blocks, BookOpen, Brain, CalendarCheck, CalendarDays, CalendarHeart, Check, Clapperboard, Code2, Download, FilePlus2, FileText, FolderOpen,
   GraduationCap, Hash, History, Hourglass, Image, Inbox, KanbanSquare, Layers, LayoutGrid, ListChecks, Network, PawPrint, PenLine, Pencil, Plus, SquareTerminal,
   Star, StickyNote, Tags, Timer, Trash2, Upload, X, Zap,
 } from "lucide-solid";
@@ -27,6 +27,8 @@ import { noteTitle } from "../../lib/markdown";
 import { PRESET_SRC } from "../Banner";
 import { CalendarPanel } from "../Calendar";
 import { CountdownWidget } from "./Countdown";
+import { PluginWidget } from "./PluginWidget";
+import { dev } from "../../state/devtools";
 import { promptNewNote } from "../FileTree";
 import { MiniTimer } from "../focus/MiniTimer";
 import { PetCard } from "../pet/PetCard";
@@ -38,7 +40,7 @@ type IconC = Component<{ class?: string; "aria-hidden"?: boolean | "true" }>;
 const WIDGET_ICON: Record<DashboardWidgetType, IconC> = {
   cover: Image, "deadline-hero": Hourglass, stats: BarChart3, "recent-notes": History, todos: ListChecks, calendar: CalendarDays, shortcuts: Zap,
   scratchpad: StickyNote, "project-spotlight": KanbanSquare, "pet-home": PawPrint, "flashcard-queue": Layers, "pomodoro-timer": Timer, "starred-notes": Star,
-  "tag-explorer": Hash, "reading-shelf": BookOpen, watchlist: Clapperboard, "writing-goal": PenLine, "quick-capture": Inbox, countdown: CalendarHeart,
+  "tag-explorer": Hash, "reading-shelf": BookOpen, watchlist: Clapperboard, "writing-goal": PenLine, "quick-capture": Inbox, countdown: CalendarHeart, plugin: Blocks,
 };
 const SHORTCUT_ICON: Record<DashboardShortcutItem["actionType"], IconC> = {
   note: FileText, folder: FolderOpen, daily: CalendarCheck, flashcards: Brain, graph: Network, "new-note": FilePlus2, projects: KanbanSquare, media: Clapperboard, terminal: SquareTerminal,
@@ -46,7 +48,8 @@ const SHORTCUT_ICON: Record<DashboardShortcutItem["actionType"], IconC> = {
 const HUB_ICON: Record<string, IconC> = { study: GraduationCap, writer: PenLine, developer: Code2 };
 
 const hubName = (h: DashboardConfig) => h.name || t(`hub-${h.templateId === "writer" || h.templateId === "developer" ? h.templateId : "study"}`);
-const widgetTitle = (w: DashboardWidget) => w.title || t(`widget-${w.type}`);
+const widgetTitle = (w: DashboardWidget) =>
+  w.title || (w.type === "plugin" && dev.state.scripts.find((p) => p.id === w.pluginId)?.name) || t(`widget-${w.type}`);
 
 function coverSrc(img?: string) {
   if (!img) return PRESET_SRC.carbon;
@@ -131,6 +134,7 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
       </Match>
       <Match when={w().type === "calendar"}><CalendarPanel /></Match>
       <Match when={w().type === "countdown"}><CountdownWidget /></Match>
+      <Match when={w().type === "plugin"}><PluginWidget w={w()} edit={props.edit} /></Match>
       <Match when={w().type === "shortcuts"}>
         <div class="w-shortcuts">
           <For each={(w().shortcuts ?? []).filter((s) => !(isMobile() && s.actionType === "terminal"))}>

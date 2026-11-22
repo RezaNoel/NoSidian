@@ -1373,6 +1373,21 @@ export interface MessageArgs {
   "daily-tasks": undefined;
   "daily-tasks-help": undefined;
   "daily-tasks-heading": undefined;
+  "widget-plugin": undefined;
+  "plugin-widget-none": undefined;
+  "plugin-widget-open-settings": undefined;
+  "plugin-widget-pick": undefined;
+  "plugin-widget-autorun": undefined;
+  "plugin-widget-running": undefined;
+  "plugin-widget-empty": undefined;
+  "plugin-widget-disabled": undefined;
+  "dev-plugin-ribbon": undefined;
+  "dev-plugin-home": undefined;
+  "dev-plugin-home-hint": undefined;
+  "dev-plugin-home-added": { name: string | number };
+  "dev-plugin-icon": undefined;
+  "dev-plugin-description": undefined;
+  "dev-plugin-api-hint": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2749,5 +2764,20 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "cal-google-to-tasks-help",
   "daily-tasks",
   "daily-tasks-help",
-  "daily-tasks-heading"
+  "daily-tasks-heading",
+  "widget-plugin",
+  "plugin-widget-none",
+  "plugin-widget-open-settings",
+  "plugin-widget-pick",
+  "plugin-widget-autorun",
+  "plugin-widget-running",
+  "plugin-widget-empty",
+  "plugin-widget-disabled",
+  "dev-plugin-ribbon",
+  "dev-plugin-home",
+  "dev-plugin-home-hint",
+  "dev-plugin-home-added",
+  "dev-plugin-icon",
+  "dev-plugin-description",
+  "dev-plugin-api-hint"
 ];

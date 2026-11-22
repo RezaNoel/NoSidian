@@ -337,6 +337,11 @@ details.callout[open] > summary::after { transform: rotate(90deg); }
 .w-shortcut .btn::before { content: ""; inline-size: 7px; block-size: 7px; border-radius: 50%; background: var(--chip, var(--accent)); flex: none; }
 .w-scratch { inline-size: 100%; flex: 1; min-block-size: 140px; resize: vertical; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: rgb(var(--l3) / 0.45); line-height: 1.6; }
 .w-scratch.sm { min-block-size: 70px; }
+.w-plugin { display: flex; flex-direction: column; gap: 8px; min-inline-size: 0; }
+.w-plugin .select { inline-size: 100%; }
+.w-plugin-bar { align-items: flex-start; }
+.w-plugin-bar > p { margin: 0; min-inline-size: 0; flex: 1 1 auto; }
+.w-plugin-out { margin: 0; max-block-size: 220px; overflow-y: auto; padding: 8px 10px; border-radius: var(--radius-sm); background: rgb(var(--l3) / 0.45); font-family: var(--font-mono); font-size: 0.82em; white-space: pre-wrap; overflow-wrap: anywhere; unicode-bidi: plaintext; }
 .w-capture { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
 .w-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .w-queue, .w-goal { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }

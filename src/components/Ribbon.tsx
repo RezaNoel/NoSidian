@@ -2,7 +2,7 @@
 // enabled. Drag a tool to reorder; right-click to choose which tools show.
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { hasTitleBar } from "./TitleBar";
-import { Brain, CalendarDays, CloudSun, Settings as SettingsIcon, Command, FileSearch, Film, FolderKanban, LayoutDashboard, Network, PanelLeft, PanelRight, PawPrint, RotateCcw, Terminal, Timer } from "lucide-solid";
+import { Blocks, Brain, CalendarDays, CloudSun, Settings as SettingsIcon, Command, FileSearch, Film, FolderKanban, LayoutDashboard, Network, PanelLeft, PanelRight, PawPrint, RotateCcw, Terminal, Timer } from "lucide-solid";
 import { t, type MessageKey } from "../i18n";
 import { rovingKeydown } from "../a11y/roving";
 import { enabledModules } from "../state/modules";
@@ -15,8 +15,18 @@ import { openDailyNote } from "../state/daily";
 import { openView } from "../state/views";
 import { openMenu } from "./ContextMenu";
 import type { ModuleId } from "../state/types";
+import { dev, runPluginById } from "../state/devtools";
+import { ENTRY_ICONS } from "./EntryStyle";
 
-export interface Tool { key: MessageKey; icon: typeof Brain; module?: ModuleId; desktopOnly?: boolean; run?: () => void }
+export interface Tool { key: MessageKey; icon: typeof Brain; module?: ModuleId; desktopOnly?: boolean; run?: () => void; /** Set for plugin tools, whose names are the user's own. */ label?: string }
+
+/** A tool's name: the user's plugin name, or the translated label. */
+export const toolLabel = (tool: Tool) => tool.label ?? t(tool.key);
+
+/** Plugins the user chose to show on the ribbon. */
+const pluginTools = (): Tool[] => dev.state.scripts
+  .filter((p) => p.enabled && p.ribbon)
+  .map((p) => ({ key: `plugin:${p.id}` as MessageKey, label: p.name, icon: (p.icon && ENTRY_ICONS[p.icon]) || Blocks, run: () => void runPluginById(p.id) }));
 
 export const later = () => toast(t("select-note-first"));
 
@@ -36,12 +46,13 @@ export const TOOLS: Tool[] = [
 
 const byOrder = (list: Tool[]) => {
   const order = profile.ribbonOrder;
-  const rank = (k: string) => { const i = order.indexOf(k); return i < 0 ? order.length + TOOLS.findIndex((x) => x.key === k) : i; };
+  // Tools not yet placed keep their built-in order; new plugin buttons go last.
+  const rank = (k: string) => { const i = order.indexOf(k); if (i >= 0) return i; const j = TOOLS.findIndex((x) => x.key === k); return order.length + (j < 0 ? TOOLS.length + list.findIndex((x) => x.key === k) : j); };
   return [...list].sort((a, b) => rank(a.key) - rank(b.key));
 };
 
 /** Every tool this device can show, in the user's order. */
-export const everyTool = (): Tool[] => byOrder(TOOLS.filter((x) => !(x.desktopOnly && isMobile())));
+export const everyTool = (): Tool[] => byOrder([...TOOLS.filter((x) => !(x.desktopOnly && isMobile())), ...pluginTools()]);
 
 /** Tools the user's modules allow, in the user's order. */
 export function availableTools(): Tool[] {
@@ -70,7 +81,7 @@ export function Ribbon() {
       const featureOn = !tool.module || enabledModules(settings.experienceLevel, settings.moduleOverrides).has(tool.module);
       const shown = featureOn && !profile.ribbonHidden.includes(tool.key);
       return {
-        label: t(tool.key),
+        label: toolLabel(tool),
         icon: <tool.icon />,
         checked: shown,
         run: () => {
@@ -99,8 +110,8 @@ export function Ribbon() {
               class="icon-btn"
               classList={{ dragging: dragKey() === tool.key, "drop-before": drop()?.key === tool.key && !drop()!.after, "drop-after": drop()?.key === tool.key && drop()!.after }}
               tabIndex={i() === 0 && hasTitleBar() ? 0 : -1}
-              title={t(tool.key)}
-              aria-label={t(tool.key)}
+              title={toolLabel(tool)}
+              aria-label={toolLabel(tool)}
               draggable="true"
               onClick={tool.run ?? later}
               onDragStart={(e) => { setDragKey(tool.key); e.dataTransfer?.setData("text/x-nosidian-ribbon", tool.key); if (e.dataTransfer) e.dataTransfer.effectAllowed = "move"; }}

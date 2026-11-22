@@ -67,6 +67,7 @@ export const DASHBOARD_WIDGET_CATALOG: DashboardWidgetCatalogItem[] = [
   { type: 'writing-goal', defaultSpan: 1, category: 'writing', iconKey: 'target', titleEn: 'Writing Goal', titleFa: 'هدف کلمات روزانه' },
   { type: 'reading-shelf', defaultSpan: 1, category: 'media', iconKey: 'book-open', titleEn: 'Reading Shelf', titleFa: 'قفسه کتاب‌ها' },
   { type: 'watchlist', defaultSpan: 1, category: 'media', iconKey: 'film', titleEn: 'Cinema Watchlist', titleFa: 'لیست فیلم و سریال' },
+  { type: 'plugin', defaultSpan: 1, category: 'core', iconKey: 'blocks', titleEn: 'Plugin', titleFa: 'افزونه' },
   { type: 'pet-home', defaultSpan: 2, category: 'study', iconKey: 'sparkles', titleEn: 'Companion Sanctuary', titleFa: 'خانه ۳بعدی پت' }
 ];
 

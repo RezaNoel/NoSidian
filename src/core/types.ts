@@ -247,6 +247,7 @@ export type DashboardTemplateId =
 
 export type DashboardWidgetType =
   | 'cover'
+  | 'plugin'
   | 'deadline-hero'
   | 'stats'
   | 'recent-notes'
@@ -293,6 +294,9 @@ export interface DashboardWidget {
   dailyWordTarget?: number;
   todos?: DashboardTodoItem[];
   shortcuts?: DashboardShortcutItem[];
+  /** For a plugin widget: which plugin it runs, and whether it runs when the home opens. */
+  pluginId?: string;
+  autoRun?: boolean;
 }
 
 export interface DashboardConfig {
@@ -762,6 +766,10 @@ export interface CustomScriptPlugin {
   description?: string;
   enabled: boolean;
   runOnStartup?: boolean;
+  /** Show a button for it on the tools ribbon. */
+  ribbon?: boolean;
+  /** Icon id (from the file icon set) for its ribbon button. */
+  icon?: string;
   code: string;
   lastRunAt?: number;
   lastError?: string;

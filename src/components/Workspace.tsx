@@ -9,7 +9,7 @@ import { LeftSidebar } from "./LeftSidebar";
 import { MobileNav } from "./MobileNav";
 import { NoteView } from "./NoteView";
 import { ResizeHandle } from "./ResizeHandle";
-import { Ribbon, availableTools, later } from "./Ribbon";
+import { Ribbon, availableTools, later, toolLabel } from "./Ribbon";
 import { RightSidebar } from "./RightSidebar";
 import { StatusBar } from "./StatusBar";
 import { TabBar } from "./TabBar";
@@ -25,7 +25,7 @@ function MoreSheet() {
       <div class="sheet-grid">
         <button class="sheet-item" onClick={() => pick(() => setOverlay("vaults"))}><VaultIcon /><span>{t("vault-switcher-title")}</span></button>
         <button class="sheet-item" onClick={() => pick(() => openSettings("you"))}><Settings /><span>{t("footer-settings")}</span></button>
-        <For each={tools()}>{(tool) => <button class="sheet-item" onClick={() => pick(tool.run ?? later)}><tool.icon /><span>{t(tool.key)}</span></button>}</For>
+        <For each={tools()}>{(tool) => <button class="sheet-item" onClick={() => pick(tool.run ?? later)}><tool.icon /><span>{toolLabel(tool)}</span></button>}</For>
       </div>
     </div>
   );
