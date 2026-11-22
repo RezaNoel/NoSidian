@@ -41,4 +41,5 @@ export async function applyStartup(): Promise<void> {
   const screen = pref("startup");
   if (screen === "daily" || pref("dailyOnStartup")) return openDailyNote(new Date());
   if (screen === "empty") updateProfile((p) => { p.activeTab = null; });
+  if (screen === "dashboard") { const { openView } = await import("./views"); await openView("dashboard"); }
 }

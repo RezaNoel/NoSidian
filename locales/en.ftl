@@ -1243,3 +1243,7 @@ tag-copy = Copy tag
 cal-add-yearly = Add a yearly date here
 cal-add-once = Add a one-time date here
 cal-remove-date = Remove "{ $name }"
+start-open-dashboard = Open the dashboard
+startup-dashboard = Dashboard
+vault-close = Close vault
+glass-preview-badge = Preview

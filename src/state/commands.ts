@@ -15,6 +15,7 @@ import { openView } from "./views";
 import { setSlidesFor } from "./ui";
 import { setZenOpen } from "./focus";
 import { exportBackup, exportStandalone, importIntoVault } from "./export";
+import { openSettings } from "../components/settings/SettingsWindow";
 
 export interface Command {
   id: string;
@@ -63,7 +64,7 @@ export const COMMANDS: Command[] = [
     requestAnimationFrame(() => document.querySelector<HTMLInputElement>("#search-input")?.focus());
   } },
   { id: "focus-files", label: "cmd-focus-files", defaultKey: "Mod+Shift+E", run: focusFiles },
-  { id: "settings", label: "footer-settings", defaultKey: "Mod+,", run: () => setOverlay("settings") },
+  { id: "settings", label: "footer-settings", defaultKey: "Mod+,", run: () => openSettings("you") },
   { id: "vaults", label: "vault-switcher-title", run: () => setOverlay("vaults") },
   { id: "toggle-left", label: "ribbon-toggle-left", defaultKey: "Mod+Alt+[", run: () => updateProfile((p) => { p.panels.left = !p.panels.left; }) },
   { id: "toggle-right", label: "ribbon-toggle-right", defaultKey: "Mod+Alt+]", run: () => updateProfile((p) => { p.panels.right = !p.panels.right; }) },

@@ -1201,6 +1201,10 @@ export interface MessageArgs {
   "cal-add-yearly": undefined;
   "cal-add-once": undefined;
   "cal-remove-date": { name: string | number };
+  "start-open-dashboard": undefined;
+  "startup-dashboard": undefined;
+  "vault-close": undefined;
+  "glass-preview-badge": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2405,5 +2409,9 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "tag-copy",
   "cal-add-yearly",
   "cal-add-once",
-  "cal-remove-date"
+  "cal-remove-date",
+  "start-open-dashboard",
+  "startup-dashboard",
+  "vault-close",
+  "glass-preview-badge"
 ];

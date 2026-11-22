@@ -14,6 +14,7 @@ import { RightSidebar } from "./RightSidebar";
 import { StatusBar } from "./StatusBar";
 import { TabBar } from "./TabBar";
 import { hasTitleBar } from "./TitleBar";
+import { openSettings } from "./settings/SettingsWindow";
 
 function MoreSheet() {
   const tools = createMemo(availableTools);
@@ -23,7 +24,7 @@ function MoreSheet() {
       <div class="sheet-grip" aria-hidden="true" />
       <div class="sheet-grid">
         <button class="sheet-item" onClick={() => pick(() => setOverlay("vaults"))}><VaultIcon /><span>{t("vault-switcher-title")}</span></button>
-        <button class="sheet-item" onClick={() => pick(() => setOverlay("settings"))}><Settings /><span>{t("footer-settings")}</span></button>
+        <button class="sheet-item" onClick={() => pick(() => openSettings("you"))}><Settings /><span>{t("footer-settings")}</span></button>
         <For each={tools()}>{(tool) => <button class="sheet-item" onClick={() => pick(tool.run ?? later)}><tool.icon /><span>{t(tool.key)}</span></button>}</For>
       </div>
     </div>

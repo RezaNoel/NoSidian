@@ -2,11 +2,13 @@
 // enabled. Drag a tool to reorder; right-click to choose which tools show.
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { hasTitleBar } from "./TitleBar";
-import { Brain, CalendarDays, Command, FileSearch, Film, FolderKanban, LayoutDashboard, Network, PanelLeft, PanelRight, PawPrint, RotateCcw, Terminal, Timer } from "lucide-solid";
+import { Brain, CalendarDays, CloudSun, Settings as SettingsIcon, Command, FileSearch, Film, FolderKanban, LayoutDashboard, Network, PanelLeft, PanelRight, PawPrint, RotateCcw, Terminal, Timer } from "lucide-solid";
 import { t, type MessageKey } from "../i18n";
 import { rovingKeydown } from "../a11y/roving";
 import { enabledModules } from "../state/modules";
-import { settings } from "../state/settings";
+import { settings, updateSettings } from "../state/settings";
+import { ambOpen, setAmbOpen } from "./focus/Ambience";
+import { openSettings } from "./settings/SettingsWindow";
 import { profile, updateProfile } from "../state/workspace";
 import { isMobile, setOverlay, toast } from "../state/ui";
 import { openDailyNote } from "../state/daily";
@@ -32,13 +34,19 @@ export const TOOLS: Tool[] = [
   { key: "pet-studio", icon: PawPrint, module: "companion-pet", run: () => window.dispatchEvent(new CustomEvent("nosidian:pet")) },
 ];
 
-/** Tools the user's modules allow, in the user's order. */
-export function availableTools(): Tool[] {
-  const mods = enabledModules(settings.experienceLevel, settings.moduleOverrides);
-  const list = TOOLS.filter((x) => (!x.module || mods.has(x.module)) && !(x.desktopOnly && isMobile()));
+const byOrder = (list: Tool[]) => {
   const order = profile.ribbonOrder;
   const rank = (k: string) => { const i = order.indexOf(k); return i < 0 ? order.length + TOOLS.findIndex((x) => x.key === k) : i; };
   return [...list].sort((a, b) => rank(a.key) - rank(b.key));
+};
+
+/** Every tool this device can show, in the user's order. */
+export const everyTool = (): Tool[] => byOrder(TOOLS.filter((x) => !(x.desktopOnly && isMobile())));
+
+/** Tools the user's modules allow, in the user's order. */
+export function availableTools(): Tool[] {
+  const mods = enabledModules(settings.experienceLevel, settings.moduleOverrides);
+  return everyTool().filter((x) => !x.module || mods.has(x.module));
 }
 
 export function Ribbon() {
@@ -55,14 +63,27 @@ export function Ribbon() {
     updateProfile((p) => { p.ribbonOrder = keys; });
   };
 
+  // Every tool is listed, whatever the experience level. Turning on a tool
+  // whose feature is off also turns the feature on.
   const menu = (e: MouseEvent) => openMenu(e, [
-    ...all().map((tool) => ({
-      label: t(tool.key),
-      checked: !profile.ribbonHidden.includes(tool.key),
-      run: () => updateProfile((p) => {
-        p.ribbonHidden = p.ribbonHidden.includes(tool.key) ? p.ribbonHidden.filter((k) => k !== tool.key) : [...p.ribbonHidden, tool.key];
-      }),
-    })),
+    ...everyTool().map((tool) => {
+      const featureOn = !tool.module || enabledModules(settings.experienceLevel, settings.moduleOverrides).has(tool.module);
+      const shown = featureOn && !profile.ribbonHidden.includes(tool.key);
+      return {
+        label: t(tool.key),
+        icon: <tool.icon />,
+        checked: shown,
+        run: () => {
+          if (!featureOn && tool.module) {
+            const m = tool.module;
+            updateSettings((c) => { c.moduleOverrides = { ...c.moduleOverrides, [m]: true }; });
+            updateProfile((p) => { p.ribbonHidden = p.ribbonHidden.filter((k) => k !== tool.key); });
+          } else updateProfile((p) => {
+            p.ribbonHidden = shown ? [...p.ribbonHidden, tool.key] : p.ribbonHidden.filter((k) => k !== tool.key);
+          });
+        },
+      };
+    }),
     { label: t("ribbon-menu-reset"), icon: <RotateCcw />, sep: true, run: () => updateProfile((p) => { p.ribbonOrder = []; p.ribbonHidden = []; }) },
   ]);
 
@@ -107,11 +128,16 @@ export function Ribbon() {
           )}
         </For>
       </div>
-      <Show when={!hasTitleBar()}><div class="ribbon-group end">
-        <button class="icon-btn" aria-pressed={profile.panels.right} title={t("ribbon-toggle-right")} aria-label={t("ribbon-toggle-right")} onClick={() => updateProfile((p) => { p.panels.right = !p.panels.right; })}>
+      <div class="ribbon-group end">
+        {/* With the left sidebar closed, its footer buttons move here. */}
+        <Show when={!profile.panels.left}>
+          <button class="icon-btn amb-toggle" aria-expanded={ambOpen()} aria-haspopup="dialog" title={t("footer-ambient")} aria-label={t("footer-ambient")} onClick={() => setAmbOpen(!ambOpen())}><CloudSun /></button>
+          <button class="icon-btn" aria-haspopup="dialog" title={t("footer-settings")} aria-label={t("footer-settings")} onClick={() => openSettings("you")}><SettingsIcon /></button>
+        </Show>
+        <Show when={!hasTitleBar()}><button class="icon-btn" aria-pressed={profile.panels.right} title={t("ribbon-toggle-right")} aria-label={t("ribbon-toggle-right")} onClick={() => updateProfile((p) => { p.panels.right = !p.panels.right; })}>
           <PanelRight class="flip-rtl" />
-        </button>
-      </div></Show>
+        </button></Show>
+      </div>
     </nav>
   );
 }

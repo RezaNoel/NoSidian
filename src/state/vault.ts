@@ -67,6 +67,15 @@ export async function ensureLoaded(path: string): Promise<void> {
   if (v.contents[path] === undefined) v.setContents(path, text);
 }
 
+/** Leave the open vault (after its pending changes are written). */
+export function leaveVault(): void {
+  batch(() => {
+    v.setVault(null);
+    v.setContents(reconcile({}));
+    v.setTree(reconcile({ notes: [], folders: [] }));
+  });
+}
+
 /** Switch to a vault: load its profile, files and last open tabs. */
 export async function enterVault(next: Vault): Promise<void> {
   batch(() => {

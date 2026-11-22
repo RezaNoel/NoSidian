@@ -65,6 +65,10 @@ export function App() {
     void syncMcp();
   });
 
+  const onClosed = () => { setOverlay("none"); setPhase("pick-vault"); };
+  window.addEventListener("nosidian:vault-closed", onClosed);
+  onCleanup(() => window.removeEventListener("nosidian:vault-closed", onClosed));
+
   onMount(async () => {
     if (!settings.onboarding.completed) return setPhase("onboarding");
     setPhase((await restoreVault()) ? "workspace" : "pick-vault");

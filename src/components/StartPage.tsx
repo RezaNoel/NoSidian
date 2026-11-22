@@ -1,6 +1,7 @@
 // The start page: shown when no note is open and in the "+" tab. Logo with the
 // companion running around it, clock and date, shortcuts and recent files.
 import { For, Show, createMemo, createSignal, onCleanup } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import { Brain, CalendarDays, Command, FilePlus, FileSearch, FileText, LayoutDashboard, Timer } from "lucide-solid";
 import { locale, t, type MessageKey } from "../i18n";
 import { noteTitle } from "../lib/markdown";
@@ -22,12 +23,18 @@ import { noteItemMenu, recentExtras } from "./itemMenus";
 
 interface Shortcut { key: MessageKey; icon: typeof Brain; module?: ModuleId; combo?: string; run: () => void }
 
-const SHORTCUTS: Shortcut[] = [
+/** The main action: the dashboard, or a new note when the dashboard is off. */
+const PRIMARY: Shortcut[] = [
+  { key: "start-open-dashboard", icon: LayoutDashboard, module: "dashboard", run: () => void openView("dashboard") },
+  { key: "action-new-note", icon: FilePlus, combo: "Ctrl+N", run: () => void promptNewNote() },
+];
+
+/** Smaller suggestions under it. */
+const SUGGESTIONS: Shortcut[] = [
   { key: "action-new-note", icon: FilePlus, combo: "Ctrl+N", run: () => void promptNewNote() },
   { key: "ribbon-daily-note", icon: CalendarDays, module: "daily-calendar", combo: "Alt+D", run: () => void openDailyNote(new Date()) },
   { key: "ribbon-quick-switcher", icon: FileSearch, combo: "Ctrl+O", run: () => setOverlay("switcher") },
   { key: "ribbon-command-palette", icon: Command, combo: "Ctrl+K", run: () => setOverlay("palette") },
-  { key: "ribbon-dashboard", icon: LayoutDashboard, module: "dashboard", run: () => void openView("dashboard") },
   { key: "ribbon-flashcards", icon: Brain, module: "flashcards", run: () => void openView("flashcards") },
   { key: "ribbon-focus", icon: Timer, module: "zen-focus", run: () => void openView("zen") },
 ];
@@ -37,10 +44,12 @@ export function StartPage() {
   const tick = setInterval(() => setNow(new Date()), 1000);
   onCleanup(() => clearInterval(tick));
   const mods = createMemo(() => enabledModules(settings.experienceLevel, settings.moduleOverrides));
-  const shortcuts = createMemo(() => SHORTCUTS.filter((s) => !s.module || mods().has(s.module)));
+  const allowed = (s: Shortcut) => !s.module || mods().has(s.module);
+  const primary = createMemo(() => PRIMARY.find(allowed)!);
+  const suggestions = createMemo(() => SUGGESTIONS.filter((s) => allowed(s) && s.key !== primary().key));
   const recent = createMemo(() => {
     const exists = new Set(tree.notes.map((n) => n.path));
-    return profile.recent.filter((r) => exists.has(r.path)).slice(0, 6);
+    return profile.recent.filter((r) => exists.has(r.path)).slice(0, 5);
   });
   const time = () => now().toLocaleTimeString(locale(), { hour: "numeric", minute: "2-digit" });
   const date = () => now().toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -64,16 +73,22 @@ export function StartPage() {
         <p class="start-greeting" dir="auto">{greeting(now())}</p>
       </div>
 
-      <nav class="start-shortcuts" aria-label={t("start-shortcuts")}>
-        <For each={shortcuts()}>
-          {(s) => (
-            <button class="start-tile" onClick={s.run} title={t(s.key)}>
-              <s.icon aria-hidden="true" />
-              <span>{t(s.key)}</span>
-              <Show when={s.combo}><kbd dir="ltr">{s.combo}</kbd></Show>
-            </button>
-          )}
-        </For>
+      <nav class="start-actions" aria-label={t("start-shortcuts")}>
+        <button class="start-primary" onClick={primary().run}>
+          <Dynamic component={primary().icon} aria-hidden="true" />
+          <span>{t(primary().key)}</span>
+          <Show when={primary().combo}><kbd dir="ltr">{primary().combo}</kbd></Show>
+        </button>
+        <div class="start-suggest">
+          <For each={suggestions()}>
+            {(s) => (
+              <button class="start-chip" onClick={s.run} title={s.combo ? `${t(s.key)} (${s.combo})` : t(s.key)}>
+                <s.icon aria-hidden="true" />
+                <span>{t(s.key)}</span>
+              </button>
+            )}
+          </For>
+        </div>
       </nav>
 
       <Show when={recent().length}>

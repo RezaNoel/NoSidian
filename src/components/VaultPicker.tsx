@@ -1,11 +1,11 @@
 // Three ways into a vault (sample, new, existing) plus recently used vaults.
 import { For, Show, createResource, createSignal } from "solid-js";
-import { BookOpen, FolderOpen, FolderPlus, Vault as VaultIcon } from "lucide-solid";
+import { BookOpen, FolderOpen, FolderPlus, Vault as VaultIcon, X } from "lucide-solid";
 import { t } from "../i18n";
 import { backend } from "../backend";
 import { inTauri } from "../state/backend";
 import { settings } from "../state/settings";
-import { createVault, openSampleVault, openVaultAt, pickAndOpenVault } from "../state/session";
+import { closeVault, createVault, openSampleVault, openVaultAt, pickAndOpenVault } from "../state/session";
 import { vault } from "../state/vault";
 import type { Vault } from "../state/types";
 
@@ -35,6 +35,15 @@ export function VaultPicker(props: { onDone: (v: Vault) => void; showRecent?: bo
 
   return (
     <div class="vault-picker" aria-busy={busy()}>
+      <Show when={vault()}>
+        {(v) => (
+          <div class="vault-current">
+            <VaultIcon aria-hidden="true" />
+            <span class="list-title" dir="auto">{v().meta.name}</span>
+            <button class="btn sm" disabled={busy()} onClick={() => void closeVault()}><X aria-hidden="true" />{t("vault-close")}</button>
+          </div>
+        )}
+      </Show>
       <div class="vault-cards">
         <button class="vault-card glass-card" disabled={busy()} onClick={() => void run(openSampleVault)}>
           <span class="vault-card-icon accent"><BookOpen /></span>

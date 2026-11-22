@@ -261,9 +261,9 @@ export const ENTRIES: Entry[] = [
       )}
     </Row>
   ), { tags: "language locale persian farsi english translate rtl" }),
-  e("you", Rocket, ["startup-screen", "startup-last", "startup-empty", "startup-daily"], () => (
+  e("you", Rocket, ["startup-screen", "startup-last", "startup-empty", "startup-daily", "startup-dashboard"], () => (
     <Select<StartupScreen> label={t("startup-screen")} value={pref("startup")}
-      options={(["last", "empty", "daily"] as const).map((v) => ({ value: v, label: t(`startup-${v}`) }))}
+      options={(["last", "empty", "daily", "dashboard"] as const).map((v) => ({ value: v, label: t(`startup-${v}`) }))}
       onChange={(v) => setPref("startup", v)} />
   ), { tags: "open launch start begin home" }),
   e("you", Music2, ["personal-startup-sound"], () => (

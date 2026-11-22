@@ -3,7 +3,7 @@
 // an older or hand-edited config can't break the UI.
 import { settings, updateSettings } from "./settings";
 
-export type StartupScreen = "last" | "empty" | "daily";
+export type StartupScreen = "last" | "empty" | "daily" | "dashboard";
 export type DefaultMode = "editor" | "split" | "reader" | "mindmap" | "kanban";
 
 export interface Prefs {
