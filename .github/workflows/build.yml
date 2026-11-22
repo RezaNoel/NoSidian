@@ -84,7 +84,7 @@ jobs:
           echo "NDK_HOME=$ANDROID_HOME/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+          targets: aarch64-linux-android
       - uses: Swatinem/rust-cache@v2
       - run: npm ci
       - run: npx tauri android init --ci
@@ -94,23 +94,28 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
+          # Release build for arm64 only: small enough to download and install.
+          npx tauri android build --apk --target aarch64 --ci
+          APK_DIR=src-tauri/gen/android/app/build/outputs/apk/arm64/release
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           if [ -n "$KEYSTORE_B64" ]; then
-            npx tauri android build --apk --ci
             echo "$KEYSTORE_B64" | base64 -d > release.jks
-            BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
-            for f in src-tauri/gen/android/app/build/outputs/apk/universal/release/*-unsigned.apk; do
-              "$BT/zipalign" -f 4 "$f" aligned.apk
-              "$BT/apksigner" sign --ks release.jks --ks-pass env:KEYSTORE_PASSWORD --ks-key-alias "$KEY_ALIAS" --out NoSidian.apk aligned.apk
-            done
+            KS=release.jks; PASS="$KEYSTORE_PASSWORD"; ALIAS="$KEY_ALIAS"
           else
-            # No signing key configured yet: debug-signed APK, installable for testing.
-            npx tauri android build --apk --debug --ci
-            cp src-tauri/gen/android/app/build/outputs/apk/universal/debug/*.apk NoSidian-debug.apk
+            # No signing key configured yet: a throwaway key, installable for testing.
+            keytool -genkeypair -v -keystore release.jks -storepass nosidian-test -keypass nosidian-test \
+              -alias nosidian -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=NoSidian" > /dev/null
+            KS=release.jks; PASS=nosidian-test; ALIAS=nosidian
           fi
+          for f in "$APK_DIR"/*-unsigned.apk; do
+            "$BT/zipalign" -f 4 "$f" aligned.apk
+            "$BT/apksigner" sign --ks "$KS" --ks-pass "pass:$PASS" --ks-key-alias "$ALIAS" --key-pass "pass:$PASS" --out NoSidian.apk aligned.apk
+          done
+          mv NoSidian.apk NoSidian-android.apk
       - uses: actions/upload-artifact@v4
         with:
           name: NoSidian-android-apk
-          path: NoSidian*.apk
+          path: NoSidian-android.apk
 
   release:
     needs: [windows-exe, android-apk]
