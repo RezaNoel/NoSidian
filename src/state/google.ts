@@ -7,11 +7,12 @@ import { keyOf, localIso, nextDay, planSync, type Desired, type RemoteEvent, typ
 import { inTauri } from "./backend";
 import { appDoc } from "./persist";
 import { personal } from "./personal";
-import { allProjects, allTasks, projectState, scheduleTask } from "./projects";
+import { allProjects, allTasks, newId, projectState, removeTask, scheduleTask, upsertTask } from "./projects";
+import type { ProjectTask } from "../core/types";
 import { toast } from "./ui";
 
 export interface GoogleStatus { configured: boolean; connected: boolean; account: string | null }
-interface ShownEvent { id: string; summary: string; day: string; time?: string }
+interface ShownEvent { id: string; summary: string; day: string; time?: string; end?: string }
 
 export interface GooglePrefs {
   pushTasks: boolean;
@@ -21,6 +22,8 @@ export interface GooglePrefs {
   map: SyncMap;
   /** Upcoming and recent events, kept so the calendar works offline. */
   events: ShownEvent[];
+  /** Turn upcoming Google events into tasks automatically. */
+  eventsToTasks?: boolean;
 }
 
 export const googlePrefs = appDoc<GooglePrefs>("google", () => ({ pushTasks: true, pushDeadlines: true, pushDates: true, lastSync: 0, map: {}, events: [] }));
@@ -76,7 +79,8 @@ function desiredItems(): Map<string, Desired> {
   const out = new Map<string, Desired>();
   if (g.pushTasks) {
     for (const x of allTasks()) {
-      if (!x.timeBlockDate || x.done) continue;
+      // Tasks made from Google events are already in Google.
+      if (!x.timeBlockDate || x.done || x.googleEventId) continue;
       const [y, m, d] = x.timeBlockDate.split("-").map(Number);
       const start = new Date(y, m - 1, d, x.timeBlockStartHour ?? 9, 0);
       const end = new Date(start.getTime() + (x.timeBlockDurationMin ?? 60) * 60_000);
@@ -242,13 +246,14 @@ export function syncGoogle(quiet = true): Promise<void> {
           if (e.start?.date) shown.push({ id: e.id, summary: e.summary ?? "", day: e.start.date });
           else if (e.start?.dateTime) {
             const d = new Date(e.start.dateTime);
-            shown.push({ id: e.id, summary: e.summary ?? "", day: ymdOf(d), time: d.toISOString() });
+            shown.push({ id: e.id, summary: e.summary ?? "", day: ymdOf(d), time: d.toISOString(), end: e.end?.dateTime ? new Date(e.end.dateTime).toISOString() : undefined });
           }
         }
         page = res.nextPageToken;
       } while (page && shown.length < 5000);
 
       googlePrefs.update((g) => { g.map = map; g.events = shown; g.lastSync = Date.now(); });
+      if (googlePrefs.state.eventsToTasks !== false) importEventsAsTasks(shown);
       if (!quiet) toast(t("cal-google-synced"));
     } catch (e) {
       if (!quiet) toast(errorText(e), true);
@@ -278,13 +283,60 @@ export async function addGoogleEvent(day: string, summary: string, hour?: number
 }
 
 /** Event titles on a day (YYYY-MM-DD), for the calendar. */
-export function googleEventsOn(day: string): string[] {
+export function googleEventsOn(day: string): { id: string; label: string }[] {
   if (!sig.status().connected) return [];
-  return googlePrefs.state.events.filter((e) => e.day === day).map((e) => (e.time ? `${new Date(e.time).toLocaleTimeString(locale(), { hour: "numeric", minute: "2-digit" })} ${e.summary}` : e.summary));
+  return googlePrefs.state.events.filter((e) => e.day === day).map((e) => ({ id: e.id, label: e.time ? `${new Date(e.time).toLocaleTimeString(locale(), { hour: "numeric", minute: "2-digit" })} ${e.summary}` : e.summary }));
 }
 
-// Start-up: learn the state, then keep in sync every ten minutes.
-if (typeof window !== "undefined" && inTauri()) {
+// ---------- Google events as tasks ----------
+
+/** The task that mirrors a Google event, as it should look now. */
+function taskFor(e: ShownEvent, existing?: ProjectTask): ProjectTask {
+  const start = e.time ? new Date(e.time) : null;
+  const end = e.end ? new Date(e.end) : null;
+  return {
+    ...(existing ?? { id: newId("task"), projectId: "inbox", done: false, status: "todo" as const, priority: "medium" as const, sourceType: "manual" as const, createdAt: Date.now() }),
+    title: e.summary.trim() || t("cal-google"),
+    dueDate: e.day,
+    timeBlockDate: start ? e.day : undefined,
+    timeBlockStartHour: start ? start.getHours() : undefined,
+    timeBlockDurationMin: start && end ? Math.max(15, Math.round((end.getTime() - start.getTime()) / 60_000)) : undefined,
+    googleEventId: e.id,
+  };
+}
+
+/** Add one Google event to tasks (from the calendar), or update the one already made. */
+export function addEventToTasks(eventId: string): boolean {
+  const e = googlePrefs.state.events.find((x) => x.id === eventId);
+  if (!e) return false;
+  const cur = projectState.state.tasks.find((x) => x.googleEventId === eventId);
+  upsertTask(taskFor(e, cur));
+  return !cur;
+}
+
+/** Keep tasks for the next two weeks of Google events: add new ones, follow moves, drop cancelled. */
+function importEventsAsTasks(shown: ShownEvent[]): void {
+  const today = ymdOf(new Date());
+  const horizon = ymdOf(new Date(Date.now() + 14 * 86_400_000));
+  const upcoming = shown.filter((e) => e.day >= today && e.day <= horizon);
+  const byId = new Map(shown.map((e) => [e.id, e]));
+  for (const e of upcoming) {
+    const cur = projectState.state.tasks.find((x) => x.googleEventId === e.id);
+    const next = taskFor(e, cur);
+    if (!cur || cur.title !== next.title || cur.timeBlockDate !== next.timeBlockDate || cur.timeBlockStartHour !== next.timeBlockStartHour || cur.dueDate !== next.dueDate) upsertTask(next);
+  }
+  // Events deleted in Google: remove their open tasks (finished ones stay as a record).
+  for (const x of projectState.state.tasks) {
+    if (x.googleEventId && !x.done && (x.dueDate ?? "") >= today && !byId.has(x.googleEventId)) removeTask(x.id);
+  }
+}
+
+let started = false;
+/** Learn the sign-in state and sync now, then every ten minutes and when the app comes back to the front. */
+export function startGoogleSync(): void {
+  if (started || typeof window === "undefined" || !inTauri()) return;
+  started = true;
   void refreshGoogleStatus().then(() => syncGoogle());
   setInterval(() => void syncGoogle(), 10 * 60_000);
+  window.addEventListener("focus", () => { if (Date.now() - googlePrefs.state.lastSync > 5 * 60_000) void syncGoogle(); });
 }

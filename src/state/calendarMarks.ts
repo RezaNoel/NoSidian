@@ -13,7 +13,7 @@ import { focusLog } from "./focus";
 import { googleEventsOn } from "./google";
 
 export type MarkKind = "birthday" | "date" | "deadline" | "task" | "cards" | "focus" | "daily" | "google";
-export interface Mark { kind: MarkKind; source: CalSource; label: string; icon?: string }
+export interface Mark { kind: MarkKind; source: CalSource; label: string; icon?: string; eventId?: string }
 
 const pad = (n: number) => String(n).padStart(2, "0");
 export const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -51,7 +51,7 @@ export function marksOn(day: Date): Mark[] {
     const b = index.blocks().get(key);
     if (b?.length) out.push({ kind: "task", source: "tasks", label: b.length === 1 ? b[0] : t("cal-mark-tasks", { count: b.length }) });
   }
-  if (calShows("google")) for (const e of googleEventsOn(key)) out.push({ kind: "google", source: "google", label: e });
+  if (calShows("google")) for (const e of googleEventsOn(key)) out.push({ kind: "google", source: "google", label: e.label, eventId: e.id });
   if (calShows("flashcards")) {
     const n = index.reviews().get(key);
     if (n) out.push({ kind: "cards", source: "flashcards", label: t("cal-mark-reviews", { count: n }) });

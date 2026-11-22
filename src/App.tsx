@@ -56,6 +56,8 @@ export function App() {
   // Wait for the workspace so the companion is there to say it.
   createEffect(() => { if (inWorkspace() && settings.onboarding.completed) void welcome(toast, announce, petWelcome); });
   startPetTalk();
+  // Google Calendar: sync as soon as the workspace is open.
+  createEffect(() => { if (inWorkspace()) void import("./state/google").then((g) => g.startGoogleSync()); });
   // The companion notices a new theme (not the one the app opened with).
   createEffect(on(() => settings.appearance.theme, () => petEvent("theme"), { defer: true }));
   let pluginsStarted = false;

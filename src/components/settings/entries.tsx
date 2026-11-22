@@ -8,6 +8,7 @@ import {
   Eye, FileClock, FilePlus, FileText, FolderOpen, Gauge, Hand, Image, Keyboard, Languages, LayoutPanelLeft, ListOrdered,
   MessageSquareText, Monitor, Music2, Palette, PanelTop, PartyPopper, Play, Plus, Rocket, RotateCcw, Ruler, ScanEye,
   Sparkles, SpellCheck, SquareRadical, Trash2, User, Vault as VaultIcon, Volume2, VolumeX, RefreshCw, Brackets, Type, Cake,
+  ListChecks,
 } from "lucide-solid";
 import { t, type MessageKey } from "../../i18n";
 import { LANGUAGES, type LanguageCode } from "../../i18n/languages";
@@ -356,6 +357,7 @@ export const ENTRIES: Entry[] = [
       onChange={(v) => setPref("dailyTemplate", v)} />
   ), { tags: "daily template journal" }),
   e("files", Rocket, ["daily-open-startup"], () => <Toggle label={t("daily-open-startup")} checked={pref("dailyOnStartup")} onChange={(v) => setPref("dailyOnStartup", v)} />, { tags: "daily open start launch" }),
+  e("files", ListChecks, ["daily-tasks", "daily-tasks-help"], () => <Toggle label={t("daily-tasks")} hint={t("daily-tasks-help")} checked={pref("dailyTasks")} onChange={(v) => setPref("dailyTasks", v)} />, { tags: "daily tasks todo google calendar agenda" }),
 
   // Features
   e("features", Gauge, ["field-experience", "experience-beginner", "experience-intermediate", "experience-advanced"], () => (

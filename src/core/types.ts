@@ -355,6 +355,8 @@ export interface ProjectTask {
   timeBlockDate?: string;
   timeBlockStartHour?: number;
   timeBlockDurationMin?: number;
+  /** Set when the task was made from a Google Calendar event. */
+  googleEventId?: string;
   createdAt: number;
 }
 

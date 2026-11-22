@@ -32,6 +32,7 @@ export function GoogleCalendarSettings() {
             <Toggle label={t("cal-google-push-tasks")} checked={googlePrefs.state.pushTasks} onChange={(v) => googlePrefs.update((g) => { g.pushTasks = v; })} />
             <Toggle label={t("cal-google-push-deadlines")} checked={googlePrefs.state.pushDeadlines} onChange={(v) => googlePrefs.update((g) => { g.pushDeadlines = v; })} />
             <Toggle label={t("cal-google-push-dates")} checked={googlePrefs.state.pushDates} onChange={(v) => googlePrefs.update((g) => { g.pushDates = v; })} />
+            <Toggle label={t("cal-google-to-tasks")} hint={t("cal-google-to-tasks-help")} checked={googlePrefs.state.eventsToTasks !== false} onChange={(v) => googlePrefs.update((g) => { g.eventsToTasks = v; })} />
           </div>
         </Show>
       </Show>

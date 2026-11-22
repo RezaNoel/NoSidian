@@ -38,6 +38,8 @@ export interface Prefs {
   petFloating: boolean;
   /** The companion says short lines on its own and reacts to events. */
   petTalk: boolean;
+  /** Add the day's tasks to its daily note when it opens. */
+  dailyTasks: boolean;
   terminalShell: string;
   /** Command id → shortcut ("Mod+K"); "" means unbound. Only overrides are stored. */
   hotkeys: Record<string, string>;
@@ -73,6 +75,7 @@ export const DEFAULT_PREFS: Prefs = {
   systemShell: false,
   petFloating: true,
   petTalk: true,
+  dailyTasks: true,
   terminalShell: "powershell",
   hotkeys: {},
 };

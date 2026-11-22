@@ -1365,6 +1365,14 @@ export interface MessageArgs {
   "pt-focus-done-4": undefined;
   "pet-talk": undefined;
   "pet-talk-help": undefined;
+  "cal-to-task": undefined;
+  "cal-in-tasks": undefined;
+  "cal-added-task": undefined;
+  "cal-google-to-tasks": undefined;
+  "cal-google-to-tasks-help": undefined;
+  "daily-tasks": undefined;
+  "daily-tasks-help": undefined;
+  "daily-tasks-heading": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2733,5 +2741,13 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "pt-focus-done-3",
   "pt-focus-done-4",
   "pet-talk",
-  "pet-talk-help"
+  "pet-talk-help",
+  "cal-to-task",
+  "cal-in-tasks",
+  "cal-added-task",
+  "cal-google-to-tasks",
+  "cal-google-to-tasks-help",
+  "daily-tasks",
+  "daily-tasks-help",
+  "daily-tasks-heading"
 ];
