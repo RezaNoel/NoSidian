@@ -3,7 +3,7 @@
 // panel for rating, dates, highlights or quotes, notes and the linked note.
 import { For, Show, createMemo, createResource, createSignal, type JSX } from "solid-js";
 import { ArrowDown, ArrowUp, BookOpen, BookmarkPlus, CheckCircle2, Clapperboard, FileText, Film, ImagePlus, Minus, Pencil, Plus, Quote, Search, Share2, Star, Target, Trash2, Trophy, Tv, X } from "lucide-solid";
-import { backend } from "../../backend";
+import { shareImage } from "../../backend/share";
 import { blobUrl } from "../../lib/attachments";
 import { copyDroppedFiles } from "../../state/dropFiles";
 import { coverColor, renderBestCard, renderEntryCard, safeName, scoreText, type Entry } from "./mediaCard";
@@ -59,7 +59,7 @@ const bestEntries = (kind: Kind): Entry[] => {
 
 async function shareCard(bytes: Promise<Uint8Array>, name: string) {
   try {
-    if (await backend.saveBytes(safeName(name, "share"), await bytes, "png")) toast(t("pet-card-saved"));
+    if (await shareImage(safeName(name, "share"), await bytes)) toast(t("pet-card-saved"));
   } catch { toast(t("pet-card-failed"), true); }
 }
 const shareEntry = (kind: Kind, e: Entry) => shareCard(renderEntryCard(e, rankOf(kind, e.id)), e.title);

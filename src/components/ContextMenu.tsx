@@ -21,7 +21,7 @@ export interface MenuItem {
   run: () => void;
 }
 
-interface MenuState { x: number; y: number; items: MenuItem[]; opener: HTMLElement | null; minWidth?: number; listbox?: boolean }
+interface MenuState { x: number; y: number; items: MenuItem[]; opener: HTMLElement | null; minWidth?: number; listbox?: boolean; at: number }
 const menu = createRoot(() => {
   const [state, setState] = createSignal<MenuState | null>(null);
   return { state, setState };
@@ -30,7 +30,7 @@ const menu = createRoot(() => {
 export function openMenu(e: MouseEvent | { clientX: number; clientY: number }, items: MenuItem[], opts: { minWidth?: number; listbox?: boolean } = {}): void {
   if ("preventDefault" in e) { e.preventDefault(); e.stopPropagation(); }
   if (!items.length) return;
-  menu.setState({ x: e.clientX, y: e.clientY, items, opener: document.activeElement as HTMLElement | null, ...opts });
+  menu.setState({ x: e.clientX, y: e.clientY, items, opener: document.activeElement as HTMLElement | null, at: performance.now(), ...opts });
 }
 
 /** Native <select> elements keep their value and change events, but open this themed list instead of the browser's. */
@@ -58,7 +58,7 @@ export function installSelectEnhancer(): void {
       });
       group = g;
     }
-    menu.setState({ x: rtl ? r.right - r.width : r.left, y: r.bottom + 4, items, opener: sel, minWidth: r.width, listbox: true });
+    menu.setState({ x: rtl ? r.right - r.width : r.left, y: r.bottom + 4, items, opener: sel, minWidth: r.width, listbox: true, at: performance.now() });
   };
   window.addEventListener("mousedown", (e) => {
     const sel = (e.target as HTMLElement | null)?.closest?.("select");
@@ -137,7 +137,13 @@ export function ContextMenu() {
         });
         return (
           <Portal>
-            <div class="menu-scrim" onClick={() => close()} onContextMenu={(e) => { e.preventDefault(); close(); }} />
+            <div
+              class="menu-scrim"
+              // On touch screens a long press ends with a click on whatever is under the finger,
+              // which is this scrim right after the menu opens. Ignore clicks in that first moment.
+              onClick={() => { if (performance.now() - s.at > 600) close(); }}
+              onContextMenu={(e) => { e.preventDefault(); if (performance.now() - s.at > 600) close(); }}
+            />
             <div
               ref={el}
               class="glass-modal context-menu"

@@ -3,6 +3,7 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/app.css";
 import "./styles/features.css";
+import "./styles/mobile.css";
 import "katex/dist/katex.min.css";
 import { App } from "./App";
 import { initSettings } from "./state/settings";

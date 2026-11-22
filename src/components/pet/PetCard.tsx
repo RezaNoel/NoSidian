@@ -8,7 +8,7 @@ import { PET_ACCESSORY_SHOP, PET_FOOD_MENU, PET_SPECIES_INFO, buyOrToggleAccesso
 import type { Pet3DInteractAction } from "../../core/pet3dKinematics";
 import { saveCustomPetModelFile, deleteCustomPetModel } from "../../core/utils/petModelStore";
 import { bumpBond, pet, setPet } from "../../state/pet";
-import { backend } from "../../backend";
+import { shareImage } from "../../backend/share";
 import { cardFileName, renderPetCard } from "./shareCard";
 import { askText, isMobile, toast } from "../../state/ui";
 import { pref, setPref } from "../../state/prefs";
@@ -74,7 +74,7 @@ export function PetStudio() {
     setSharing(true);
     try {
       const bytes = await renderPetCard(pet.state, capture?.() ?? null);
-      if (await backend.saveBytes(cardFileName(pet.state.name), bytes, "png")) toast(t("pet-card-saved"));
+      if (await shareImage(cardFileName(pet.state.name), bytes)) toast(t("pet-card-saved"));
     } catch { toast(t("pet-card-failed"), true); } finally { setSharing(false); }
   };
   const label = () => t("pet-label", { name: pet.state.name, mood: t(`pet-mood-${getPetMoodLabel(pet.state).toLowerCase()}` as "pet-mood-happy") });

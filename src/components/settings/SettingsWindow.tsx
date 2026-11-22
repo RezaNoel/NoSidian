@@ -2,7 +2,7 @@
 // the UI language and in English plus extra keywords, tolerates typos and
 // partial words, and lists related settings from the same section.
 import { For, Match, Show, Switch, createMemo, createSignal } from "solid-js";
-import { Bot, Blocks, CalendarDays, Code2, FileText, FolderTree, Keyboard, Palette, PawPrint, PersonStanding, Search, User, Vault as VaultIcon, X } from "lucide-solid";
+import { Bot, Blocks, CalendarDays, ChevronLeft, Code2, FileText, FolderTree, Keyboard, Palette, PawPrint, PersonStanding, Search, User, Vault as VaultIcon, X } from "lucide-solid";
 import { format, locale, t, type MessageKey } from "../../i18n";
 import { rovingKeydown } from "../../a11y/roving";
 import { setOverlay } from "../../state/ui";
@@ -28,7 +28,10 @@ export const SETTINGS_TABS: { id: TabId; icon: typeof Search }[] = [
 const LEGACY: Record<string, TabId> = { general: "you", workspace: "appearance", daily: "files", pet: "companion", mcp: "ai", modules: "features", developer: "advanced", sync: "vault" };
 
 const [tab, setTab] = createSignal<TabId>("you");
+/** Phones show the list of sections first; a section opens its own page. */
+const [mobileDetail, setMobileDetail] = createSignal(false);
 export function openSettings(at?: TabId | string): void {
+  setMobileDetail(!!at);
   if (at) setTab((LEGACY[at] ?? at) as TabId);
   setOverlay("settings");
 }
@@ -122,8 +125,8 @@ export function SettingsWindow() {
   );
 
   return (
-    <Modal title={t("footer-settings")} hideTitle onClose={close} class="settings-window">
-      <div class="settings-layout">
+    <Modal title={t("footer-settings")} hideTitle onClose={close} closeButton={false} class="settings-window">
+      <div class="settings-layout" classList={{ detail: mobileDetail() || !!query().trim() }}>
         <nav class="settings-nav" aria-label={t("settings-tabs-label")}>
           <div class="settings-search">
             <Search aria-hidden="true" />
@@ -140,7 +143,7 @@ export function SettingsWindow() {
                   tabIndex={tab() === x.id ? 0 : -1}
                   class="settings-tab"
                   title={tabLabel(x.id)}
-                  onClick={() => go(x.id)}
+                  onClick={() => { setMobileDetail(true); go(x.id); }}
                 >
                   <x.icon aria-hidden="true" />
                   <span>{tabLabel(x.id)}</span>
@@ -151,6 +154,7 @@ export function SettingsWindow() {
         </nav>
         <section id="settings-panel" class="settings-panel" role="tabpanel" aria-labelledby={results() ? undefined : `stab-${tab()}`} aria-label={results() ? t("settings-search") : undefined}>
           <header class="settings-panel-head">
+            <button class="icon-btn settings-back" title={t("action-back")} aria-label={t("action-back")} onClick={() => { setQuery(""); setMobileDetail(false); }}><ChevronLeft class="flip-rtl" aria-hidden="true" /></button>
             <h2 class="modal-title">{results() ? t("settings-results") : tabLabel(tab())}</h2>
             <button class="icon-btn" title={t("action-close")} aria-label={t("action-close")} onClick={close}><X /></button>
           </header>
