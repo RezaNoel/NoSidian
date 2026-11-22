@@ -1,5 +1,6 @@
 # Checks every push, and builds the Windows installer (.exe) and Android
-# package (.apk) for distribution. Run manually or by pushing a tag like v0.1.0.
+# package (.apk) for distribution. Run manually, or push a tag like v1.0.0:
+# a tag builds both and publishes them as a GitHub release.
 name: build
 
 on:
@@ -59,8 +60,8 @@ jobs:
 
   android-apk:
     needs: check
-    # Android is paused until further notice; run only when asked for explicitly.
-    if: github.event_name == 'workflow_dispatch' && inputs.android
+    # Built when asked for by hand, and for every release tag.
+    if: (github.event_name == 'workflow_dispatch' && inputs.android) || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04
     env:
       NDK_VERSION: 27.2.12479018
@@ -106,3 +107,19 @@ jobs:
         with:
           name: NoSidian-android-apk
           path: NoSidian*.apk
+
+  release:
+    needs: [windows-exe, android-apk]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

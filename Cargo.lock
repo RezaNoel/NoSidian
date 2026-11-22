@@ -2030,7 +2030,7 @@ checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 
 [[package]]
 name = "nosidian"
-version = "0.2.0"
+version = "1.0.0"
 dependencies = [
  "base64 0.22.1",
  "nosidian-core",
@@ -2046,7 +2046,7 @@ dependencies = [
 
 [[package]]
 name = "nosidian-core"
-version = "0.2.0"
+version = "1.0.0"
 dependencies = [
  "base64 0.22.1",
  "serde",
@@ -2058,7 +2058,7 @@ dependencies = [
 
 [[package]]
 name = "nosidian-i18n"
-version = "0.2.0"
+version = "1.0.0"
 dependencies = [
  "fluent-syntax",
  "thiserror 2.0.21",
