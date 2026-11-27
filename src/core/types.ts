@@ -719,6 +719,15 @@ export interface CinemaEntry {
   favoriteQuotes: string[];
   notes: string;
   linkedNotePath?: string;
+  /** Person note (vault path) who recommended it. */
+  recommendedBy?: string;
+  /** Where to buy, read or watch it. */
+  link?: string;
+  tags?: string[];
+  /** How many times finished again after the first time. */
+  repeats?: number;
+  /** Where to watch it (service or cinema). */
+  platform?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -750,6 +759,15 @@ export interface BookEntry {
   highlights: BookHighlight[];
   notes: string;
   linkedNotePath?: string;
+  /** Person note (vault path) who recommended it. */
+  recommendedBy?: string;
+  /** Where to buy, read or watch it. */
+  link?: string;
+  tags?: string[];
+  /** How many times finished again after the first time. */
+  repeats?: number;
+  /** Paper, e-book or audiobook. */
+  format?: 'paper' | 'ebook' | 'audio';
   createdAt: number;
   updatedAt: number;
 }

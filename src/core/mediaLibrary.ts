@@ -304,7 +304,7 @@ Core insight from ${book.title} :: Summarize the main takeaway in one clear sent
 `;
 }
 
-export function buildMediaNotePath(kind: 'movie' | 'book', title: string): string {
-  const folder = kind === 'movie' ? 'Movies' : 'Books';
+export function buildMediaNotePath(kind: 'movie' | 'book', title: string, folderOverride?: string): string {
+  const folder = (folderOverride ?? '').replace(/^\/+|\/+$/g, '') || (kind === 'movie' ? 'Movies' : 'Books');
   return `${folder}/${sanitizeMediaNoteSlug(title)}.md`;
 }

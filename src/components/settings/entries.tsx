@@ -9,7 +9,7 @@ import {
   Eye, FileClock, FilePlus, FileText, FolderOpen, Gauge, Hand, Image, Keyboard, Languages, LayoutPanelLeft, ListOrdered,
   MessageSquareText, Monitor, Music2, Palette, PanelTop, PartyPopper, Play, Plus, Rocket, RotateCcw, Ruler, ScanEye,
   Sparkles, SpellCheck, SquareRadical, Trash2, User, Vault as VaultIcon, Volume2, VolumeX, RefreshCw, Brackets, Type, Cake,
-  ListChecks,
+  ListChecks, Paperclip, Film, Link2,
 } from "lucide-solid";
 import { t, type MessageKey } from "../../i18n";
 import { LANGUAGES, type LanguageCode } from "../../i18n/languages";
@@ -153,6 +153,13 @@ function ModuleGrid() {
       </For>
     </div>
   );
+}
+
+/** Folder choices for a setting: the vault's folders plus the current value (even before it exists). */
+function folderOptions(current: string, withRoot = true): { value: string; label: string }[] {
+  const folders = new Set([...tree.folders]);
+  if (current) folders.add(current);
+  return [...(withRoot ? [{ value: "", label: t("files-root") }] : []), ...[...folders].sort().map((f) => ({ value: f, label: f }))];
 }
 
 // ---------- Appearance ----------
@@ -332,6 +339,11 @@ export const ENTRIES: Entry[] = [
   e("editor", AlignJustify, ["editor-line-height"], () => <Range label={t("editor-line-height")} value={pref("lineHeight")} min={1.2} max={2.4} step={0.1} show={(v) => v.toFixed(1)} onChange={(v) => setPref("lineHeight", v)} />, { tags: "spacing leading lines" }),
   e("editor", Ruler, ["editor-readable"], () => <Toggle label={t("editor-readable")} checked={pref("readableLine")} onChange={(v) => setPref("readableLine", v)} />, { tags: "width narrow column wide" }),
   e("editor", ListOrdered, ["editor-line-numbers"], () => <Toggle label={t("editor-line-numbers")} checked={pref("lineNumbers")} onChange={(v) => setPref("lineNumbers", v)} />, { tags: "gutter numbers" }),
+  e("editor", Link2, ["pref-link-style", "link-style-name", "link-style-card"], () => (
+    <Select<"name" | "card"> label={t("pref-link-style")} value={pref("linkStyle")}
+      options={[{ value: "name", label: t("link-style-name") }, { value: "card", label: t("link-style-card") }]}
+      onChange={(v) => setPref("linkStyle", v)} />
+  ), { tags: "link wikilink preview card embed note title" }),
   e("editor", CaseSensitive, ["pref-format-bar"], () => <PrefToggle k="formatBar" label={t("pref-format-bar")} />, { tags: "toolbar bold italic buttons formatting" }),
   e("editor", Brackets, ["pref-show-properties"], () => <PrefToggle k="showProperties" label={t("pref-show-properties")} />, { tags: "frontmatter yaml metadata properties" }),
   e("editor", Eye, ["pref-props-reader"], () => <PrefToggle k="propsInReader" label={t("pref-props-reader")} />, { tags: "frontmatter metadata reader preview" }),
@@ -355,6 +367,20 @@ export const ENTRIES: Entry[] = [
       options={[{ value: "", label: t("files-root") }, ...[...tree.folders].sort().map((f) => ({ value: f, label: f }))]}
       onChange={(v) => setPref("newNoteFolder", v)} />
   ), { tags: "folder location new note where" }),
+  e("files", Paperclip, ["pref-attachment-folder", "pref-attachment-mode", "attach-copy", "attach-move", "attach-link"], () => (
+    <>
+      <Select<string> label={t("pref-attachment-folder")} value={pref("attachmentFolder")} options={folderOptions(pref("attachmentFolder"))} onChange={(v) => setPref("attachmentFolder", v)} />
+      <Select<"copy" | "move" | "link"> label={t("pref-attachment-mode")} value={pref("attachmentMode")}
+        options={[{ value: "copy", label: t("attach-copy") }, { value: "move", label: t("attach-move") }, { value: "link", label: t("attach-link") }]}
+        onChange={(v) => setPref("attachmentMode", v)} />
+    </>
+  ), { tags: "image picture attachment paste drop folder copy move link assets" }),
+  e("files", Film, ["pref-media-books-folder", "pref-media-movies-folder"], () => (
+    <>
+      <Select<string> label={t("pref-media-books-folder")} value={pref("mediaBooksFolder")} options={folderOptions(pref("mediaBooksFolder"), false)} onChange={(v) => setPref("mediaBooksFolder", v)} />
+      <Select<string> label={t("pref-media-movies-folder")} value={pref("mediaMoviesFolder")} options={folderOptions(pref("mediaMoviesFolder"), false)} onChange={(v) => setPref("mediaMoviesFolder", v)} />
+    </>
+  ), { tags: "books movies films series cinema shelf folder" }),
   e("files", Trash2, ["files-confirm-delete"], () => <Toggle label={t("files-confirm-delete")} checked={pref("confirmDelete")} onChange={(v) => setPref("confirmDelete", v)} />, { tags: "delete trash remove confirm ask" }),
   e("files", FileClock, ["pref-history-auto"], () => <PrefToggle k="historyAuto" label={t("pref-history-auto")} />, { tags: "history versions snapshots backup undo" }),
   e("files", CalendarDays, ["daily-folder"], () => (

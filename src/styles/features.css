@@ -1082,3 +1082,28 @@ svg.star.on { color: #f5b83d; fill: #f5b83d; }
 .font-opt-name { font-size: 1.05em; max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .font-opt-sample { font-size: 0.85em; color: var(--text-muted); max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .font-load { align-self: flex-start; }
+
+/* Book, film and series notes: cover beside the title and the shelf details. */
+.media-hero {
+  display: flex; gap: 16px; align-items: stretch; margin: 10px 16px 0; padding: 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-lg); background: rgb(var(--l2) / 0.45);
+}
+.media-hero-cover {
+  flex: none; inline-size: 104px; aspect-ratio: 2 / 3; border-radius: var(--radius-md); overflow: hidden;
+  background: var(--cover); display: grid; place-items: center; box-shadow: 0 8px 22px rgb(0 0 0 / 0.28);
+}
+.media-hero-cover:not(.poster) { aspect-ratio: 3 / 4.4; }
+.media-hero-cover img { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+.media-hero-cover .cover-icon svg { inline-size: 34px; block-size: 34px; color: rgb(255 255 255 / 0.85); }
+.media-hero-body { display: flex; flex-direction: column; gap: 6px; min-inline-size: 0; flex: 1; justify-content: center; }
+.media-hero-title { font-size: 1.15em; line-height: 1.3; }
+.media-hero-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.media-hero-stars { display: inline-flex; gap: 1px; }
+.media-hero-stars .star { inline-size: 15px; block-size: 15px; color: var(--text-muted); }
+.media-hero-stars .star.on { color: #f5b301; fill: #f5b301; }
+.media-hero .meter { max-inline-size: 320px; }
+.media-hero-actions { gap: 6px; }
+@media (max-width: 560px) {
+  .media-hero { margin-inline: 10px; gap: 12px; }
+  .media-hero-cover { inline-size: 84px; }
+}

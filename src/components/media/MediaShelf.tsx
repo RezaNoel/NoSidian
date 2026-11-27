@@ -2,7 +2,7 @@
 // watching now with one-tap progress, a yearly reading goal, and a detail
 // panel for rating, dates, highlights or quotes, notes and the linked note.
 import { For, Show, createMemo, createResource, createSignal, type JSX } from "solid-js";
-import { ArrowDown, ArrowUp, BookOpen, BookmarkPlus, CheckCircle2, Clapperboard, FileText, Film, ImagePlus, Minus, Pencil, Plus, Quote, Search, Share2, Star, Target, Trash2, Trophy, Tv, X } from "lucide-solid";
+import { ArrowDown, Dices, ArrowUp, BookOpen, BookmarkPlus, CheckCircle2, Clapperboard, FileText, Film, ImagePlus, Minus, Pencil, Plus, Quote, Search, Share2, Star, Target, Trash2, Trophy, Tv, X } from "lucide-solid";
 import { shareImage } from "../../backend/share";
 import { blobUrl } from "../../lib/attachments";
 import { copyDroppedFiles } from "../../state/dropFiles";
@@ -12,6 +12,7 @@ import { addBookHighlight, computeBookProgressPercent, computeSeriesProgressPerc
 import type { BookEntry, BookReadStatus, CinemaEntry, CinemaWatchStatus } from "../../core/types";
 import { media, openMediaNote } from "../../state/media";
 import { newId } from "../../state/projects";
+import { createPerson, peoplePaths } from "../../state/people";
 import { askText, toast } from "../../state/ui";
 import { Modal } from "../Modal";
 import { openMenu, type MenuItem } from "../ContextMenu";
@@ -229,6 +230,43 @@ function AddEntry(props: { kind: Kind; onClose: () => void; onAdded: (id: string
   );
 }
 
+/** Who recommended it (a person note), a web link, where to watch or the book format, and tags. */
+function ExtraFields(props: { kind: Kind; e: Entry }) {
+  const save = (patch: Record<string, unknown>) => { const next = { ...copy(props.e) as object, ...patch, updatedAt: Date.now() }; if (props.kind === "books") setBook(next as BookEntry); else setMovie(next as CinemaEntry); };
+  const pickPerson = async (v: string) => {
+    if (v !== "__new") return save({ recommendedBy: v || undefined });
+    const name = await askText(t("media-person-new"), "", t("action-add"));
+    const path = name?.trim() ? await createPerson(name, false) : null;
+    if (path) save({ recommendedBy: path });
+  };
+  return (
+    <div class="form-grid">
+      <label class="field"><span>{t("media-recommended-label")}</span>
+        <select class="select" value={props.e.recommendedBy ?? ""} onChange={(ev) => void pickPerson(ev.currentTarget.value)}>
+          <option value="">{t("media-recommended-none")}</option>
+          <For each={peoplePaths()}>{(p) => <option value={p}>{p.split("/").pop()!.replace(/\.md$/i, "")}</option>}</For>
+          <Show when={props.e.recommendedBy && !peoplePaths().includes(props.e.recommendedBy)}><option value={props.e.recommendedBy}>{props.e.recommendedBy!.split("/").pop()!.replace(/\.md$/i, "")}</option></Show>
+          <option value="__new">{t("media-person-new")}</option>
+        </select>
+      </label>
+      <Show when={props.kind === "books"} fallback={
+        <label class="field"><span>{t("media-platform")}</span><input class="input" dir="auto" value={(props.e as CinemaEntry).platform ?? ""} onChange={(ev) => save({ platform: ev.currentTarget.value.trim() || undefined })} /></label>
+      }>
+        <label class="field"><span>{t("media-format")}</span>
+          <select class="select" value={(props.e as BookEntry).format ?? ""} onChange={(ev) => save({ format: (ev.currentTarget.value || undefined) as BookEntry["format"] })}>
+            <option value="">-</option>
+            <option value="paper">{t("media-format-paper")}</option>
+            <option value="ebook">{t("media-format-ebook")}</option>
+            <option value="audio">{t("media-format-audio")}</option>
+          </select>
+        </label>
+      </Show>
+      <label class="field"><span>{t("media-link")}</span><input class="input" type="url" dir="ltr" placeholder="https://" value={props.e.link ?? ""} onChange={(ev) => save({ link: ev.currentTarget.value.trim() || undefined })} /></label>
+      <label class="field"><span>{t("media-tags")}</span><input class="input" dir="auto" value={(props.e.tags ?? []).join(", ")} onChange={(ev) => save({ tags: ev.currentTarget.value.split(",").map((x) => x.trim().replace(/^#/, "")).filter(Boolean) })} /></label>
+    </div>
+  );
+}
+
 function BookDetail(props: { id: string; onClose: () => void }) {
   const b = () => media.state.books.find((x) => x.id === props.id);
   const [quote, setQuote] = createSignal("");
@@ -283,6 +321,7 @@ function BookDetail(props: { id: string; onClose: () => void }) {
               <label class="field"><span>{t("media-genre")}</span><input class="input" dir="auto" value={bk().genre} onChange={field("genre")} /></label>
               <label class="field"><span>{t("media-pages")}</span><input class="input num" type="number" min="1" value={bk().totalPages} onChange={field("totalPages")} /></label>
             </div>
+            <ExtraFields kind="books" e={bk()} />
             <label class="field"><span>{t("media-notes")}</span><textarea class="input" dir="auto" rows="3" value={bk().notes} onChange={field("notes")} /></label>
           </details>
         </Modal>
@@ -346,6 +385,7 @@ function MovieDetail(props: { id: string; onClose: () => void }) {
                 <label class="field"><span>{t("media-episodes-total")}</span><input class="input num" type="number" min="1" value={mv().episodesTotal} onChange={field("episodesTotal")} /></label>
               </Show>
             </div>
+            <ExtraFields kind="cinema" e={mv()} />
             <label class="field"><span>{t("media-notes")}</span><textarea class="input" dir="auto" rows="3" value={mv().notes} onChange={field("notes")} /></label>
           </details>
         </Modal>
@@ -497,6 +537,11 @@ export default function MediaShelf() {
           </For>
         </div>
         <label class="search-field"><Search aria-hidden="true" /><input class="input sm" type="search" dir="auto" placeholder={t("media-search")} aria-label={t("media-search")} value={q()} onInput={(e) => setQ(e.currentTarget.value)} /></label>
+        <button class="icon-btn" data-sound="pick" title={t("media-pick")} aria-label={t("media-pick")} onClick={() => {
+          const pool = kind() === "books" ? media.state.books.filter((b) => b.status === "to-read") : media.state.movies.filter((m) => m.status === "watchlist");
+          if (!pool.length) return toast(t("media-pick-empty"));
+          setOpen(pool[Math.floor(Math.random() * pool.length)].id);
+        }}><Dices /></button>
       </div>
 
       <Show when={filter() !== "best"} fallback={<BestList kind={kind()} open={setOpen} />}>

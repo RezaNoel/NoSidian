@@ -1404,6 +1404,30 @@ export interface MessageArgs {
   "theme-matrix": undefined;
   "theme-new": undefined;
   "pref-ui-sounds": undefined;
+  "pref-attachment-folder": undefined;
+  "pref-attachment-mode": undefined;
+  "attach-copy": undefined;
+  "attach-move": undefined;
+  "attach-link": undefined;
+  "pref-media-books-folder": undefined;
+  "pref-media-movies-folder": undefined;
+  "pref-link-style": undefined;
+  "link-style-name": undefined;
+  "link-style-card": undefined;
+  "media-recommended-by": { name: string | number };
+  "media-open-shelf": undefined;
+  "media-recommended-label": undefined;
+  "media-recommended-none": undefined;
+  "media-person-new": undefined;
+  "media-platform": undefined;
+  "media-format": undefined;
+  "media-format-paper": undefined;
+  "media-format-ebook": undefined;
+  "media-format-audio": undefined;
+  "media-link": undefined;
+  "media-tags": undefined;
+  "media-pick": undefined;
+  "media-pick-empty": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2811,5 +2835,29 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "theme-christmas",
   "theme-matrix",
   "theme-new",
-  "pref-ui-sounds"
+  "pref-ui-sounds",
+  "pref-attachment-folder",
+  "pref-attachment-mode",
+  "attach-copy",
+  "attach-move",
+  "attach-link",
+  "pref-media-books-folder",
+  "pref-media-movies-folder",
+  "pref-link-style",
+  "link-style-name",
+  "link-style-card",
+  "media-recommended-by",
+  "media-open-shelf",
+  "media-recommended-label",
+  "media-recommended-none",
+  "media-person-new",
+  "media-platform",
+  "media-format",
+  "media-format-paper",
+  "media-format-ebook",
+  "media-format-audio",
+  "media-link",
+  "media-tags",
+  "media-pick",
+  "media-pick-empty"
 ];

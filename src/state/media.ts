@@ -4,12 +4,14 @@ import { vaultDoc } from "./persist";
 import { normalizeMediaLibrary, buildMediaNotePath, generateBookNoteMarkdown, generateMovieNoteMarkdown } from "../core/mediaLibrary";
 import type { BookEntry, CinemaEntry, MediaLibraryState } from "../core/types";
 import { createNote, markdownPaths, openNote } from "./vault";
+import { pref } from "./prefs";
 
 export const media = vaultDoc<MediaLibraryState>("media", () => ({ movies: [], books: [] }));
 export const normalizeMedia = (raw: Partial<MediaLibraryState> | null) => normalizeMediaLibrary(raw);
 
 export async function openMediaNote(kind: "movie" | "book", entry: CinemaEntry | BookEntry): Promise<void> {
-  const path = entry.linkedNotePath && markdownPaths().includes(entry.linkedNotePath) ? entry.linkedNotePath : buildMediaNotePath(kind, entry.title);
+  const folder = (kind === "movie" ? pref("mediaMoviesFolder") : pref("mediaBooksFolder")).trim();
+  const path = entry.linkedNotePath && markdownPaths().includes(entry.linkedNotePath) ? entry.linkedNotePath : buildMediaNotePath(kind, entry.title, folder);
   if (!markdownPaths().includes(path)) {
     const body = kind === "movie" ? generateMovieNoteMarkdown(entry as CinemaEntry) : generateBookNoteMarkdown(entry as BookEntry);
     const folder = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : undefined;

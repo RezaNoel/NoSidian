@@ -12,6 +12,7 @@ import { vault } from "./state/vault";
 import { BannerSettings } from "./components/Banner";
 import { ContextMenu, installContextMenuGuard, installSelectEnhancer } from "./components/ContextMenu";
 import { installUiSounds } from "./state/uiSound";
+import "./state/mediaSync";
 import { Dialogs } from "./components/Dialogs";
 import { Modal } from "./components/Modal";
 import { Onboarding } from "./components/Onboarding";

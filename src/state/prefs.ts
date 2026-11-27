@@ -57,6 +57,8 @@ export interface Prefs {
   /** Folders read as the book and the film/series shelves. */
   mediaBooksFolder: string;
   mediaMoviesFolder: string;
+  /** Folder holding one note per person (the people network). */
+  peopleFolder: string;
 }
 
 export const DEFAULT_PREFS: Prefs = {
@@ -99,6 +101,7 @@ export const DEFAULT_PREFS: Prefs = {
   attachmentMode: "copy",
   mediaBooksFolder: "Books",
   mediaMoviesFolder: "Movies",
+  peopleFolder: "People",
 };
 
 const LIMITS: Partial<Record<keyof Prefs, [number, number]>> = {

@@ -45,6 +45,7 @@ const RULES: [string, Kind][] = [
   ["[data-sound=start]", "start"],
   ["[data-sound=stop]", "stop"],
   ["[data-sound=open]", "open"],
+  ["[data-sound=pick]", "pick"],
   ["[data-sound]", "tap"],
   [".theme-tile, .swatch, .accent-dot", "pick"],
   [".settings-tab, .mnav-btn, .sheet-item, .ribbon button", "open"],
