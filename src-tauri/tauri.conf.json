@@ -55,7 +55,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMzRTQwMjMzOTVDQkZBOTkKUldTWitzdVZNd0xrdzVjL0xEZ2svOTJNRWlXM3g5cUI3V2t5Mi9FdVZwOVVlbXVLYnZERzRTbmwK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDFBRTJBOTAyRUU0REMxNEIKUldSTHdVM3VBcW5pR29LMFRmWHJoSnVPcG80bzVWZzZaSWZCanl1U0JBM0FoVnp2cUNJczh6OFEK",
       "endpoints": [
         "https://github.com/RezaNoel/NoSidian/releases/latest/download/latest.json"
       ],
