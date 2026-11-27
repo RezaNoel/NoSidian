@@ -2046,7 +2046,7 @@ dependencies = [
 
 [[package]]
 name = "nosidian-core"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "base64 0.22.1",
  "serde",
@@ -2058,7 +2058,7 @@ dependencies = [
 
 [[package]]
 name = "nosidian-i18n"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "fluent-syntax",
  "thiserror 2.0.21",
