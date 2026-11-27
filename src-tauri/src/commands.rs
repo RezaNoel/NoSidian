@@ -359,9 +359,12 @@ pub fn reveal_in_os(state: State<'_, AppState>, path: String) -> CmdResult<()> {
     let target = if path.trim().is_empty() { root } else { notes::resolve(&root, &path)? };
     #[cfg(target_os = "windows")]
     let r = {
-        let mut arg = std::ffi::OsString::from("/select,");
-        arg.push(&target);
-        std::process::Command::new("explorer").arg(arg).spawn()
+        // Explorer needs the path quoted exactly as one raw argument (paths with spaces
+        // otherwise open the parent folder without selecting the file), and no \\?\ prefix.
+        use std::os::windows::process::CommandExt;
+        let clean = target.to_string_lossy().replace("/", "\\");
+        let clean = clean.strip_prefix("\\\\?\\").unwrap_or(&clean).to_string();
+        std::process::Command::new("explorer").raw_arg(format!("/select,\"{clean}\"")).spawn()
     };
     #[cfg(target_os = "macos")]
     let r = std::process::Command::new("open").arg("-R").arg(&target).spawn();
