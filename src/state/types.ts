@@ -4,11 +4,21 @@ import type { LanguageCode } from "../i18n/languages";
 
 export type ThemeId =
   | "obsidian-slate" | "midnight-carbon" | "nord-arctic"
-  | "catppuccin-mocha" | "paper-daylight" | "warm-parchment";
+  | "catppuccin-mocha" | "paper-daylight" | "warm-parchment"
+  | "christmas" | "matrix";
 export const THEMES: ThemeId[] = [
   "obsidian-slate", "midnight-carbon", "nord-arctic",
   "catppuccin-mocha", "paper-daylight", "warm-parchment",
+  "christmas", "matrix",
 ];
+/** Themes that show a "new" badge, and the last day (inclusive) they show it. */
+export const NEW_THEMES: Partial<Record<ThemeId, string>> = { christmas: "2026-12-10", matrix: "2026-12-10" };
+export function themeIsNew(id: ThemeId, now = new Date()): boolean {
+  const until = NEW_THEMES[id];
+  if (!until) return false;
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return today <= until;
+}
 
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
 export type UseCase = "study-languages" | "writing" | "projects-coding" | "general";

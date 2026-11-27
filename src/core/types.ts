@@ -20,7 +20,9 @@ export type ThemeId =
   | 'nord-arctic'
   | 'catppuccin-mocha'
   | 'paper-daylight'
-  | 'warm-parchment';
+  | 'warm-parchment'
+  | 'christmas'
+  | 'matrix';
 
 export type ViewMode = 'editor' | 'split' | 'preview' | 'mindmap' | 'kanban';
 export type MainSurface = 'workspace' | 'dashboard' | 'projects' | 'media';

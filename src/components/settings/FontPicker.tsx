@@ -1,6 +1,7 @@
 // Font chooser: one searchable list of the fonts that ship with NoSidian and
 // the fonts installed on this computer. Every name is shown in its own face.
-import { For, Show, createMemo, createSignal } from "solid-js";
+import { For, Show, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { Portal } from "solid-js/web";
 import { ChevronDown } from "lucide-solid";
 import { t } from "../../i18n";
 import { GOOGLE_FONTS_CATALOG, bundledFontOptions, fontFamilyOf, normalizeFontValue, querySystemFonts, type FontOption } from "../../core/fonts";
@@ -15,6 +16,7 @@ export function FontPicker(props: {
   onChange: (v: string) => void;
 }) {
   const [open, setOpen] = createSignal(false);
+  let anchor!: HTMLButtonElement;
   const [query, setQuery] = createSignal("");
   const [system, setSystem] = createSignal<string[] | null>(null);
   const [loading, setLoading] = createSignal(false);
@@ -50,14 +52,37 @@ export function FontPicker(props: {
 
   return (
     <div class="font-picker">
-      <button type="button" class="input font-current" aria-label={`${props.label}: ${shownName()}`} aria-expanded={open()} aria-haspopup="listbox"
+      <button ref={anchor} type="button" class="input font-current" aria-label={`${props.label}: ${shownName()}`} aria-expanded={open()} aria-haspopup="listbox"
         onClick={() => setOpen((o) => !o)}>
         <span class="font-current-name" style={{ "font-family": shownFace() }}>{shownName()}</span>
         <ChevronDown aria-hidden="true" />
       </button>
       <Show when={open()}>
-        <div class="font-panel glass-soft">
-          <input class="input sm" type="search" dir="auto" value={query()} placeholder={t("font-search")} aria-label={t("font-search")}
+        <Portal>
+        <div class="font-scrim" onClick={() => setOpen(false)} />
+        <div class="font-panel glass-modal" ref={(el) => {
+          // Opens as its own floating panel (not inside the settings row): under the
+          // button when there is room, above it otherwise; a bottom sheet on phones.
+          const place = () => {
+            const phone = window.innerWidth < 768;
+            el.classList.toggle("sheet-mode", phone);
+            if (phone) { el.style.cssText = ""; return; }
+            const r = anchor.getBoundingClientRect();
+            const w = Math.min(Math.max(r.width, 300), window.innerWidth - 16);
+            const left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8));
+            const below = window.innerHeight - r.bottom - 12;
+            const above = r.top - 12;
+            const h = Math.min(460, Math.max(below, above));
+            el.style.left = `${left}px`;
+            el.style.width = `${w}px`;
+            el.style.maxHeight = `${h}px`;
+            if (below >= Math.min(320, above)) { el.style.top = `${r.bottom + 4}px`; el.style.bottom = ""; }
+            else { el.style.bottom = `${window.innerHeight - r.top + 4}px`; el.style.top = ""; }
+          };
+          onMount(() => { place(); window.addEventListener("resize", place); });
+          onCleanup(() => window.removeEventListener("resize", place));
+        }}>
+          <input class="input sm" type="search" dir="auto" value={query()} placeholder={t("font-search")} aria-label={t("font-search")} autofocus
             onInput={(e) => setQuery(e.currentTarget.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") { e.preventDefault(); const f = firstMatch(); if (f) pick(f.value); else if (props.allowDefault && !q()) pick(""); }
@@ -87,6 +112,7 @@ export function FontPicker(props: {
             <button type="button" class="btn sm font-load" disabled={loading()} onClick={() => void loadSystem()}>{t("font-load-system")}</button>
           </Show>
         </div>
+        </Portal>
       </Show>
     </div>
   );

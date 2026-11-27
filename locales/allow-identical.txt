@@ -91,3 +91,10 @@ it:startup-dashboard
 de:widget-plugin
 pt-BR:widget-plugin
 it:widget-plugin
+# Theme name used as a proper noun
+de:theme-matrix
+es:theme-matrix
+fr:theme-matrix
+it:theme-matrix
+pt-BR:theme-matrix
+tr:theme-matrix

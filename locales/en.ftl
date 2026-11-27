@@ -55,12 +55,12 @@ radius-soft = Soft
 experience-beginner = Beginner (essential)
 experience-intermediate = Intermediate
 experience-advanced = Advanced (power user)
-theme-obsidian-slate = Obsidian Slate
-theme-midnight-carbon = Midnight Carbon
-theme-nord-arctic = Nord Arctic
-theme-catppuccin-mocha = Catppuccin Mocha
-theme-paper-daylight = Paper Daylight
-theme-warm-parchment = Warm Parchment
+theme-obsidian-slate = Slate
+theme-midnight-carbon = Carbon
+theme-nord-arctic = Arctic
+theme-catppuccin-mocha = Mocha
+theme-paper-daylight = Daylight
+theme-warm-parchment = Parchment
 
 ## Status and announcements
 status-no-vault = No vault open
@@ -1445,3 +1445,7 @@ font-group-system = On this computer
 font-load-system = Show fonts on this computer
 font-none = No font matches your search.
 more-customize = Choose tools
+theme-christmas = Christmas
+theme-matrix = Matrix
+theme-new = New
+pref-ui-sounds = Button sounds

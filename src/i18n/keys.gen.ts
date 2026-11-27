@@ -1400,6 +1400,10 @@ export interface MessageArgs {
   "font-load-system": undefined;
   "font-none": undefined;
   "more-customize": undefined;
+  "theme-christmas": undefined;
+  "theme-matrix": undefined;
+  "theme-new": undefined;
+  "pref-ui-sounds": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2803,5 +2807,9 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "font-group-system",
   "font-load-system",
   "font-none",
-  "more-customize"
+  "more-customize",
+  "theme-christmas",
+  "theme-matrix",
+  "theme-new",
+  "pref-ui-sounds"
 ];

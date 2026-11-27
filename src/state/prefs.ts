@@ -46,6 +46,17 @@ export interface Prefs {
   terminalShell: string;
   /** Command id → shortcut ("Mod+K"); "" means unbound. Only overrides are stored. */
   hotkeys: Record<string, string>;
+  /** Short click sounds on important buttons. */
+  uiSounds: boolean;
+  /** How a bare link to another note shows in reading view: its name, or a preview card. */
+  linkStyle: "name" | "card";
+  /** Where pasted or dropped attachments are stored ("" = vault root). */
+  attachmentFolder: string;
+  /** Files from outside the vault: copy them in, move them in, or keep a link to where they are. */
+  attachmentMode: "copy" | "move" | "link";
+  /** Folders read as the book and the film/series shelves. */
+  mediaBooksFolder: string;
+  mediaMoviesFolder: string;
 }
 
 export const DEFAULT_PREFS: Prefs = {
@@ -82,6 +93,12 @@ export const DEFAULT_PREFS: Prefs = {
   dailyTasks: true,
   terminalShell: "powershell",
   hotkeys: {},
+  uiSounds: true,
+  linkStyle: "name",
+  attachmentFolder: "",
+  attachmentMode: "copy",
+  mediaBooksFolder: "Books",
+  mediaMoviesFolder: "Movies",
 };
 
 const LIMITS: Partial<Record<keyof Prefs, [number, number]>> = {
@@ -94,6 +111,8 @@ const ENUMS: Partial<Record<keyof Prefs, readonly string[]>> = {
   startup: ["last", "empty", "daily"],
   editorDefaultMode: ["editor", "split", "reader", "mindmap", "kanban"],
   terminalShell: ["powershell", "cmd", "bash", "sh"],
+  linkStyle: ["name", "card"],
+  attachmentMode: ["copy", "move", "link"],
 };
 
 /** Validate one stored value against the default's type and limits. */

@@ -80,6 +80,22 @@
   --shadow: 0 12px 30px rgb(68 52 32 / 0.14);
   --mesh-1: #f4c27a; --mesh-2: #e8a0a0; --mesh-3: #b7d3a8;
 }
+[data-theme="christmas"] {
+  --bg-primary: #0c1d15; --l1: 18 40 29; --l2: 30 60 43; --l3: 16 35 26;
+  --text-primary: #f6f0e4; --text-secondary: #d6cbb5; --text-muted: #a79c86;
+  --border: rgb(246 240 228 / 0.13); --border-strong: rgb(246 240 228 / 0.26);
+  --hover: rgb(246 240 228 / 0.08); --specular: rgb(255 255 255 / 0.10);
+  --shadow: 0 14px 36px rgb(0 0 0 / 0.5);
+  --mesh-1: #b3122e; --mesh-2: #1d7a45; --mesh-3: #d9a441;
+}
+[data-theme="matrix"] {
+  --bg-primary: #020803; --l1: 6 20 9; --l2: 11 36 16; --l3: 5 17 8;
+  --text-primary: #c9f7c4; --text-secondary: #8fd88a; --text-muted: #63a75e;
+  --border: rgb(0 255 65 / 0.16); --border-strong: rgb(0 255 65 / 0.3);
+  --hover: rgb(0 255 65 / 0.08); --specular: rgb(180 255 190 / 0.08);
+  --shadow: 0 14px 36px rgb(0 0 0 / 0.7);
+  --mesh-1: #00a82d; --mesh-2: #004d14; --mesh-3: #0b6b2a;
+}
 :root, [data-theme] {
   --bg-secondary: rgb(var(--l1) / var(--glass-opacity));
   --bg-tertiary: rgb(var(--l2) / var(--glass-surface));

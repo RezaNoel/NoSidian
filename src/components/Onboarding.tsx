@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-solid";
 import { locale, t } from "../i18n";
 import { LANGUAGES } from "../i18n/languages";
 import { settings, updateSettings } from "../state/settings";
-import { THEMES, type ExperienceLevel, type UseCase } from "../state/types";
+import { THEMES, themeIsNew, type ExperienceLevel, type UseCase } from "../state/types";
 import { Choice, GlassPreview, Toggle, changeLanguage, changeTheme } from "./controls";
 import { VaultPicker } from "./VaultPicker";
 import { Logo } from "./Logo";
@@ -91,6 +91,7 @@ export function Onboarding(props: { onFinish: () => void }) {
                         <input type="radio" name="ob-theme" checked={settings.appearance.theme === th} onChange={() => changeTheme(th)} />
                         <span class="swatch-preview" aria-hidden="true"><i /><i /><i /></span>
                         <span class="swatch-name">{t(`theme-${th}`)}</span>
+                        <Show when={themeIsNew(th)}><span class="new-badge">{t("theme-new")}</span></Show>
                       </label>
                     )}
                   </For>

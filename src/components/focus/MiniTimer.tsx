@@ -13,8 +13,8 @@ export function MiniTimer() {
         <span class="ring-label" dir="auto">{currentBlock()?.kind === "break" ? t("focus-break") : t("focus-focus")}</span>
       </div>
       <div class="row">
-        <Show when={timerRunning()} fallback={<button class="icon-btn" aria-label={t("focus-start")} title={t("focus-start")} onClick={startTimer}><Play /></button>}>
-          <button class="icon-btn" aria-label={t("focus-pause")} title={t("focus-pause")} onClick={pauseTimer}><Pause /></button>
+        <Show when={timerRunning()} fallback={<button class="icon-btn" data-sound="start" aria-label={t("focus-start")} title={t("focus-start")} onClick={startTimer}><Play /></button>}>
+          <button class="icon-btn" data-sound="stop" aria-label={t("focus-pause")} title={t("focus-pause")} onClick={pauseTimer}><Pause /></button>
         </Show>
         <button class="icon-btn" aria-label={t("focus-skip")} title={t("focus-skip")} onClick={skipBlock}><SkipForward class="flip-rtl" /></button>
         <button class="icon-btn" aria-label={t("focus-reset")} title={t("focus-reset")} onClick={resetTimer}><RotateCcw /></button>

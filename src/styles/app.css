@@ -802,3 +802,15 @@ label.btn:focus-within { box-shadow: var(--focus-ring); }
 .date-day.sel { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .date-day:focus-visible { box-shadow: var(--focus-ring); outline: none; }
 .date-pop-foot { display: flex; justify-content: center; margin-block-start: 6px; }
+
+/* Theme picker: names in full (one word each), "new" badge on new themes. */
+.theme-name, .theme-swatches .swatch-name { overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; text-align: center; }
+.theme-tile, .swatch { position: relative; }
+.new-badge {
+  position: absolute; inset-block-start: -7px; inset-inline-end: -4px; z-index: 1;
+  padding: 1px 6px; border-radius: 999px; font-size: 0.66em; font-weight: 700; line-height: 1.5;
+  background: var(--accent); color: var(--accent-ink, #fff); box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+}
+@media (max-width: 767px) {
+  html:not([data-desktop]) .theme-grid { grid-auto-flow: row; grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 14px; }
+}

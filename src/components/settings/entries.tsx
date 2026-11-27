@@ -24,7 +24,7 @@ import { profile, updateProfile } from "../../state/workspace";
 import { setOverlay } from "../../state/ui";
 import { tree } from "../../state/vault";
 import { personal } from "../../state/personal";
-import { THEMES, type Density, type ExperienceLevel, type FocusProfile, type ModuleId, type RadiusScale, type ThemeId } from "../../state/types";
+import { THEMES, themeIsNew, type Density, type ExperienceLevel, type FocusProfile, type ModuleId, type RadiusScale, type ThemeId } from "../../state/types";
 import { Toggle, changeLanguage, changeTheme } from "../controls";
 import { CssSettings, McpSettings, PetSettings, PluginSettings, PrefToggle, ShellSettings, VaultTools } from "./advanced";
 import { Hotkeys } from "./hotkeys";
@@ -166,6 +166,8 @@ const THEME_SWATCH: Record<ThemeId, [string, string, string]> = {
   "catppuccin-mocha": ["#151522", "#2b2c44", "#cdd6f4"],
   "paper-daylight": ["#edf1f8", "#ffffff", "#141720"],
   "warm-parchment": ["#f2ead8", "#fcf7ec", "#31261b"],
+  christmas: ["#0c1d15", "#b3122e", "#f6f0e4"],
+  matrix: ["#020803", "#0b3a14", "#00ff41"],
 };
 
 function ThemePicker() {
@@ -180,6 +182,7 @@ function ThemePicker() {
               <i style={{ background: THEME_SWATCH[id][2] }} />
             </span>
             <span class="theme-name">{t(`theme-${id}`)}</span>
+            <Show when={themeIsNew(id)}><span class="new-badge">{t("theme-new")}</span></Show>
           </button>
         )}
       </For>
@@ -278,6 +281,7 @@ export const ENTRIES: Entry[] = [
   e("you", MessageSquareText, ["personal-greet"], () => (
     <Toggle label={t("personal-greet")} checked={personal.state.greet} onChange={(v) => personal.update((p) => { p.greet = v; })} />
   ), { tags: "welcome hello greeting message" }),
+  e("you", Volume2, ["pref-ui-sounds"], () => <PrefToggle k="uiSounds" label={t("pref-ui-sounds")} />, { tags: "sound click effect button audio feedback" }),
 
   // Appearance
   e("appearance", undefined, ["field-theme", ...THEMES.map((x) => `theme-${x}` as MessageKey)], () => <ThemePicker />, { tags: "dark light color colour mode night", wide: true }),

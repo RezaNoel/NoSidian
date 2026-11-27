@@ -21,7 +21,7 @@
 
 /* Onboarding theme picker: three per row instead of six squeezed into one line. */
 @media (max-width: 767px) {
-  html:not([data-desktop]) .theme-swatches { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row; }
+  html:not([data-desktop]) .theme-swatches { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: row; row-gap: 12px; }
   html:not([data-desktop]) .theme-swatches .swatch-name { white-space: normal; text-align: center; }
 }
 

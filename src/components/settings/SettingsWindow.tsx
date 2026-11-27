@@ -11,10 +11,10 @@ import { ENTRIES, type Entry, type TabId } from "./entries";
 
 export const SETTINGS_TABS: { id: TabId; icon: typeof Search }[] = [
   { id: "you", icon: User },
+  { id: "features", icon: Blocks },
   { id: "appearance", icon: Palette },
   { id: "editor", icon: FileText },
   { id: "files", icon: FolderTree },
-  { id: "features", icon: Blocks },
   { id: "calendar", icon: CalendarDays },
   { id: "companion", icon: PawPrint },
   { id: "hotkeys", icon: Keyboard },
