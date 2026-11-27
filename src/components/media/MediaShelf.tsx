@@ -193,13 +193,14 @@ function AddEntry(props: { kind: Kind; onClose: () => void; onAdded: (id: string
   const [series, setSeries] = createSignal(false);
   const [year, setYear] = createSignal("");
   const [status, setStatus] = createSignal<string>(props.kind === "books" ? "to-read" : "watchlist");
+  const [rec, setRec] = createSignal("");
   const add = () => {
     const now = Date.now();
     if (props.kind === "books") {
-      const b: BookEntry = { id: newId("book"), title: title().trim(), author: by().trim(), status: "to-read", currentPage: 0, totalPages: Math.max(1, size()), genre: genre().trim(), rating: 0, highlights: [], notes: "", createdAt: now, updatedAt: now };
+      const b: BookEntry = { id: newId("book"), title: title().trim(), author: by().trim(), status: "to-read", currentPage: 0, totalPages: Math.max(1, size()), genre: genre().trim(), rating: 0, highlights: [], notes: "", recommendedBy: rec() || undefined, createdAt: now, updatedAt: now };
       setBook(b); setBookStatus(b, status() as BookReadStatus); props.onAdded(b.id);
     } else {
-      const m: CinemaEntry = { id: newId("mov"), title: title().trim(), mediaType: series() ? "series" : "movie", status: "watchlist", director: by().trim(), year: year().trim(), genre: genre().trim(), runtimeMin: 0, episodesWatched: 0, episodesTotal: series() ? Math.max(1, size()) : 1, rating: 0, favoriteQuotes: [], notes: "", createdAt: now, updatedAt: now };
+      const m: CinemaEntry = { id: newId("mov"), title: title().trim(), mediaType: series() ? "series" : "movie", status: "watchlist", director: by().trim(), year: year().trim(), genre: genre().trim(), runtimeMin: 0, episodesWatched: 0, episodesTotal: series() ? Math.max(1, size()) : 1, rating: 0, favoriteQuotes: [], notes: "", recommendedBy: rec() || undefined, createdAt: now, updatedAt: now };
       setMovie(m); setMovieStatus(m, status() as CinemaWatchStatus); props.onAdded(m.id);
     }
     props.onClose();
@@ -220,6 +221,14 @@ function AddEntry(props: { kind: Kind; onClose: () => void; onAdded: (id: string
           <Show when={props.kind === "books"}><label class="field"><span>{t("media-pages")}</span><input class="input num" type="number" min="1" value={size()} onInput={(e) => setSize(Number(e.currentTarget.value) || 1)} /></label></Show>
           <Show when={props.kind === "cinema"}><label class="field"><span>{t("media-year")}</span><input class="input num" inputmode="numeric" value={year()} onInput={(e) => setYear(e.currentTarget.value)} /></label></Show>
           <Show when={props.kind === "cinema" && series()}><label class="field"><span>{t("media-episodes-total")}</span><input class="input num" type="number" min="1" value={size()} onInput={(e) => setSize(Number(e.currentTarget.value) || 1)} /></label></Show>
+          <Show when={peoplePaths().length}>
+            <label class="field"><span>{t("media-recommended-label")}</span>
+              <select class="select" value={rec()} onChange={(e) => setRec(e.currentTarget.value)}>
+                <option value="">{t("media-recommended-none")}</option>
+                <For each={peoplePaths()}>{(p) => <option value={p}>{p.split("/").pop()!.replace(/\.md$/i, "")}</option>}</For>
+              </select>
+            </label>
+          </Show>
         </div>
         <div class="segmented" role="radiogroup" aria-label={t("media-status")}>
           <For each={props.kind === "books" ? BOOK_STATUSES : MOVIE_STATUSES}>{(s) => <button type="button" role="radio" aria-checked={status() === s} onClick={() => setStatus(s)}>{statusLabel(props.kind, s)}</button>}</For>

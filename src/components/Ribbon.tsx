@@ -2,7 +2,7 @@
 // enabled. Drag a tool to reorder; right-click to choose which tools show.
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { hasTitleBar } from "./TitleBar";
-import { Blocks, Brain, CalendarDays, CloudSun, Settings as SettingsIcon, Command, FileSearch, Film, FolderKanban, LayoutDashboard, Network, PanelLeft, PanelRight, PawPrint, RotateCcw, Terminal, Timer } from "lucide-solid";
+import { Blocks, Brain, CalendarDays, CloudSun, Settings as SettingsIcon, Command, FileSearch, Film, FolderKanban, LayoutDashboard, Network, PanelLeft, PanelRight, PawPrint, RotateCcw, Terminal, Timer, Users } from "lucide-solid";
 import { t, type MessageKey } from "../i18n";
 import { rovingKeydown } from "../a11y/roving";
 import { enabledModules } from "../state/modules";
@@ -40,6 +40,7 @@ export const TOOLS: Tool[] = [
   { key: "ribbon-daily-note", icon: CalendarDays, module: "daily-calendar", run: () => void openDailyNote(new Date()) },
   { key: "ribbon-focus", icon: Timer, module: "zen-focus", run: () => void openView("zen") },
   { key: "ribbon-media", icon: Film, module: "media-shelf", run: () => void openView("media") },
+  { key: "ribbon-people", icon: Users, module: "people", run: () => void openView("people") },
   { key: "ribbon-terminal", icon: Terminal, module: "integrated-terminal", desktopOnly: true, run: () => window.dispatchEvent(new CustomEvent("nosidian:terminal")) },
   { key: "pet-studio", icon: PawPrint, module: "companion-pet", run: () => window.dispatchEvent(new CustomEvent("nosidian:pet")) },
 ];

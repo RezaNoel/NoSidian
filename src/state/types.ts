@@ -26,7 +26,7 @@ export type RadiusScale = "sharp" | "balanced" | "soft";
 export type Density = "compact" | "comfortable";
 
 export type ModuleId =
-  | "dashboard" | "flashcards" | "media-shelf" | "knowledge-graph" | "mindmap"
+  | "dashboard" | "flashcards" | "media-shelf" | "people" | "knowledge-graph" | "mindmap"
   | "kanban" | "slides" | "daily-calendar" | "recent-files" | "pdf-support"
   | "zen-focus" | "ambient-effects" | "companion-pet" | "project-mode"
   | "dependency-graph" | "integrated-terminal" | "mcp-bridge"

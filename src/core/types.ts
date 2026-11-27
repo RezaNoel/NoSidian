@@ -269,7 +269,13 @@ export type DashboardWidgetType =
   | 'watchlist'
   | 'writing-goal'
   | 'quick-capture'
-  | 'countdown';
+  | 'countdown'
+  | 'kanban'
+  | 'open-tasks'
+  | 'people'
+  | 'random-note'
+  | 'para'
+  | 'zettel';
 
 export interface DashboardShortcutItem {
   id: string;

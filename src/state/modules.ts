@@ -14,6 +14,7 @@ export const MODULE_MIN_LEVEL: Record<ModuleId, ExperienceLevel> = {
   dashboard: "intermediate",
   flashcards: "intermediate",
   "media-shelf": "intermediate",
+  people: "intermediate",
   "knowledge-graph": "intermediate",
   mindmap: "intermediate",
   kanban: "intermediate",

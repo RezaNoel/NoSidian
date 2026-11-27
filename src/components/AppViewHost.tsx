@@ -12,6 +12,7 @@ const GraphView = lazy(() => import("./graph/GraphView"));
 const Flashcards = lazy(() => import("./flashcards/Flashcards"));
 const Projects = lazy(() => import("./projects/Projects"));
 const MediaShelf = lazy(() => import("./media/MediaShelf"));
+const People = lazy(() => import("./people/People"));
 /** Old saved "app:zen" tabs close and open the Zen page instead. */
 function ZenRedirect(props: { path: string }) {
   queueMicrotask(() => { closeTab(props.path); setZenPage(true); });
@@ -29,6 +30,7 @@ export function AppViewHost(props: { path: string }) {
           <Match when={viewOf(props.path) === "flashcards"}><Flashcards /></Match>
           <Match when={viewOf(props.path) === "projects"}><Projects /></Match>
           <Match when={viewOf(props.path) === "media"}><MediaShelf /></Match>
+          <Match when={viewOf(props.path) === "people"}><People /></Match>
           <Match when={viewOf(props.path) === "zen"}><ZenRedirect path={props.path} /></Match>
         </Switch>
       </Suspense>

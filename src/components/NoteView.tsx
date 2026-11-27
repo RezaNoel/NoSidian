@@ -28,6 +28,7 @@ import { AppViewHost } from "./AppViewHost";
 import { FormatBar } from "./FormatBar";
 import { Properties } from "./Properties";
 import { MediaNoteHero } from "./media/MediaNoteHero";
+import { PersonNoteHero } from "./people/PersonNoteHero";
 
 setNoteSource(() => (activePath() ? contents[activePath()!] ?? null : null));
 
@@ -117,7 +118,7 @@ function NoteBody(props: { path: string }) {
       <Show when={/\.pdf$/i.test(path)} fallback={
         <>
           <Show when={editing() && pref("formatBar")}><FormatBar /></Show>
-          <Show when={mode() !== "mindmap" && mode() !== "kanban"}><MediaNoteHero path={path} /></Show>
+          <Show when={mode() !== "mindmap" && mode() !== "kanban"}><MediaNoteHero path={path} /><PersonNoteHero path={path} /></Show>
           <div class="panes" data-mode={mode()}>
             <Switch>
               <Match when={mode() === "editor"}><EditorPane path={path} /></Match>

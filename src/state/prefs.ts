@@ -59,6 +59,10 @@ export interface Prefs {
   mediaMoviesFolder: string;
   /** Folder holding one note per person (the people network). */
   peopleFolder: string;
+  /** Note-taking method the app helps with: PARA folders, Zettelkasten notes, or neither. */
+  pkmMethod: "none" | "para" | "zettel";
+  /** Folder for Zettelkasten notes. */
+  zettelFolder: string;
 }
 
 export const DEFAULT_PREFS: Prefs = {
@@ -102,6 +106,8 @@ export const DEFAULT_PREFS: Prefs = {
   mediaBooksFolder: "Books",
   mediaMoviesFolder: "Movies",
   peopleFolder: "People",
+  pkmMethod: "none",
+  zettelFolder: "Zettelkasten",
 };
 
 const LIMITS: Partial<Record<keyof Prefs, [number, number]>> = {
@@ -116,6 +122,7 @@ const ENUMS: Partial<Record<keyof Prefs, readonly string[]>> = {
   terminalShell: ["powershell", "cmd", "bash", "sh"],
   linkStyle: ["name", "card"],
   attachmentMode: ["copy", "move", "link"],
+  pkmMethod: ["none", "para", "zettel"],
 };
 
 /** Validate one stored value against the default's type and limits. */

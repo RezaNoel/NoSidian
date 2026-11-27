@@ -9,7 +9,7 @@ import {
   Eye, FileClock, FilePlus, FileText, FolderOpen, Gauge, Hand, Image, Keyboard, Languages, LayoutPanelLeft, ListOrdered,
   MessageSquareText, Monitor, Music2, Palette, PanelTop, PartyPopper, Play, Plus, Rocket, RotateCcw, Ruler, ScanEye,
   Sparkles, SpellCheck, SquareRadical, Trash2, User, Vault as VaultIcon, Volume2, VolumeX, RefreshCw, Brackets, Type, Cake,
-  ListChecks, Paperclip, Film, Link2,
+  ListChecks, Paperclip, Film, Link2, Users, Network,
 } from "lucide-solid";
 import { t, type MessageKey } from "../../i18n";
 import { LANGUAGES, type LanguageCode } from "../../i18n/languages";
@@ -18,6 +18,7 @@ import { stopSpeaking } from "../../a11y/speech";
 import { formatDailyName } from "../../lib/dates";
 import { MODULE_MIN_LEVEL, enabledModules } from "../../state/modules";
 import { settings, updateSettings } from "../../state/settings";
+import { setupPara } from "../../state/pkm";
 import { pref, setPref, type DefaultMode, type StartupScreen } from "../../state/prefs";
 import { commandById } from "../../state/commands";
 import { profile, updateProfile } from "../../state/workspace";
@@ -115,6 +116,7 @@ const MODULE_LABEL: Record<ModuleId, MessageKey> = {
   dashboard: "ribbon-dashboard",
   flashcards: "ribbon-flashcards",
   "media-shelf": "ribbon-media",
+  people: "ribbon-people",
   "knowledge-graph": "ribbon-graph",
   mindmap: "ribbon-mindmap",
   kanban: "ribbon-kanban",
@@ -381,6 +383,19 @@ export const ENTRIES: Entry[] = [
       <Select<string> label={t("pref-media-movies-folder")} value={pref("mediaMoviesFolder")} options={folderOptions(pref("mediaMoviesFolder"), false)} onChange={(v) => setPref("mediaMoviesFolder", v)} />
     </>
   ), { tags: "books movies films series cinema shelf folder" }),
+  e("files", Users, ["pref-people-folder"], () => (
+    <Select<string> label={t("pref-people-folder")} value={pref("peopleFolder")} options={folderOptions(pref("peopleFolder"), false)} onChange={(v) => setPref("peopleFolder", v)} />
+  ), { tags: "people persons contacts network friends folder" }),
+  e("files", Network, ["pref-pkm-method", "pref-pkm-method-hint"], () => (
+    <>
+      <Select<"none" | "para" | "zettel"> label={t("pref-pkm-method")} hint={t("pref-pkm-method-hint")} value={pref("pkmMethod")}
+        options={[{ value: "none", label: t("pkm-none") }, { value: "para", label: t("pkm-para") }, { value: "zettel", label: t("pkm-zettel") }]}
+        onChange={(v) => { setPref("pkmMethod", v); if (v === "para") void setupPara(); }} />
+      <Show when={pref("pkmMethod") === "zettel"}>
+        <Select<string> label={t("pref-zettel-folder")} value={pref("zettelFolder")} options={folderOptions(pref("zettelFolder"), false)} onChange={(v) => setPref("zettelFolder", v)} />
+      </Show>
+    </>
+  ), { tags: "para zettelkasten projects areas resources archive method organize pkm" }),
   e("files", Trash2, ["files-confirm-delete"], () => <Toggle label={t("files-confirm-delete")} checked={pref("confirmDelete")} onChange={(v) => setPref("confirmDelete", v)} />, { tags: "delete trash remove confirm ask" }),
   e("files", FileClock, ["pref-history-auto"], () => <PrefToggle k="historyAuto" label={t("pref-history-auto")} />, { tags: "history versions snapshots backup undo" }),
   e("files", CalendarDays, ["daily-folder"], () => (

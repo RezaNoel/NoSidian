@@ -1428,6 +1428,80 @@ export interface MessageArgs {
   "media-tags": undefined;
   "media-pick": undefined;
   "media-pick-empty": undefined;
+  "view-people": undefined;
+  "ribbon-people": undefined;
+  "people-new": undefined;
+  "people-search": undefined;
+  "people-empty": undefined;
+  "people-pick": undefined;
+  "people-photo": undefined;
+  "people-open-note": undefined;
+  "people-open-link": undefined;
+  "people-contact": undefined;
+  "people-traits": undefined;
+  "people-add-trait": undefined;
+  "people-connections": undefined;
+  "people-add-connection": undefined;
+  "people-places": undefined;
+  "people-add-place": undefined;
+  "people-recommended": undefined;
+  "people-mentioned-in": undefined;
+  "people-no-mentions": undefined;
+  "people-field-relation": undefined;
+  "people-field-birthday": undefined;
+  "people-field-phone": undefined;
+  "people-field-email": undefined;
+  "people-field-address": undefined;
+  "people-field-city": undefined;
+  "people-field-work": undefined;
+  "people-field-website": undefined;
+  "people-field-instagram": undefined;
+  "people-field-telegram": undefined;
+  "people-field-whatsapp": undefined;
+  "people-field-x": undefined;
+  "people-field-linkedin": undefined;
+  "people-field-github": undefined;
+  "widget-kanban": undefined;
+  "widget-kanban-pick": undefined;
+  "widget-kanban-new": undefined;
+  "widget-open-tasks": undefined;
+  "widget-open-tasks-count": { n: string | number };
+  "widget-open-tasks-none": undefined;
+  "widget-people": undefined;
+  "widget-people-today": undefined;
+  "widget-people-in-days": { n: string | number };
+  "widget-random-note": undefined;
+  "widget-random-another": undefined;
+  "widget-para": undefined;
+  "widget-para-intro": undefined;
+  "widget-para-setup": undefined;
+  "para-projects": undefined;
+  "para-areas": undefined;
+  "para-resources": undefined;
+  "para-archive": undefined;
+  "widget-zettel": undefined;
+  "widget-zettel-placeholder": undefined;
+  "widget-zettel-count": { n: string | number; orphans: string | number };
+  "widget-zettel-refresh": undefined;
+  "widget-cat-pkm": undefined;
+  "menu-copy-link-as": undefined;
+  "copy-link-wiki": undefined;
+  "copy-link-markdown": undefined;
+  "copy-link-embed": undefined;
+  "copy-link-vault": undefined;
+  "copy-link-relative": undefined;
+  "copy-link-absolute": undefined;
+  "copy-link-file-url": undefined;
+  "copy-link-name": undefined;
+  "menu-move-para": undefined;
+  "cmd-new-zettel": undefined;
+  "pref-people-folder": undefined;
+  "pref-pkm-method": undefined;
+  "pref-pkm-method-hint": undefined;
+  "pkm-none": undefined;
+  "pkm-para": undefined;
+  "pkm-zettel": undefined;
+  "pref-zettel-folder": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2859,5 +2933,79 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "media-link",
   "media-tags",
   "media-pick",
-  "media-pick-empty"
+  "media-pick-empty",
+  "view-people",
+  "ribbon-people",
+  "people-new",
+  "people-search",
+  "people-empty",
+  "people-pick",
+  "people-photo",
+  "people-open-note",
+  "people-open-link",
+  "people-contact",
+  "people-traits",
+  "people-add-trait",
+  "people-connections",
+  "people-add-connection",
+  "people-places",
+  "people-add-place",
+  "people-recommended",
+  "people-mentioned-in",
+  "people-no-mentions",
+  "people-field-relation",
+  "people-field-birthday",
+  "people-field-phone",
+  "people-field-email",
+  "people-field-address",
+  "people-field-city",
+  "people-field-work",
+  "people-field-website",
+  "people-field-instagram",
+  "people-field-telegram",
+  "people-field-whatsapp",
+  "people-field-x",
+  "people-field-linkedin",
+  "people-field-github",
+  "widget-kanban",
+  "widget-kanban-pick",
+  "widget-kanban-new",
+  "widget-open-tasks",
+  "widget-open-tasks-count",
+  "widget-open-tasks-none",
+  "widget-people",
+  "widget-people-today",
+  "widget-people-in-days",
+  "widget-random-note",
+  "widget-random-another",
+  "widget-para",
+  "widget-para-intro",
+  "widget-para-setup",
+  "para-projects",
+  "para-areas",
+  "para-resources",
+  "para-archive",
+  "widget-zettel",
+  "widget-zettel-placeholder",
+  "widget-zettel-count",
+  "widget-zettel-refresh",
+  "widget-cat-pkm",
+  "menu-copy-link-as",
+  "copy-link-wiki",
+  "copy-link-markdown",
+  "copy-link-embed",
+  "copy-link-vault",
+  "copy-link-relative",
+  "copy-link-absolute",
+  "copy-link-file-url",
+  "copy-link-name",
+  "menu-move-para",
+  "cmd-new-zettel",
+  "pref-people-folder",
+  "pref-pkm-method",
+  "pref-pkm-method-hint",
+  "pkm-none",
+  "pkm-para",
+  "pkm-zettel",
+  "pref-zettel-folder"
 ];

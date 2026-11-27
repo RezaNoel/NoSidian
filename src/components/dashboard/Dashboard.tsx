@@ -5,7 +5,7 @@ import { For, Match, Show, Switch, createMemo, createResource, createSignal, onM
 import {
   ArrowLeft, ArrowRight, BarChart3, Blocks, BookOpen, Brain, CalendarCheck, CalendarDays, CalendarHeart, Check, Clapperboard, Code2, Download, FilePlus2, FileText, FolderOpen,
   GraduationCap, Hash, History, Hourglass, Image, Inbox, KanbanSquare, Layers, LayoutGrid, ListChecks, Network, PawPrint, PenLine, Pencil, Plus, SquareTerminal,
-  Star, StickyNote, Tags, Timer, Trash2, Upload, X, Zap,
+  Folders, ListTodo, Shuffle, Star, StickyNote, Tags, Timer, Trash2, Upload, Users, X, Zap,
 } from "lucide-solid";
 import { locale, t } from "../../i18n";
 import { backend } from "../../backend";
@@ -28,6 +28,7 @@ import { PRESET_SRC } from "../Banner";
 import { CalendarPanel } from "../Calendar";
 import { CountdownWidget } from "./Countdown";
 import { PluginWidget } from "./PluginWidget";
+import { KanbanWidget, OpenTasksWidget, ParaWidget, PeopleWidget, RandomNoteWidget, ZettelWidget } from "./MoreWidgets";
 import { dev } from "../../state/devtools";
 import { promptNewNote } from "../FileTree";
 import { MiniTimer } from "../focus/MiniTimer";
@@ -41,6 +42,7 @@ const WIDGET_ICON: Record<DashboardWidgetType, IconC> = {
   cover: Image, "deadline-hero": Hourglass, stats: BarChart3, "recent-notes": History, todos: ListChecks, calendar: CalendarDays, shortcuts: Zap,
   scratchpad: StickyNote, "project-spotlight": KanbanSquare, "pet-home": PawPrint, "flashcard-queue": Layers, "pomodoro-timer": Timer, "starred-notes": Star,
   "tag-explorer": Hash, "reading-shelf": BookOpen, watchlist: Clapperboard, "writing-goal": PenLine, "quick-capture": Inbox, countdown: CalendarHeart, plugin: Blocks,
+  kanban: KanbanSquare, "open-tasks": ListTodo, people: Users, "random-note": Shuffle, para: Folders, zettel: Network,
 };
 const SHORTCUT_ICON: Record<DashboardShortcutItem["actionType"], IconC> = {
   note: FileText, folder: FolderOpen, daily: CalendarCheck, flashcards: Brain, graph: Network, "new-note": FilePlus2, projects: KanbanSquare, media: Clapperboard, terminal: SquareTerminal,
@@ -242,6 +244,12 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
         </ul>
       </Match>
       <Match when={w().type === "pet-home"}><PetCard compact /></Match>
+      <Match when={w().type === "kanban"}><KanbanWidget w={w()} edit={props.edit} /></Match>
+      <Match when={w().type === "open-tasks"}><OpenTasksWidget /></Match>
+      <Match when={w().type === "people"}><PeopleWidget /></Match>
+      <Match when={w().type === "random-note"}><RandomNoteWidget /></Match>
+      <Match when={w().type === "para"}><ParaWidget /></Match>
+      <Match when={w().type === "zettel"}><ZettelWidget /></Match>
     </Switch>
   );
 }
