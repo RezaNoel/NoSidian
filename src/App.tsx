@@ -1,5 +1,6 @@
 // Root: boots into the first-launch wizard or straight into the last vault.
 import { petEvent, petWelcome, startPetTalk } from "./state/petTalk";
+import { HoverPreview } from "./components/HoverPreview";
 import { For, Match, Show, Switch, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
 import { t } from "./i18n";
 import { LiveAnnouncer } from "./a11y/announcer";
@@ -104,6 +105,7 @@ export function App() {
       </Switch>
       <Show when={overlay() === "settings"}><SettingsWindow /></Show>
       <Show when={phase() === "workspace" && vault()}>
+        <HoverPreview />
         <Show when={overlay() === "switcher"}><QuickSwitcher /></Show>
         <Show when={overlay() === "palette"}><CommandPalette /></Show>
       </Show>

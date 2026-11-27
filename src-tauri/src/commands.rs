@@ -373,6 +373,61 @@ pub fn reveal_in_os(state: State<'_, AppState>, path: String) -> CmdResult<()> {
     r.map(|_| ()).map_err(internal)
 }
 
+/// Move files from outside the vault into `folder` (copy, then remove the original).
+#[tauri::command]
+pub fn files_move_in(state: State<'_, AppState>, sources: Vec<PathBuf>, folder: String) -> CmdResult<Vec<String>> {
+    let root = active_root(&state)?;
+    let added = files::import(&root, &sources, &folder)?;
+    // Only remove an original once its copy exists inside the vault.
+    for (src, rel) in sources.iter().zip(added.iter()) {
+        if notes::resolve(&root, rel).map(|p| p.exists()).unwrap_or(false) {
+            let _ = std::fs::remove_file(src);
+        }
+    }
+    let refs: Vec<&str> = added.iter().map(String::as_str).collect();
+    touch_index(&state, &root, &refs);
+    Ok(added)
+}
+
+/// Open a file outside the vault (a linked attachment) with its default app.
+#[tauri::command]
+pub fn open_external_file(path: PathBuf) -> CmdResult<()> {
+    if !path.is_absolute() || !path.exists() {
+        return Err(CommandError { code: "not-found", detail: path.to_string_lossy().into_owned() });
+    }
+    #[cfg(target_os = "windows")]
+    let r = {
+        use std::os::windows::process::CommandExt;
+        let clean = path.to_string_lossy().replace("/", "\\");
+        std::process::Command::new("explorer").raw_arg(format!("\"{clean}\"")).spawn()
+    };
+    #[cfg(target_os = "macos")]
+    let r = std::process::Command::new("open").arg(&path).spawn();
+    #[cfg(all(unix, not(target_os = "macos")))]
+    let r = std::process::Command::new("xdg-open").arg(&path).spawn();
+    r.map(|_| ()).map_err(internal)
+}
+
+/// Title and channel of a YouTube video (oEmbed JSON), for video cards in notes.
+/// Only YouTube video ids are accepted, so this can't be used to fetch anything else.
+#[tauri::command]
+pub async fn youtube_info(id: String) -> CmdResult<String> {
+    if id.len() != 11 || !id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
+        return Err(CommandError { code: "invalid-path", detail: id });
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let url = format!("https://www.youtube.com/oembed?format=json&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D{id}");
+        ureq::get(&url)
+            .timeout(std::time::Duration::from_secs(12))
+            .call()
+            .map_err(internal)?
+            .into_string()
+            .map_err(internal)
+    })
+    .await
+    .map_err(internal)?
+}
+
 /// Absolute filesystem path of a vault entry, for "copy location".
 #[tauri::command]
 pub fn entry_abs_path(state: State<'_, AppState>, path: String) -> CmdResult<String> {

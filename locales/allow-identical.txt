@@ -118,3 +118,17 @@ fr:pkm-zettel
 it:pkm-zettel
 pt-BR:pkm-zettel
 tr:pkm-zettel
+de:prop-type-text
+fr:prop-type-date
+fr:prop-type-image
+de:prop-type-list
+tr:prop-type-list
+de:callout-info
+fr:callout-note
+fr:callout-info
+fr:callout-important
+fr:callout-question
+fr:callout-danger
+fr:player-volume
+it:player-volume
+pt-BR:player-volume

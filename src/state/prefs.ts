@@ -63,6 +63,8 @@ export interface Prefs {
   pkmMethod: "none" | "para" | "zettel";
   /** Folder for Zettelkasten notes. */
   zettelFolder: string;
+  /** A bare YouTube link in a note: a player that plays in the note, or a card that opens YouTube. */
+  youtubeStyle: "player" | "card";
 }
 
 export const DEFAULT_PREFS: Prefs = {
@@ -108,6 +110,7 @@ export const DEFAULT_PREFS: Prefs = {
   peopleFolder: "People",
   pkmMethod: "none",
   zettelFolder: "Zettelkasten",
+  youtubeStyle: "player",
 };
 
 const LIMITS: Partial<Record<keyof Prefs, [number, number]>> = {
@@ -123,6 +126,7 @@ const ENUMS: Partial<Record<keyof Prefs, readonly string[]>> = {
   linkStyle: ["name", "card"],
   attachmentMode: ["copy", "move", "link"],
   pkmMethod: ["none", "para", "zettel"],
+  youtubeStyle: ["player", "card"],
 };
 
 /** Validate one stored value against the default's type and limits. */

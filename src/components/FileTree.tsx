@@ -16,7 +16,7 @@ import { askConfirm, askText, isMobile, setDrawer, toast } from "../state/ui";
 import type { NoteSummary, SortMode } from "../state/types";
 import { openMenu } from "./ContextMenu";
 import { Dynamic } from "solid-js/web";
-import { HoverPreview, hoverRow, leaveRow } from "./HoverPreview";
+import { hoverRow, leaveRow } from "./HoverPreview";
 import { ENTRY_ICONS, EntryStyleDialog, entryStyle, openEntryStyle } from "./EntryStyle";
 import { pref } from "../state/prefs";
 import { copyDroppedFiles, hasOsFiles } from "../state/dropFiles";
@@ -295,7 +295,6 @@ export function FileTree() {
   return (
     <div class="panel files-panel">
       <EntryStyleDialog />
-      <HoverPreview />
       <div class="panel-head tools-only" onContextMenu={areaMenu}>
         <h2 class="sr-only">{t("tab-files")}</h2>
         <div class="panel-tools" role="toolbar" aria-label={t("tab-files")}>

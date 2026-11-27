@@ -12,6 +12,12 @@ import { openPdfAt } from "../state/pdf";
 import { Properties } from "./Properties";
 import { mountPlayer } from "./MediaPlayer";
 import { embedDroppedFiles, hasOsFiles } from "../state/dropFiles";
+import { backend } from "../backend";
+import { hoverRow, leaveRow } from "./HoverPreview";
+import { linkCards, makeResizable, tableTools, youtubeEmbeds } from "./readerExtras";
+
+type ReaderCtx = { path: string; editable: boolean; get: () => string; set: (text: string) => void };
+const ctxOf = new WeakMap<HTMLElement, ReaderCtx>();
 
 // Players mounted into rendered Markdown, per reader, disposed on re-render.
 const players = new WeakMap<HTMLElement, (() => void)[]>();
@@ -113,7 +119,8 @@ async function renderEmbeds(root: HTMLElement, from: string, depth: number, top:
         img.tabIndex = 0;
         const w = /^(\d+)(?:x(\d+))?$/.exec(size);
         if (w) img.style.width = `${w[1]}px`;
-        node = img;
+        const ctx = root === top ? ctxOf.get(top) : undefined;
+        node = ctx ? makeResizable(img, target, ctx) : img;
       } else {
         node = document.createElement("div");
         node.className = "media-embed";
@@ -131,6 +138,10 @@ async function renderEmbeds(root: HTMLElement, from: string, depth: number, top:
 
 function enhance(root: HTMLElement, path: string) {
   disposePlayers(root);
+  const ctx = ctxOf.get(root);
+  linkCards(root);
+  youtubeEmbeds(root);
+  if (ctx) tableTools(root, ctx);
   for (const b of root.querySelectorAll<HTMLButtonElement>(".code-copy")) {
     b.textContent = t("action-copy");
     b.setAttribute("aria-label", t("action-copy"));
@@ -164,7 +175,16 @@ export function Reader(props: { path: string; source?: () => string; readOnly?: 
   let el!: HTMLElement;
   const text = () => (props.source ? props.source() : contents[props.path] ?? "");
   const html = createMemo(() => renderMarkdown(text(), { breaks: !pref("strictBreaks") }));
-  createEffect(on(html, () => queueMicrotask(() => el && enhance(el, props.path))));
+  createEffect(on(html, () => queueMicrotask(() => {
+    if (!el) return;
+    ctxOf.set(el, { path: props.path, editable: !props.readOnly && !props.source, get: () => contents[props.path] ?? "", set: (v) => setContent(props.path, v) });
+    enhance(el, props.path);
+  })));
+  const onMove = (e: MouseEvent) => {
+    const a = (e.target as HTMLElement).closest<HTMLElement>("a.wikilink[data-target]");
+    const p = a ? resolveLink((a.dataset.target ?? "").split("#")[0], markdownPaths()) : null;
+    if (p) hoverRow(e, p); else leaveRow();
+  };
   onCleanup(() => el && disposePlayers(el));
   const dir = () => "auto" as const;
 
@@ -197,6 +217,11 @@ export function Reader(props: { path: string; source?: () => string; readOnly?: 
     if (/^https?:/i.test(href)) {
       e.preventDefault();
       window.open(href, "_blank", "noopener");
+    } else if (/^file:/i.test(href)) {
+      // A file linked where it is, outside the vault.
+      e.preventDefault();
+      const abs = decodeURIComponent(href.replace(/^file:\/+/i, ""));
+      void backend.openExternalFile(/^[a-z]:/i.test(abs) ? abs : `/${abs}`).catch(() => toast(t("embed-missing", { name: abs.split(/[\\/]/).pop() ?? abs }), true));
     } else if (href.startsWith("#")) {
       e.preventDefault();
     }
@@ -231,7 +256,7 @@ export function Reader(props: { path: string; source?: () => string; readOnly?: 
   return (
     <div class="reader-wrap" onDragOver={onDragOver} onDrop={(e) => void onDrop(e)}>
       {pref("propsInReader") && !props.source && <Properties path={props.path} readOnly />}
-      <article ref={el} class="reader markdown-body" dir={dir()} aria-label={t("mode-reader")} innerHTML={html()} onClick={onClick} onKeyDown={onKey} onChange={onChange} tabIndex={0} />
+      <article ref={el} class="reader markdown-body" dir={dir()} aria-label={t("mode-reader")} innerHTML={html()} onClick={onClick} onKeyDown={onKey} onChange={onChange} onMouseMove={onMove} onMouseLeave={leaveRow} tabIndex={0} />
     </div>
   );
 }

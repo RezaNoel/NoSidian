@@ -20,6 +20,7 @@ export function MediaPlayer(props: { kind: "audio" | "video"; src: string; name:
   const [dur, setDur] = createSignal(0);
   const [muted, setMuted] = createSignal(false);
   const [speed, setSpeed] = createSignal(1);
+  const [volume, setVolume] = createSignal(1);
   const toggle = () => (media.paused ? void media.play().catch(() => undefined) : media.pause());
   const skip = (d: number) => { media.currentTime = Math.max(0, Math.min(dur() || 0, media.currentTime + d)); };
   const nextSpeed = () => {
@@ -50,7 +51,7 @@ export function MediaPlayer(props: { kind: "audio" | "video"; src: string; name:
         onTimeUpdate={() => setTime(media.currentTime)}
         onLoadedMetadata={() => setDur(media.duration)}
         onDurationChange={() => setDur(media.duration)}
-        onVolumeChange={() => setMuted(media.muted)}
+        onVolumeChange={() => { setMuted(media.muted); setVolume(media.volume); }}
         onClick={toggle}
         onDblClick={full}
       />
@@ -76,9 +77,13 @@ export function MediaPlayer(props: { kind: "audio" | "video"; src: string; name:
         />
         <span class="mp-time">{fmt(dur())}</span>
         <button class="mp-speed" aria-label={t("player-speed")} title={t("player-speed")} onClick={nextSpeed}>{speed()}×</button>
-        <button class="icon-btn" aria-label={muted() ? t("player-unmute") : t("player-mute")} onClick={() => (media.muted = !media.muted)}>
-          <Show when={muted()} fallback={<Volume2 />}><VolumeX /></Show>
-        </button>
+        <span class="mp-volume">
+          <button class="icon-btn" aria-label={muted() ? t("player-unmute") : t("player-mute")} onClick={() => (media.muted = !media.muted)}>
+            <Show when={muted() || volume() === 0} fallback={<Volume2 />}><VolumeX /></Show>
+          </button>
+          <input class="range mp-vol" type="range" min="0" max="1" step="0.05" value={muted() ? 0 : volume()} aria-label={t("player-volume")}
+            onInput={(e) => { const v = Number(e.currentTarget.value); media.volume = v; media.muted = v === 0; }} />
+        </span>
         <Show when={props.kind === "video"}>
           <button class="icon-btn" aria-label={t("player-fullscreen")} title={t("player-fullscreen")} onClick={full}><Maximize2 /></button>
         </Show>

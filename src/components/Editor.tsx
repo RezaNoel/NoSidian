@@ -142,6 +142,41 @@ export function applyFormat(kind: FormatKind): boolean {
   return true;
 }
 
+/** Turn the selected lines into a callout of `type` (or change the type of the callout already there). */
+export function applyCallout(type: string): boolean {
+  const view = activeView;
+  if (!view) return false;
+  const lines = new Set<number>();
+  for (const r of view.state.selection.ranges) for (let l = view.state.doc.lineAt(r.from).number; l <= view.state.doc.lineAt(r.to).number; l++) lines.add(l);
+  const nums = [...lines].sort((a, b) => a - b);
+  const first = view.state.doc.line(nums[0]);
+  const head = /^> \[!([\w-]+)\][+-]?/.exec(first.text);
+  if (head) {
+    view.dispatch({ changes: { from: first.from + 4, to: first.from + 4 + head[1].length, insert: type } });
+  } else {
+    const changes = nums.map((n, i) => {
+      const line = view.state.doc.line(n);
+      const cur = /^> /.exec(line.text)?.[0] ?? "";
+      return { from: line.from, to: line.from + cur.length, insert: i === 0 ? `> [!${type}] ` : "> " };
+    });
+    view.dispatch({ changes });
+  }
+  view.focus();
+  return true;
+}
+
+/** Insert text at the cursor on its own line (attachments, embeds). */
+export function insertBlockAtCursor(md: string): boolean {
+  const view = activeView;
+  if (!view || !md) return false;
+  const at = view.state.selection.main.head;
+  const line = view.state.doc.lineAt(at);
+  const insert = `${at > line.from ? "\n" : ""}${md}${at < line.to ? "\n" : ""}`;
+  view.dispatch({ changes: { from: at, insert }, selection: { anchor: at + insert.length } });
+  view.focus();
+  return true;
+}
+
 /** Imperative handle used by the outline panel. */
 let activeView: EditorView | null = null;
 export function editorGotoLine(line: number): boolean {

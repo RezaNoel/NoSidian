@@ -225,6 +225,17 @@ export const memoryBackend: VaultBackend = {
   async importFiles() {
     return [];
   },
+  async attachFiles() {
+    return null;
+  },
+  async openExternalFile() {},
+  async youtubeInfo(id: string) {
+    try {
+      const r = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}`);
+      const j = (await r.json()) as { title?: string; author_name?: string };
+      return j.title ? { title: j.title, author: j.author_name ?? "" } : null;
+    } catch { return null; }
+  },
   async saveText(name, content) {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([content], { type: "text/plain" }));

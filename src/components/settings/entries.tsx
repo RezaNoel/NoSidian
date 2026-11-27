@@ -341,6 +341,11 @@ export const ENTRIES: Entry[] = [
   e("editor", AlignJustify, ["editor-line-height"], () => <Range label={t("editor-line-height")} value={pref("lineHeight")} min={1.2} max={2.4} step={0.1} show={(v) => v.toFixed(1)} onChange={(v) => setPref("lineHeight", v)} />, { tags: "spacing leading lines" }),
   e("editor", Ruler, ["editor-readable"], () => <Toggle label={t("editor-readable")} checked={pref("readableLine")} onChange={(v) => setPref("readableLine", v)} />, { tags: "width narrow column wide" }),
   e("editor", ListOrdered, ["editor-line-numbers"], () => <Toggle label={t("editor-line-numbers")} checked={pref("lineNumbers")} onChange={(v) => setPref("lineNumbers", v)} />, { tags: "gutter numbers" }),
+  e("editor", Play, ["pref-youtube-style", "pref-youtube-style-hint"], () => (
+    <Select<"player" | "card"> label={t("pref-youtube-style")} hint={t("pref-youtube-style-hint")} value={pref("youtubeStyle")}
+      options={[{ value: "player", label: t("youtube-style-player") }, { value: "card", label: t("youtube-style-card") }]}
+      onChange={(v) => setPref("youtubeStyle", v)} />
+  ), { tags: "youtube video embed player card link" }),
   e("editor", Link2, ["pref-link-style", "link-style-name", "link-style-card"], () => (
     <Select<"name" | "card"> label={t("pref-link-style")} value={pref("linkStyle")}
       options={[{ value: "name", label: t("link-style-name") }, { value: "card", label: t("link-style-card") }]}

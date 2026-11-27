@@ -1502,6 +1502,60 @@ export interface MessageArgs {
   "pkm-para": undefined;
   "pkm-zettel": undefined;
   "pref-zettel-folder": undefined;
+  "tags-filter": undefined;
+  "tags-sort-count": undefined;
+  "tags-sort-name": undefined;
+  "tags-show-all": { n: string | number };
+  "props-type": { type: string | number };
+  "props-choose-image": undefined;
+  "prop-type-text": undefined;
+  "prop-type-number": undefined;
+  "prop-type-checkbox": undefined;
+  "prop-type-date": undefined;
+  "prop-type-list": undefined;
+  "prop-type-tags": undefined;
+  "prop-type-link": undefined;
+  "prop-type-url": undefined;
+  "prop-type-image": undefined;
+  "fmt-attach": undefined;
+  "callout-note": undefined;
+  "callout-info": undefined;
+  "callout-tip": undefined;
+  "callout-important": undefined;
+  "callout-success": undefined;
+  "callout-question": undefined;
+  "callout-warning": undefined;
+  "callout-danger": undefined;
+  "callout-bug": undefined;
+  "callout-example": undefined;
+  "callout-quote": undefined;
+  "callout-abstract": undefined;
+  "callout-todo": undefined;
+  "callout-failure": undefined;
+  "yt-play": undefined;
+  "yt-open": undefined;
+  "pref-youtube-style": undefined;
+  "pref-youtube-style-hint": undefined;
+  "youtube-style-player": undefined;
+  "youtube-style-card": undefined;
+  "img-resize": undefined;
+  "player-volume": undefined;
+  "table-row": undefined;
+  "table-column": undefined;
+  "table-edit-cell": undefined;
+  "table-insert-file": undefined;
+  "table-row-above": undefined;
+  "table-row-below": undefined;
+  "table-row-delete": undefined;
+  "table-col-left": undefined;
+  "table-col-right": undefined;
+  "table-col-delete": undefined;
+  "table-align-left": undefined;
+  "table-align-center": undefined;
+  "table-align-right": undefined;
+  "table-sort-asc": undefined;
+  "table-sort-desc": undefined;
+  "table-delete": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -3007,5 +3061,59 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "pkm-none",
   "pkm-para",
   "pkm-zettel",
-  "pref-zettel-folder"
+  "pref-zettel-folder",
+  "tags-filter",
+  "tags-sort-count",
+  "tags-sort-name",
+  "tags-show-all",
+  "props-type",
+  "props-choose-image",
+  "prop-type-text",
+  "prop-type-number",
+  "prop-type-checkbox",
+  "prop-type-date",
+  "prop-type-list",
+  "prop-type-tags",
+  "prop-type-link",
+  "prop-type-url",
+  "prop-type-image",
+  "fmt-attach",
+  "callout-note",
+  "callout-info",
+  "callout-tip",
+  "callout-important",
+  "callout-success",
+  "callout-question",
+  "callout-warning",
+  "callout-danger",
+  "callout-bug",
+  "callout-example",
+  "callout-quote",
+  "callout-abstract",
+  "callout-todo",
+  "callout-failure",
+  "yt-play",
+  "yt-open",
+  "pref-youtube-style",
+  "pref-youtube-style-hint",
+  "youtube-style-player",
+  "youtube-style-card",
+  "img-resize",
+  "player-volume",
+  "table-row",
+  "table-column",
+  "table-edit-cell",
+  "table-insert-file",
+  "table-row-above",
+  "table-row-below",
+  "table-row-delete",
+  "table-col-left",
+  "table-col-right",
+  "table-col-delete",
+  "table-align-left",
+  "table-align-center",
+  "table-align-right",
+  "table-sort-asc",
+  "table-sort-desc",
+  "table-delete"
 ];
