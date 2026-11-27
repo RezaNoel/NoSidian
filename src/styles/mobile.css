@@ -81,3 +81,13 @@
   html:not([data-desktop]) .media-detail .form-grid { grid-template-columns: minmax(0, 1fr); }
   html:not([data-desktop]) .media-detail .progress-line { justify-content: space-between; }
 }
+
+/* Settings pages never scroll sideways on phones: tiles and rows shrink and wrap. */
+@media (max-width: 767px) {
+  html:not([data-desktop]) .settings-scroll { overflow-x: hidden; }
+  html:not([data-desktop]) .module-grid { grid-template-columns: minmax(0, 1fr); }
+  html:not([data-desktop]) .module-tile { min-inline-size: 0; }
+  html:not([data-desktop]) .module-tile span { min-inline-size: 0; overflow-wrap: anywhere; }
+  html:not([data-desktop]) .settings-panel,
+  html:not([data-desktop]) .settings-panel * { max-inline-size: 100%; }
+}
