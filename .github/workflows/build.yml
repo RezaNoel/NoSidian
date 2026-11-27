@@ -89,18 +89,13 @@ jobs:
       - run: npm ci
       - run: npx tauri android init --ci
       - name: Compile every Android library against SDK 36
-        # tauri-android needs 36, and plugins such as sharekit still pin 35.
+        # tauri-android needs 36, and the sharekit plugin still pins 35.
         run: |
-          cat >> src-tauri/gen/android/build.gradle.kts <<'KTS'
-
-          subprojects {
-              plugins.withId("com.android.library") {
-                  afterEvaluate {
-                      extensions.configure<com.android.build.gradle.LibraryExtension>("android") { compileSdk = 36 }
-                  }
-              }
-          }
-          KTS
+          cargo fetch --manifest-path src-tauri/Cargo.toml
+          for f in "$HOME"/.cargo/registry/src/*/tauri-plugin-*/android/build.gradle.kts; do
+            sed -i -E 's/compileSdk = 3[0-5]\b/compileSdk = 36/' "$f"
+          done
+          grep -h compileSdk "$HOME"/.cargo/registry/src/*/tauri-plugin-sharekit-*/android/build.gradle.kts
       - name: Build APK
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
