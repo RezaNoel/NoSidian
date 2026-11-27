@@ -132,3 +132,4 @@ fr:callout-danger
 fr:player-volume
 it:player-volume
 pt-BR:player-volume
+de:graph-layout-ring

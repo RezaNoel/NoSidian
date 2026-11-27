@@ -291,13 +291,13 @@ fn analyze(meta: NoteMeta, src: &str) -> Entry {
             }
             plain.replace_range(s..e + 2, " ");
         }
-        prose.push_str(&plain.to_lowercase());
+        prose.push_str(&fold(&plain));
         prose.push('\n');
     }
-    let body_lower = lines.iter().map(|(_, l)| l.to_lowercase()).collect::<Vec<_>>().join("\n");
+    let body_lower = lines.iter().map(|(_, l)| fold(l)).collect::<Vec<_>>().join("\n");
     Entry {
-        title_lower: title.to_lowercase(),
-        path_lower: meta.path.to_lowercase(),
+        title_lower: fold(&title),
+        path_lower: fold(&meta.path),
         title,
         meta,
         lines,
@@ -307,6 +307,70 @@ fn analyze(meta: NoteMeta, src: &str) -> Entry {
         links,
         headings,
         words,
+    }
+}
+
+// ---------- Text folding ----------
+
+/// Lowercase and fold text so searches match however it was typed: Arabic
+/// and Persian letter forms (ي/ی, ك/ک, ة/ه, أإآ/ا), no diacritics, tatweel
+/// or zero-width joiners, and common Latin accents.
+pub fn fold(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '\u{200c}' | '\u{200d}' | '\u{200e}' | '\u{200f}' | '\u{0640}' => {}
+            '\u{064b}'..='\u{065f}' | '\u{0670}' => {}
+            'ي' | 'ى' | 'ئ' => out.push('ی'),
+            'ك' => out.push('ک'),
+            'ة' => out.push('ه'),
+            'أ' | 'إ' | 'آ' | 'ٱ' => out.push('ا'),
+            'ؤ' => out.push('و'),
+            '٠'..='٩' => out.push(char::from(b'0' + (c as u32 - '٠' as u32) as u8)),
+            '۰'..='۹' => out.push(char::from(b'0' + (c as u32 - '۰' as u32) as u8)),
+            'à' | 'á' | 'â' | 'ã' | 'ä' | 'å' | 'À' | 'Á' | 'Â' | 'Ã' | 'Ä' | 'Å' => out.push('a'),
+            'è' | 'é' | 'ê' | 'ë' | 'È' | 'É' | 'Ê' | 'Ë' => out.push('e'),
+            'ì' | 'í' | 'î' | 'ï' | 'Ì' | 'Í' | 'Î' | 'Ï' => out.push('i'),
+            'ò' | 'ó' | 'ô' | 'õ' | 'ö' | 'Ò' | 'Ó' | 'Ô' | 'Õ' | 'Ö' => out.push('o'),
+            'ù' | 'ú' | 'û' | 'ü' | 'Ù' | 'Ú' | 'Û' | 'Ü' => out.push('u'),
+            'ç' | 'Ç' => out.push('c'),
+            'ñ' | 'Ñ' => out.push('n'),
+            _ => out.extend(c.to_lowercase()),
+        }
+    }
+    out
+}
+
+/// Edit distance, stopping early once it passes `max`.
+fn within_edits(a: &str, b: &str, max: usize) -> bool {
+    let a: Vec<char> = a.chars().collect();
+    let b: Vec<char> = b.chars().collect();
+    if a.len().abs_diff(b.len()) > max {
+        return false;
+    }
+    let mut prev: Vec<usize> = (0..=b.len()).collect();
+    for i in 1..=a.len() {
+        let mut cur = vec![i; b.len() + 1];
+        let mut best = cur[0];
+        for j in 1..=b.len() {
+            let cost = usize::from(a[i - 1] != b[j - 1]);
+            cur[j] = (prev[j] + 1).min(cur[j - 1] + 1).min(prev[j - 1] + cost);
+            best = best.min(cur[j]);
+        }
+        if best > max {
+            return false;
+        }
+        prev = cur;
+    }
+    prev[b.len()] <= max
+}
+
+/// Typos allowed for a search word of this length.
+fn typo_budget(term: &str) -> usize {
+    match term.chars().count() {
+        0..=3 => 0,
+        4..=7 => 1,
+        _ => 2,
     }
 }
 
@@ -350,7 +414,7 @@ fn parse_query(q: &str) -> Query {
             chars.next();
         }
         if !tok.is_empty() {
-            tokens.push(tok.to_lowercase());
+            tokens.push(fold(&tok));
         }
     }
     for tok in tokens {
@@ -443,7 +507,7 @@ impl VaultIndex {
     /// Resolve a wikilink target: exact path (with or without `.md`), then by
     /// title, preferring the shortest path like Obsidian does.
     pub fn resolve(&self, target: &str) -> Option<&str> {
-        let t = target.trim().to_lowercase();
+        let t = fold(target.trim());
         let t = t.strip_suffix(".md").unwrap_or(&t);
         if let Some((p, _)) = self.notes.iter().find(|(_, e)| e.path_lower.strip_suffix(".md").unwrap_or(&e.path_lower) == t) {
             return Some(p);
@@ -463,7 +527,7 @@ impl VaultIndex {
         }
         let mut hits: Vec<(SearchHit, u64)> = Vec::new();
         for (path, e) in &self.notes {
-            if !q.tags.iter().all(|t| e.tags.iter().any(|x| x.to_lowercase() == *t || x.to_lowercase().starts_with(&format!("{t}/")))) {
+            if !q.tags.iter().all(|t| e.tags.iter().any(|x| fold(x) == *t || fold(x).starts_with(&format!("{t}/")))) {
                 continue;
             }
             if !q.title.iter().all(|t| e.title_lower.contains(t.as_str())) {
@@ -487,7 +551,7 @@ impl VaultIndex {
                 if in_title {
                     score += 20 + if e.title_lower == *term { 30 } else { 0 };
                 }
-                if e.headings.iter().any(|h| h.text.to_lowercase().contains(term.as_str())) {
+                if e.headings.iter().any(|h| fold(&h.text).contains(term.as_str())) {
                     score += 6;
                 }
                 score += count.min(10) as u32;
@@ -498,7 +562,7 @@ impl VaultIndex {
             let mut matches = Vec::new();
             if !q.terms.is_empty() {
                 for (line, text) in &e.lines {
-                    let lower = text.to_lowercase();
+                    let lower = fold(text);
                     if q.terms.iter().any(|t| lower.contains(t.as_str())) {
                         matches.push(LineMatch { line: *line, text: snippet(text) });
                         if matches.len() >= MAX_LINE_MATCHES {
@@ -508,6 +572,38 @@ impl VaultIndex {
                 }
             }
             hits.push((SearchHit { path: path.clone(), title: e.title.clone(), score, matches }, e.meta.modified));
+        }
+        // Nothing matched exactly: allow small typos in each word (title and body words).
+        if hits.is_empty() && !q.terms.is_empty() && q.terms.iter().any(|t| typo_budget(t) > 0) {
+            for (path, e) in &self.notes {
+                if !q.tags.iter().all(|t| e.tags.iter().any(|x| fold(x) == *t)) || !q.path.iter().all(|t| e.path_lower.contains(t.as_str())) {
+                    continue;
+                }
+                let words: BTreeSet<&str> = e.title_lower.split(|c: char| !c.is_alphanumeric()).chain(e.body_lower.split(|c: char| !c.is_alphanumeric())).filter(|w| !w.is_empty()).collect();
+                let mut found: Vec<&str> = Vec::new();
+                let all = q.terms.iter().all(|term| {
+                    let budget = typo_budget(term);
+                    match words.iter().find(|w| w.contains(term.as_str()) || (budget > 0 && within_edits(w, term, budget))) {
+                        Some(w) => { found.push(w); true }
+                        None => false,
+                    }
+                });
+                if !all {
+                    continue;
+                }
+                let mut matches = Vec::new();
+                for (line, text) in &e.lines {
+                    let lower = fold(text);
+                    if found.iter().any(|w| lower.contains(w)) {
+                        matches.push(LineMatch { line: *line, text: snippet(text) });
+                        if matches.len() >= MAX_LINE_MATCHES {
+                            break;
+                        }
+                    }
+                }
+                let score = 1 + found.iter().filter(|w| e.title_lower.contains(**w)).count() as u32 * 10;
+                hits.push((SearchHit { path: path.clone(), title: e.title.clone(), score, matches }, e.meta.modified));
+            }
         }
         match sort {
             SearchSort::Relevance => hits.sort_by(|a, b| b.0.score.cmp(&a.0.score).then_with(|| a.0.title.cmp(&b.0.title))),
@@ -566,7 +662,7 @@ impl VaultIndex {
                     if p == path || linked.contains(p.as_str()) || !e.prose_lower.contains(needle.as_str()) {
                         continue;
                     }
-                    if let Some((line, text)) = e.lines.iter().find(|(_, t)| strip_inline_code(t).to_lowercase().contains(needle.as_str()) && !t.to_lowercase().contains(&format!("[[{needle}"))) {
+                    if let Some((line, text)) = e.lines.iter().find(|(_, t)| fold(&strip_inline_code(t)).contains(needle.as_str()) && !fold(t).contains(&format!("[[{needle}"))) {
                         unlinked.push(Mention { path: p.clone(), line: *line, snippet: snippet(text) });
                     }
                 }
@@ -603,6 +699,14 @@ impl VaultIndex {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn fold_matches_persian_and_arabic_forms() {
+        assert_eq!(fold("كتاب‌هاي من"), fold("کتابهای من"));
+        assert_eq!(fold("Café ۱۲"), "cafe 12");
+        assert!(within_edits("markdown", "markdwon", 2));
+        assert!(!within_edits("note", "tone", 1));
+    }
 
     fn meta(path: &str, modified: u64) -> NoteMeta {
         NoteMeta { path: path.into(), kind: EntryKind::Markdown, size: 0, modified, created: modified }

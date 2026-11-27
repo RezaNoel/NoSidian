@@ -16,7 +16,8 @@ import { vaultDoc } from "../../state/persist";
 import { noteTitle } from "../../lib/markdown";
 import { settings } from "../../state/settings";
 
-const graphPrefs = vaultDoc<GraphSettings & { showTags: boolean }>("graph", () => ({ ...DEFAULT_GRAPH_SETTINGS, customPalette: [...DEFAULT_GRAPH_SETTINGS.customPalette], showTags: false }));
+type GraphExtra = { showTags: boolean; centerForce: number; layout: "network" | "islands" | "ring" };
+const graphPrefs = vaultDoc<GraphSettings & GraphExtra>("graph", () => ({ ...DEFAULT_GRAPH_SETTINGS, customPalette: [...DEFAULT_GRAPH_SETTINGS.customPalette], showTags: false, centerForce: 2, layout: "network" }));
 
 interface N { id: string; label: string; note?: Note; tag?: boolean; x: number; y: number; vx: number; vy: number; deg: number; group: string; created: number }
 interface E { a: N; b: N }
@@ -106,6 +107,16 @@ export default function GraphView() {
     const { nodes, edges } = visible();
     if (alpha > 0.02 && !settings.accessibility.reduceMotion) {
       const rep = g().repulsion, dist = g().linkDistance;
+      // How strongly nodes are pulled in: low spreads the graph out, high packs it in the middle.
+      const pull = ((g().centerForce ?? 2) / 1000) * alpha;
+      const layout = g().layout ?? "network";
+      const gs = groups();
+      const ring = 160 + gs.length * 26;
+      const anchor = (n: N): [number, number] => {
+        if (layout !== "islands" || gs.length < 2) return [0, 0];
+        const a = (Math.max(0, gs.indexOf(n.group)) / gs.length) * Math.PI * 2;
+        return [Math.cos(a) * ring, Math.sin(a) * ring];
+      };
       for (let i = 0; i < nodes.length; i++) {
         const a = nodes[i];
         for (let j = i + 1; j < nodes.length; j++) {
@@ -117,7 +128,16 @@ export default function GraphView() {
           const f = (rep * alpha) / d2;
           a.vx += dx * f; a.vy += dy * f; b.vx -= dx * f; b.vy -= dy * f;
         }
-        a.vx -= a.x * 0.002 * alpha; a.vy -= a.y * 0.002 * alpha;
+        if (layout === "ring") {
+          // Keep every node near a circle whose size follows the node count.
+          const r = Math.sqrt(a.x * a.x + a.y * a.y) || 1, target = 80 + nodes.length * 4;
+          const k = ((r - target) / r) * pull * 6;
+          a.vx -= a.x * k; a.vy -= a.y * k;
+        } else {
+          const [ax, ay] = anchor(a);
+          const k = layout === "islands" ? pull * 4 : pull;
+          a.vx -= (a.x - ax) * k; a.vy -= (a.y - ay) * k;
+        }
       }
       for (const e of edges) {
         const dx = e.b.x - e.a.x, dy = e.b.y - e.a.y;
@@ -226,8 +246,8 @@ export default function GraphView() {
   onMount(() => { raf = requestAnimationFrame(step); });
   onCleanup(() => { cancelAnimationFrame(raf); clearInterval(lapseTimer); });
 
-  const set = <K extends keyof GraphSettings | "showTags">(k: K, v: (GraphSettings & { showTags: boolean })[K]) => graphPrefs.update((s) => { (s as unknown as Record<string, unknown>)[k] = v; });
-  const slider = (k: "repulsion" | "linkDistance" | "nodeSize" | "edgeWidth" | "edgeOpacity" | "labelFontSize", min: number, max: number, stepv = 1) => (
+  const set = <K extends keyof (GraphSettings & GraphExtra)>(k: K, v: (GraphSettings & GraphExtra)[K]) => { graphPrefs.update((s) => { (s as unknown as Record<string, unknown>)[k] = v; }); alpha = Math.max(alpha, 0.6); };
+  const slider = (k: "repulsion" | "linkDistance" | "nodeSize" | "edgeWidth" | "edgeOpacity" | "labelFontSize" | "centerForce", min: number, max: number, stepv = 1) => (
     <label class="mixer-row"><span>{t(`graph-${k.toLowerCase()}` as "graph-repulsion")}</span><input type="range" min={min} max={max} step={stepv} value={g()[k]} onInput={(e) => set(k, Number(e.currentTarget.value))} /></label>
   );
 
@@ -270,8 +290,15 @@ export default function GraphView() {
                 <For each={["circle", "square", "diamond", "hexagon", "triangle"] as const}>{(x) => <option value={x}>{t(`graph-shape-${x}`)}</option>}</For>
               </select>
             </label>
-            {slider("repulsion", 200, 1800, 20)}
-            {slider("linkDistance", 70, 320, 5)}
+            <label class="field inline"><span>{t("graph-layout")}</span>
+              <select class="select sm" value={g().layout ?? "network"} onChange={(e) => { set("layout", e.currentTarget.value as GraphExtra["layout"]); alpha = 1; }}>
+                <For each={["network", "islands", "ring"] as const}>{(x) => <option value={x}>{t(`graph-layout-${x}`)}</option>}</For>
+              </select>
+            </label>
+            {slider("repulsion", 200, 3000, 20)}
+            {slider("linkDistance", 30, 480, 5)}
+            {slider("centerForce", 0, 12, 0.5)}
+            <button class="btn sm" onClick={() => { for (const n of visible().nodes) { n.x = (Math.random() - 0.5) * 400; n.y = (Math.random() - 0.5) * 400; n.vx = 0; n.vy = 0; } alpha = 1; }}>{t("graph-rearrange")}</button>
             {slider("nodeSize", 4, 16)}
             {slider("edgeWidth", 0.5, 6, 0.1)}
             {slider("edgeOpacity", 0.1, 0.9, 0.05)}

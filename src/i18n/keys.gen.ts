@@ -1556,6 +1556,12 @@ export interface MessageArgs {
   "table-sort-asc": undefined;
   "table-sort-desc": undefined;
   "table-delete": undefined;
+  "graph-layout": undefined;
+  "graph-layout-network": undefined;
+  "graph-layout-islands": undefined;
+  "graph-layout-ring": undefined;
+  "graph-centerforce": undefined;
+  "graph-rearrange": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -3115,5 +3121,11 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "table-align-right",
   "table-sort-asc",
   "table-sort-desc",
-  "table-delete"
+  "table-delete",
+  "graph-layout",
+  "graph-layout-network",
+  "graph-layout-islands",
+  "graph-layout-ring",
+  "graph-centerforce",
+  "graph-rearrange"
 ];
