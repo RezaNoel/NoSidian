@@ -16,6 +16,8 @@ import { ContextMenu, installContextMenuGuard, installSelectEnhancer } from "./c
 import { installUiSounds } from "./state/uiSound";
 import { backend } from "./backend";
 import { XmasDecor } from "./components/Christmas";
+import { UpdateBanner } from "./components/UpdateBanner";
+import { checkForUpdate } from "./state/updater";
 import "./state/mediaSync";
 import { Dialogs } from "./components/Dialogs";
 import { Modal } from "./components/Modal";
@@ -94,6 +96,7 @@ export function App() {
   onCleanup(() => window.removeEventListener("nosidian:vault-closed", onClosed));
 
   onMount(async () => {
+    void checkForUpdate();
     if (!settings.onboarding.completed) return setPhase("onboarding");
     setPhase((await restoreVault()) ? "workspace" : "pick-vault");
   });
@@ -103,6 +106,7 @@ export function App() {
       <a class="skip-link" href="#main">{t("shell-skip-to-content")}</a>
       <div class="backdrop" aria-hidden="true"><span /><span /><span /></div>
       <XmasDecor />
+      <UpdateBanner />
       <Show when={hasTitleBar()}><TitleBar /></Show>
       <Switch>
         <Match when={phase() === "onboarding"}><Onboarding onFinish={() => setPhase("workspace")} /></Match>

@@ -1579,6 +1579,11 @@ export interface MessageArgs {
   "accent-theme-fixed": undefined;
   "xmas-countdown": { days: string | number };
   "xmas-today": undefined;
+  "update-available": { version: string | number };
+  "update-install": undefined;
+  "update-later": undefined;
+  "update-installing": undefined;
+  "update-failed": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -3161,5 +3166,10 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "start-buttons-hint",
   "accent-theme-fixed",
   "xmas-countdown",
-  "xmas-today"
+  "xmas-today",
+  "update-available",
+  "update-install",
+  "update-later",
+  "update-installing",
+  "update-failed"
 ];

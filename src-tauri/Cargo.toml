@@ -25,6 +25,11 @@ uuid.workspace = true
 sha2 = "0.10"
 ureq = { version = "2", features = ["json"] }
 
+# Checks GitHub for a newer release and installs it (desktop only).
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
+
 # The phone share sheet (Telegram, Instagram, ...) for pet, book and film cards.
 # Android only: its Windows code does not build against the windows crate Tauri uses.
 [target.'cfg(target_os = "android")'.dependencies]

@@ -1427,3 +1427,10 @@ button.prop-chip svg { inline-size: 11px; block-size: 11px; }
   .xmas-extra, .mx-term { flex-basis: 100%; }
   .mx-term { max-inline-size: 260px; }
 }
+
+/* ---------- Update card (desktop) ---------- */
+.update-card { position: fixed; inset-block-end: 16px; inset-inline-end: 16px; z-index: 80; max-inline-size: min(340px, calc(100vw - 32px)); padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: var(--bg-modal); box-shadow: var(--shadow); }
+.update-title { margin: 0 0 10px; font-weight: 600; color: var(--text-primary); }
+.update-error { margin: 0 0 10px; color: var(--danger, #c0392b); font-size: 0.9em; }
+.update-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.update-go:disabled { opacity: 0.6; cursor: progress; }
