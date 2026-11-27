@@ -451,8 +451,8 @@ input[type="range"] { accent-color: var(--accent); inline-size: 100%; }
   html:not([data-desktop]) .page { padding: 14px 14px 28px; }
   html:not([data-desktop]) .page-head h1 { font-size: 1.25em; }
   html:not([data-desktop]) .start-primary kbd { display: none; }
-  html:not([data-desktop]) .start-chip { padding: 9px 14px; font-size: 0.95em; }
-  html:not([data-desktop]) .seg-label { display: none; }
+  html:not([data-desktop]) .start-chip { padding: 6px 11px; font-size: 0.85em; }
+  html:not([data-desktop]) button:has(> svg) > .seg-label { display: none; }
   html:not([data-desktop]) .reader { padding: 18px 18px 30vh; }
   html:not([data-desktop]) .editor-host .cm-content { padding: 18px 16px 40vh !important; }
   html:not([data-desktop]) .tab-close { opacity: 0.6; }
@@ -830,3 +830,44 @@ label.btn:focus-within { box-shadow: var(--focus-ring); }
 @media (max-width: 767px) {
   html:not([data-desktop]) .theme-grid { grid-auto-flow: row; grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 14px; }
 }
+
+/* Settings rows never scroll sideways: a control that does not fit next to
+   its label moves to its own line, and wide segmented controls wrap. */
+.set-row { flex-wrap: wrap; row-gap: 8px; }
+.set-row > .set-label { flex: 1 1 9em; }
+.set-row > :not(.set-label) { max-inline-size: 100%; min-inline-size: 0; }
+.set-row .segmented { flex-wrap: wrap; flex: 0 1 auto; max-inline-size: 100%; }
+.setting-body, .settings-scroll { min-inline-size: 0; overflow-x: hidden; }
+
+/* Themes: roomy tiles that flow onto more rows, names on one line. */
+.theme-grid, html:not([data-desktop]) .theme-grid {
+  grid-auto-flow: row; grid-auto-columns: unset;
+  grid-template-columns: repeat(auto-fill, minmax(max(7.5em, 96px), 1fr)); gap: 12px; row-gap: 14px;
+}
+.theme-tile { padding: 8px; gap: 8px; }
+.theme-swatch { block-size: 64px; }
+.theme-name, .theme-swatches .swatch-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.86em; }
+.theme-swatches, html:not([data-desktop]) .theme-swatches { grid-auto-flow: row; grid-template-columns: repeat(auto-fill, minmax(max(6.5em, 84px), 1fr)); row-gap: 12px; }
+@media (max-width: 640px) { .theme-swatch { block-size: 46px; } .theme-name { font-size: 0.8em; } }
+@media (max-width: 767px) {
+  html:not([data-desktop]) .theme-grid { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+  html:not([data-desktop]) .theme-swatch { block-size: 40px; }
+}
+.new-badge { inset-inline-end: 4px; }
+.start-btn-pick { display: flex; flex-wrap: wrap; gap: 6px; padding-block: 6px; }
+.start-btn-pick .chip { display: inline-flex; align-items: center; gap: 6px; }
+.start-btn-pick .chip svg { inline-size: 14px; block-size: 14px; }
+.start-btn-n { inline-size: 16px; block-size: 16px; border-radius: 50%; display: grid; place-items: center; font-size: 0.75em; font-weight: 700; background: var(--accent); color: var(--accent-ink); }
+
+/* Editor suggestion menus (links, @people, #tags, /commands) in the app's own style. */
+.cm-tooltip { border: 1px solid var(--border) !important; border-radius: var(--radius-md); background: rgb(var(--l2) / 0.98) !important; color: var(--text-primary); box-shadow: 0 12px 32px rgb(0 0 0 / 0.35); backdrop-filter: blur(12px); overflow: hidden; }
+.cm-tooltip.cm-tooltip-autocomplete > ul { font-family: var(--font-ui) !important; font-size: 0.88rem; max-block-size: 18em; padding: 4px; min-inline-size: 220px; }
+.cm-tooltip.cm-tooltip-autocomplete > ul > li { display: flex; align-items: center; gap: 8px; padding: 6px 10px !important; border-radius: var(--radius-sm); line-height: 1.4; }
+.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] { background: var(--accent) !important; color: var(--accent-ink) !important; }
+.cm-tooltip-autocomplete .cm-completionIcon { opacity: 0.7; inline-size: 1em; padding: 0; }
+.cm-tooltip-autocomplete .cm-completionDetail { margin-inline-start: auto; padding-inline-start: 12px; font-style: normal; font-size: 0.85em; opacity: 0.65; }
+.cm-tooltip-autocomplete .cm-completionMatchedText { text-decoration: none; font-weight: 700; }
+.cm-tooltip.cm-completionInfo { padding: 8px 10px; max-inline-size: 320px; font-family: var(--font-ui); font-size: 0.85rem; }
+.cm-tooltip-autocomplete ul::-webkit-scrollbar { inline-size: 6px; }
+.set-control:has(> .segmented) { max-inline-size: 100%; flex: 0 1 auto; }
+.accent-row.is-off { opacity: 0.4; pointer-events: none; }

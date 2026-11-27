@@ -81,13 +81,18 @@
   --mesh-1: #f4c27a; --mesh-2: #e8a0a0; --mesh-3: #b7d3a8;
 }
 [data-theme="christmas"] {
-  --bg-primary: #0c1d15; --l1: 18 40 29; --l2: 30 60 43; --l3: 16 35 26;
-  --text-primary: #f6f0e4; --text-secondary: #d6cbb5; --text-muted: #a79c86;
-  --border: rgb(246 240 228 / 0.13); --border-strong: rgb(246 240 228 / 0.26);
-  --hover: rgb(246 240 228 / 0.08); --specular: rgb(255 255 255 / 0.10);
-  --shadow: 0 14px 36px rgb(0 0 0 / 0.5);
-  --mesh-1: #b3122e; --mesh-2: #1d7a45; --mesh-3: #d9a441;
+  /* Snow white and candy red (#B11E31), with a little pine green and gold. */
+  color-scheme: light;
+  --bg-primary: #f6f1ea; --l1: 255 255 255; --l2: 252 246 242; --l3: 255 252 249;
+  --text-primary: #2a1215; --text-secondary: #5b3439; --text-muted: #7d5a5f;
+  --border: rgb(177 30 49 / 0.16); --border-strong: rgb(177 30 49 / 0.3);
+  --hover: rgb(177 30 49 / 0.07); --specular: rgb(255 255 255 / 0.8);
+  --shadow: 0 12px 30px rgb(110 20 32 / 0.14);
+  --mesh-1: #e9a9b2; --mesh-2: #ffffff; --mesh-3: #b9d9c4;
+  --xmas-red: #b11e31; --xmas-red-dark: #8c1524; --xmas-green: #1e6b45; --xmas-gold: #d9a441;
 }
+/* The theme brings its own red; the accent picker comes back when you leave the theme. */
+:root[data-theme="christmas"] { --accent: #b11e31 !important; --accent-ink: #ffffff !important; }
 [data-theme="matrix"] {
   --bg-primary: #020803; --l1: 6 20 9; --l2: 11 36 16; --l3: 5 17 8;
   --text-primary: #c9f7c4; --text-secondary: #8fd88a; --text-muted: #63a75e;

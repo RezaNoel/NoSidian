@@ -1566,6 +1566,17 @@ export interface MessageArgs {
   "cal-google-open-link": undefined;
   "cal-google-copy-link": undefined;
   "back-again-to-exit": undefined;
+  "media-delete-also-title": undefined;
+  "media-delete-also-body": { name: string | number };
+  "media-hero-hide": undefined;
+  "media-hero-show": undefined;
+  "files-new-note-auto": undefined;
+  "files-new-note-auto-hint": { path: string | number };
+  "stab-daily": undefined;
+  "stab-organize": undefined;
+  "start-buttons": undefined;
+  "start-buttons-hint": undefined;
+  "accent-theme-fixed": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -3135,5 +3146,16 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "cal-google-manual",
   "cal-google-open-link",
   "cal-google-copy-link",
-  "back-again-to-exit"
+  "back-again-to-exit",
+  "media-delete-also-title",
+  "media-delete-also-body",
+  "media-hero-hide",
+  "media-hero-show",
+  "files-new-note-auto",
+  "files-new-note-auto-hint",
+  "stab-daily",
+  "stab-organize",
+  "start-buttons",
+  "start-buttons-hint",
+  "accent-theme-fixed"
 ];

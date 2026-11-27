@@ -3,10 +3,11 @@
 //   notes between them;
 // - Zettelkasten: one idea per note, named by a time-based id, linked to
 //   other notes; plus finding notes that are not linked to anything yet.
+import { createEffect, createRoot, on } from "solid-js";
 import { backend } from "../backend";
 import { wikilinks } from "../lib/markdown";
 import { pref } from "./prefs";
-import { contents, createNote, markdownPaths, moveEntry, refresh, tree } from "./vault";
+import { contents, createNote, markdownPaths, moveEntry, refresh, tree, vault } from "./vault";
 
 export const PARA = ["1 Projects", "2 Areas", "3 Resources", "4 Archive"] as const;
 export type ParaFolder = (typeof PARA)[number];
@@ -31,6 +32,29 @@ export async function moveToPara(path: string, folder: ParaFolder): Promise<void
 
 export const zettelFolder = () => pref("zettelFolder").trim().replace(/^\/+|\/+$/g, "") || "Zettelkasten";
 
+/** Zettelkasten subfolders: quick ideas, notes on sources, and finished idea notes. */
+export const ZETTEL_PARTS = ["Fleeting", "Literature", "Permanent"] as const;
+
+/** Create the Zettelkasten folder and its subfolders that are missing. */
+export async function setupZettel(): Promise<void> {
+  const root = zettelFolder();
+  for (const f of [root, ...ZETTEL_PARTS.map((p) => `${root}/${p}`)]) if (!tree.folders.includes(f)) await backend.createFolder(f).catch(() => undefined);
+  await refresh();
+}
+
+/** Where new notes go for the chosen note system ("" = vault root). */
+export function autoNoteFolder(): string {
+  const m = pref("pkmMethod");
+  if (m === "zettel") return `${zettelFolder()}/${ZETTEL_PARTS[0]}`;
+  if (m === "para") return PARA[0];
+  return "";
+}
+
+/** Folder for a new note: the one chosen in settings, else the note system's own. */
+export function newNoteFolder(): string | undefined {
+  return pref("newNoteFolder").trim() || autoNoteFolder() || undefined;
+}
+
 /** Time-based id like 202611271430. */
 export function zettelId(d = new Date()): string {
   const p = (n: number) => String(n).padStart(2, "0");
@@ -44,7 +68,9 @@ export async function newZettel(title: string, from?: string, open = true): Prom
   const name = clean ? `${id} ${clean}` : id;
   const back = from ? `\n\n## Links\n\n- [[${from.replace(/\.md$/i, "")}]]\n` : "\n\n## Links\n\n";
   const body = `---\nid: "${id}"\ntype: zettel\ntags: [zettel]\n---\n\n# ${clean || id}\n\n${back}`;
-  return createNote(name, zettelFolder(), body, open);
+  const folder = `${zettelFolder()}/${ZETTEL_PARTS[2]}`;
+  if (!tree.folders.includes(folder)) await setupZettel();
+  return createNote(name, folder, body, open);
 }
 
 /** Notes in the Zettelkasten folder with no links in or out. */
@@ -59,3 +85,13 @@ export function orphanZettels(): string[] {
   }
   return zs.filter((z) => !linked.has(z));
 }
+
+// With Zettelkasten chosen, make sure its folders exist in every vault that opens.
+createRoot(() => {
+  createEffect(on(() => [vault()?.root, pref("pkmMethod"), tree.notes.length > 0] as const, ([root, m, ready]) => {
+    if (!root || !ready) return;
+    const z = zettelFolder();
+    if (m === "zettel" && ![z, ...ZETTEL_PARTS.map((p) => `${z}/${p}`)].every((f) => tree.folders.includes(f))) void setupZettel();
+    if (m === "para" && !paraReady()) void setupPara();
+  }));
+});

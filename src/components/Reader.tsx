@@ -216,7 +216,7 @@ export function Reader(props: { path: string; source?: () => string; readOnly?: 
     const href = a.getAttribute("href") ?? "";
     if (/^https?:/i.test(href)) {
       e.preventDefault();
-      window.open(href, "_blank", "noopener");
+      void backend.openUrl(href);
     } else if (/^file:/i.test(href)) {
       // A file linked where it is, outside the vault.
       e.preventDefault();

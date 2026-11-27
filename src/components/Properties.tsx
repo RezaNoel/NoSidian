@@ -1,3 +1,4 @@
+import { backend } from "../backend";
 // YAML front matter as an editable properties table above the note. Each
 // property has a type (text, number, checkbox, date, list, tags, link, URL,
 // image), picked from the icon beside its name and remembered per vault.
@@ -136,7 +137,7 @@ export function Properties(props: { path: string; readOnly?: boolean }) {
         <Match when={ty === "checkbox"}><span class="prop-value"><input type="checkbox" checked={/^true$/i.test(flat)} disabled aria-label={p.key} /></span></Match>
         <Match when={ty === "tags"}><span class="prop-value"><For each={Array.isArray(p.value) ? p.value : flat.split(",").filter(Boolean)}>{(v) => <button class="prop-chip" onClick={() => window.dispatchEvent(new CustomEvent("nosidian:search", { detail: `#${v.replace(/^#/, "")}` }))}><Hash aria-hidden="true" />{v.replace(/^#/, "")}</button>}</For></span></Match>
         <Match when={ty === "link"}>{(() => { const target = resolveLink(linkOf(flat), markdownPaths()); return <span class="prop-value"><Show when={target} fallback={<span dir="auto">{linkOf(flat)}</span>}><button class="link-btn" dir="auto" onClick={() => openNote(target!)}>{linkOf(flat).split("/").pop()}</button></Show></span>; })()}</Match>
-        <Match when={ty === "url"}><span class="prop-value"><a href={flat} target="_blank" rel="noopener" dir="ltr" onClick={(e) => { e.preventDefault(); window.open(flat, "_blank", "noopener"); }}>{flat.replace(/^https?:\/\//, "")}</a></span></Match>
+        <Match when={ty === "url"}><span class="prop-value"><a href={flat} target="_blank" rel="noopener" dir="ltr" onClick={(e) => { e.preventDefault(); void backend.openUrl(flat); }}>{flat.replace(/^https?:\/\//, "")}</a></span></Match>
         <Match when={ty === "image"}><ImageValue value={flat} readOnly onChange={() => undefined} /></Match>
       </Switch>
     );

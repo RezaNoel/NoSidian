@@ -65,6 +65,10 @@ export interface Prefs {
   zettelFolder: string;
   /** A bare YouTube link in a note: a player that plays in the note, or a card that opens YouTube. */
   youtubeStyle: "player" | "card";
+  /** The shelf card on top of book and film notes is folded to one line. */
+  mediaHeroCollapsed: boolean;
+  /** Buttons on the start page, in order (comma-separated ids). */
+  startButtons: string;
 }
 
 export const DEFAULT_PREFS: Prefs = {
@@ -111,6 +115,8 @@ export const DEFAULT_PREFS: Prefs = {
   pkmMethod: "none",
   zettelFolder: "Zettelkasten",
   youtubeStyle: "player",
+  mediaHeroCollapsed: false,
+  startButtons: "new-note,daily,switcher,palette,flashcards,focus",
 };
 
 const LIMITS: Partial<Record<keyof Prefs, [number, number]>> = {

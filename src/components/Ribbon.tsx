@@ -1,6 +1,8 @@
 // Narrow vertical tool ribbon on desktop. Tools show only when their module is
 // enabled. Drag a tool to reorder; right-click to choose which tools show.
 import { For, Show, createMemo, createSignal } from "solid-js";
+import { Dynamic } from "solid-js/web";
+import { themedIcon } from "./Christmas";
 import { hasTitleBar } from "./TitleBar";
 import { Blocks, Brain, CalendarDays, CloudSun, Settings as SettingsIcon, Command, FileSearch, Film, FolderKanban, LayoutDashboard, Network, PanelLeft, PanelRight, PawPrint, RotateCcw, Terminal, Timer, Users } from "lucide-solid";
 import { t, type MessageKey } from "../i18n";
@@ -135,7 +137,7 @@ export function Ribbon() {
                 queueMicrotask(() => (e.currentTarget as HTMLElement | null)?.focus());
               }}
             >
-              <tool.icon />
+              <Dynamic component={themedIcon(tool.key, tool.icon)} />
             </button>
           )}
         </For>
@@ -143,8 +145,8 @@ export function Ribbon() {
       <div class="ribbon-group end">
         {/* With the left sidebar closed, its footer buttons move here. */}
         <Show when={!profile.panels.left}>
-          <button class="icon-btn amb-toggle" aria-expanded={ambOpen()} aria-haspopup="dialog" title={t("footer-ambient")} aria-label={t("footer-ambient")} onClick={() => setAmbOpen(!ambOpen())}><CloudSun /></button>
-          <button class="icon-btn" aria-haspopup="dialog" title={t("footer-settings")} aria-label={t("footer-settings")} onClick={() => openSettings("you")}><SettingsIcon /></button>
+          <button class="icon-btn amb-toggle" aria-expanded={ambOpen()} aria-haspopup="dialog" title={t("footer-ambient")} aria-label={t("footer-ambient")} onClick={() => setAmbOpen(!ambOpen())}><Dynamic component={themedIcon("ambience", CloudSun)} /></button>
+          <button class="icon-btn" aria-haspopup="dialog" title={t("footer-settings")} aria-label={t("footer-settings")} onClick={() => openSettings("home")}><Dynamic component={themedIcon("settings", SettingsIcon)} /></button>
         </Show>
         <Show when={!hasTitleBar()}><button class="icon-btn" aria-pressed={profile.panels.right} title={t("ribbon-toggle-right")} aria-label={t("ribbon-toggle-right")} onClick={() => updateProfile((p) => { p.panels.right = !p.panels.right; })}>
           <PanelRight class="flip-rtl" />

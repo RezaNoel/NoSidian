@@ -14,6 +14,8 @@ import { vault } from "./state/vault";
 import { BannerSettings } from "./components/Banner";
 import { ContextMenu, installContextMenuGuard, installSelectEnhancer } from "./components/ContextMenu";
 import { installUiSounds } from "./state/uiSound";
+import { backend } from "./backend";
+import { XmasDecor } from "./components/Christmas";
 import "./state/mediaSync";
 import { Dialogs } from "./components/Dialogs";
 import { Modal } from "./components/Modal";
@@ -50,6 +52,15 @@ export function App() {
   installContextMenuGuard();
   installSelectEnhancer();
   installUiSounds();
+  // Any other web, mail or phone link opens outside the app (the app window never navigates away).
+  document.addEventListener("click", (e) => {
+    if (e.defaultPrevented) return;
+    const a = (e.target as HTMLElement | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+    const href = a?.getAttribute("href") ?? "";
+    if (!/^(https?|mailto|tel):/i.test(href)) return;
+    e.preventDefault();
+    void backend.openUrl(href);
+  });
   if (isMobile()) installBackNav();
 
   const mods = createMemo(() => enabledModules(settings.experienceLevel, settings.moduleOverrides));
@@ -91,6 +102,7 @@ export function App() {
     <>
       <a class="skip-link" href="#main">{t("shell-skip-to-content")}</a>
       <div class="backdrop" aria-hidden="true"><span /><span /><span /></div>
+      <XmasDecor />
       <Show when={hasTitleBar()}><TitleBar /></Show>
       <Switch>
         <Match when={phase() === "onboarding"}><Onboarding onFinish={() => setPhase("workspace")} /></Match>

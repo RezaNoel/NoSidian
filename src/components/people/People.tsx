@@ -1,3 +1,4 @@
+import { backend } from "../../backend";
 // The people network: everyone in the People folder, with a profile per
 // person (photo, contact details, socials, traits, places, connections) and
 // everything in the vault that points at them: notes that link to them and
@@ -14,6 +15,7 @@ import { pref } from "../../state/prefs";
 import { askText } from "../../state/ui";
 import { contents, ensureLoaded, markdownPaths, openNote, setContent } from "../../state/vault";
 import { Avatar } from "./Avatar";
+import { DatePicker } from "../DatePicker";
 
 const SOCIAL: Partial<Record<PersonField, (v: string) => string>> = {
   phone: (v) => `tel:${v.replace(/[^\d+]/g, "")}`,
@@ -59,10 +61,27 @@ function pickPhoto(): Promise<string | null> {
 }
 
 /** Chips with an add box; used for traits, places and connections. */
-function ChipList(props: { items: string[]; label: string; onRemove: (x: string) => void; onAdd: (x: string) => void; render?: (x: string) => any; options?: string[] }) {
+function ChipList(props: { items: string[]; label: string; onRemove: (x: string) => void; onAdd: (x: string) => void; render?: (x: string) => any; options?: string[]; option?: (x: string) => any }) {
   const [v, setV] = createSignal("");
-  const id = `dl-${Math.random().toString(36).slice(2, 8)}`;
-  const add = () => { const x = v().trim(); if (x) props.onAdd(x); setV(""); };
+  const [open, setOpen] = createSignal(false);
+  const [hi, setHi] = createSignal(0);
+  const add = (x = v().trim()) => { if (x) props.onAdd(x); setV(""); setHi(0); };
+  // Themed suggestion list (no browser datalist): every option, filtered as you type.
+  const matches = createMemo(() => {
+    if (!props.options) return [];
+    const q = v().trim().toLowerCase();
+    const have = new Set(props.items.map((x) => nameOf(x).toLowerCase()));
+    return props.options.filter((o) => !have.has(o.toLowerCase()) && (!q || o.toLowerCase().includes(q))).slice(0, 50);
+  });
+  const key = (e: KeyboardEvent) => {
+    const n = matches().length;
+    if (!open() || !n) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setHi((i) => (i + 1) % n); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setHi((i) => (i - 1 + n) % n); }
+    else if (e.key === "Enter" && v().trim() === "" ) { e.preventDefault(); add(matches()[hi()]); }
+    else if (e.key === "Enter" && matches()[hi()]?.toLowerCase().includes(v().trim().toLowerCase())) { e.preventDefault(); add(matches()[hi()]); }
+    else if (e.key === "Escape") { setOpen(false); }
+  };
   return (
     <div class="person-chips">
       <For each={props.items}>{(x) => (
@@ -71,8 +90,21 @@ function ChipList(props: { items: string[]; label: string; onRemove: (x: string)
         </span>
       )}</For>
       <form class="person-chip-add" onSubmit={(e) => { e.preventDefault(); add(); }}>
-        <input class="input sm" dir="auto" list={props.options ? id : undefined} placeholder={props.label} aria-label={props.label} value={v()} onInput={(e) => setV(e.currentTarget.value)} onBlur={add} />
-        <Show when={props.options}><datalist id={id}><For each={props.options}>{(o) => <option value={o} />}</For></datalist></Show>
+        <input class="input sm" dir="auto" placeholder={props.label} aria-label={props.label} value={v()} autocomplete="off"
+          role={props.options ? "combobox" : undefined} aria-expanded={props.options ? open() : undefined}
+          onFocus={() => setOpen(true)} onKeyDown={key}
+          onInput={(e) => { setV(e.currentTarget.value); setHi(0); setOpen(true); }}
+          onBlur={() => { setOpen(false); if (!props.options) add(); }} />
+        <Show when={props.options && open() && matches().length}>
+          <ul class="person-suggest" role="listbox">
+            <For each={matches()}>{(o, i) => (
+              <li role="option" aria-selected={i() === hi()} classList={{ hi: i() === hi() }}
+                onMouseDown={(e) => { e.preventDefault(); add(o); }} onMouseEnter={() => setHi(i())}>
+                {props.option ? props.option(o) : <span dir="auto">{o}</span>}
+              </li>
+            )}</For>
+          </ul>
+        </Show>
       </form>
     </div>
   );
@@ -121,9 +153,11 @@ function Profile(props: { path: string; onBack: () => void; select: (p: string) 
           <For each={PERSON_FIELDS.filter((f) => f !== "relation")}>{(f) => (
             <label class="person-field">
               <span class="person-field-label">{fieldIcon(f)}{t(`people-field-${f}` as "people-field-phone")}</span>
-              <input class="input sm" type={f === "birthday" ? "date" : f === "email" ? "email" : f === "phone" || f === "whatsapp" ? "tel" : "text"} dir={f === "address" || f === "city" || f === "work" ? "auto" : "ltr"} value={person().fields[f] ?? ""} onChange={(e) => setField(f, e.currentTarget.value)} />
+              <Show when={f === "birthday"} fallback={<input class="input sm" type={f === "email" ? "email" : f === "phone" || f === "whatsapp" ? "tel" : "text"} dir={f === "address" || f === "city" || f === "work" ? "auto" : "ltr"} value={person().fields[f] ?? ""} onChange={(e) => setField(f, e.currentTarget.value)} />}>
+                <DatePicker size="sm" clearable label={t("people-field-birthday")} value={person().fields.birthday ?? ""} onChange={(v) => setField("birthday", v)} />
+              </Show>
               <Show when={person().fields[f] && urlOf(f, person().fields[f]!)}>
-                {(href) => <a class="icon-btn sm" href={href()} target="_blank" rel="noopener" title={t("people-open-link")} aria-label={t("people-open-link")} onClick={(e) => { if (/^https?:/.test(href())) { e.preventDefault(); window.open(href(), "_blank", "noopener"); } }}><ExternalLink /></a>}
+                {(href) => <a class="icon-btn sm" href={href()} target="_blank" rel="noopener" title={t("people-open-link")} aria-label={t("people-open-link")} onClick={(e) => { e.preventDefault(); void backend.openUrl(href()); }}><ExternalLink /></a>}
               </Show>
             </label>
           )}</For>
@@ -141,6 +175,7 @@ function Profile(props: { path: string; onBack: () => void; select: (p: string) 
           items={connected()}
           label={t("people-add-connection")}
           options={peoplePaths().filter((p) => p !== props.path).map(nameOf)}
+          option={(n) => { const p = peoplePaths().find((x) => nameOf(x) === n)!; return <><Avatar path={p} photo={readPerson(p).photo} size="sm" /><span dir="auto">{n}</span></>; }}
           render={(p) => <button class="link-btn" onClick={() => props.select(p)}><Avatar path={p} photo={readPerson(p).photo} size="sm" /><span dir="auto">{nameOf(p)}</span></button>}
           onAdd={(x) => void addRelated(x)}
           onRemove={(p) => setRelated(person().related.filter((y) => y !== p))}

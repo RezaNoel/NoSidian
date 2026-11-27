@@ -64,6 +64,8 @@ export interface VaultBackend {
   attachFiles(folder: string, mode: "copy" | "move" | "link"): Promise<{ vault: string[]; outside: string[] } | null>;
   /** Open a file outside the vault with its default app. */
   openExternalFile(path: string): Promise<void>;
+  /** Open a web, mail or phone link in the system browser or app. */
+  openUrl(url: string): Promise<void>;
   /** Title and channel of a YouTube video, or null when offline. */
   youtubeInfo(id: string): Promise<{ title: string; author: string } | null>;
   /** Ask where to save and write text there. Returns false if cancelled. */
@@ -149,6 +151,7 @@ const tauriBackend: VaultBackend = {
     return { vault: await invoke<string[]>(mode === "move" ? "files_move_in" : "files_import", { sources, folder }), outside: [] };
   },
   openExternalFile: (path) => invoke("open_external_file", { path }),
+  openUrl: (url) => invoke("plugin:opener|open_url", { url }),
   async youtubeInfo(id) {
     try {
       const j = JSON.parse(await invoke<string>("youtube_info", { id })) as { title?: string; author_name?: string };

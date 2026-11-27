@@ -1,3 +1,5 @@
+import { Dynamic } from "solid-js/web";
+import { themedIcon } from "./Christmas";
 // Bottom of the left sidebar: vault switcher, ambience (weather, sounds,
 // music) and settings.
 import { CloudSun, Settings, Vault as VaultIcon, X } from "lucide-solid";
@@ -30,8 +32,8 @@ export function VaultFooter() {
       >
         <CloudSun />
       </button>
-      <button class="icon-btn sm" title={t("footer-settings")} aria-label={t("footer-settings")} aria-haspopup="dialog" onClick={() => openSettings("you")}>
-        <Settings />
+      <button class="icon-btn sm" title={t("footer-settings")} aria-label={t("footer-settings")} aria-haspopup="dialog" onClick={() => openSettings("home")}>
+        <Dynamic component={themedIcon("settings", Settings)} />
       </button>
     </div>
   );

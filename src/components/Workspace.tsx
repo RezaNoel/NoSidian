@@ -38,7 +38,7 @@ function MoreSheet() {
       <div class="sheet-grip" aria-hidden="true" />
       <div class="sheet-grid">
         <button class="sheet-item" onClick={() => pick(() => setOverlay("vaults"))}><VaultIcon /><span>{t("vault-switcher-title")}</span></button>
-        <button class="sheet-item" onClick={() => pick(() => openSettings("you"))}><Settings /><span>{t("footer-settings")}</span></button>
+        <button class="sheet-item" onClick={() => pick(() => openSettings("home"))}><Settings /><span>{t("footer-settings")}</span></button>
         <For each={shown()}>{(tool) => <button class="sheet-item" onClick={() => pick(tool.run ?? later)}><tool.icon /><span>{toolLabel(tool)}</span></button>}</For>
       </div>
       <div class="sheet-foot">

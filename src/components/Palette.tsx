@@ -12,7 +12,7 @@ import { COMMANDS, formatCombo, keyFor } from "../state/commands";
 import { profile } from "../state/workspace";
 import { setOverlay } from "../state/ui";
 import { createNote, openNote, tree } from "../state/vault";
-import { pref } from "../state/prefs";
+import { newNoteFolder } from "../state/pkm";
 import { Modal } from "./Modal";
 
 interface Row { id: string; label: string; detail?: string; match?: FuzzyResult; icon: JSX.Element; hint?: string; run: () => unknown }
@@ -103,7 +103,7 @@ function searchText(q: string) {
 
 export function QuickSwitcher() {
   const folderOf = (p: string) => (p.includes("/") ? p.slice(0, p.lastIndexOf("/")) : "");
-  const create = (name: string) => void createNote(name, pref("newNoteFolder") || undefined);
+  const create = (name: string) => void createNote(name, newNoteFolder());
   const rows = (q: string): Row[] => {
     const recent = new Map(profile.recent.map((r, i) => [r.path, i]));
     const notes = tree.notes.map((n) => n.path);

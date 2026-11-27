@@ -2,10 +2,10 @@
 // the UI language and in English plus extra keywords, tolerates typos and
 // partial words, and lists related settings from the same section.
 import { For, Match, Show, Switch, createMemo, createSignal } from "solid-js";
-import { Bot, Blocks, CalendarDays, ChevronLeft, Code2, FileText, FolderTree, Keyboard, Palette, PawPrint, PersonStanding, Search, User, Vault as VaultIcon, X } from "lucide-solid";
+import { Bot, Blocks, CalendarCheck, CalendarDays, Network, ChevronLeft, Code2, FileText, FolderTree, Keyboard, Palette, PawPrint, PersonStanding, Search, User, Vault as VaultIcon, X } from "lucide-solid";
 import { format, locale, t, type MessageKey } from "../../i18n";
 import { rovingKeydown } from "../../a11y/roving";
-import { setOverlay } from "../../state/ui";
+import { isMobile, setOverlay } from "../../state/ui";
 import { Modal } from "../Modal";
 import { ENTRIES, type Entry, type TabId } from "./entries";
 
@@ -15,6 +15,8 @@ export const SETTINGS_TABS: { id: TabId; icon: typeof Search }[] = [
   { id: "appearance", icon: Palette },
   { id: "editor", icon: FileText },
   { id: "files", icon: FolderTree },
+  { id: "daily", icon: CalendarCheck },
+  { id: "organize", icon: Network },
   { id: "calendar", icon: CalendarDays },
   { id: "companion", icon: PawPrint },
   { id: "hotkeys", icon: Keyboard },
@@ -25,12 +27,14 @@ export const SETTINGS_TABS: { id: TabId; icon: typeof Search }[] = [
 ];
 
 /** Older code and commands still ask for the previous tab names. */
-const LEGACY: Record<string, TabId> = { general: "you", workspace: "appearance", daily: "files", pet: "companion", mcp: "ai", modules: "features", developer: "advanced", sync: "vault" };
+const LEGACY: Record<string, TabId> = { general: "you", workspace: "appearance", pet: "companion", mcp: "ai", modules: "features", developer: "advanced", sync: "vault" };
 
 const [tab, setTab] = createSignal<TabId>("you");
 /** Phones show the list of sections first; a section opens its own page. */
 const [mobileDetail, setMobileDetail] = createSignal(false);
 export function openSettings(at?: TabId | string): void {
+  // The general settings button opens the list of sections on phones.
+  if (at === "home") at = isMobile() ? undefined : "you";
   setMobileDetail(!!at);
   if (at) setTab((LEGACY[at] ?? at) as TabId);
   setOverlay("settings");

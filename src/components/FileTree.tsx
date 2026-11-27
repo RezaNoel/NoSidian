@@ -20,7 +20,7 @@ import { hoverRow, leaveRow } from "./HoverPreview";
 import { ENTRY_ICONS, EntryStyleDialog, entryStyle, openEntryStyle } from "./EntryStyle";
 import { pref } from "../state/prefs";
 import { copyDroppedFiles, hasOsFiles } from "../state/dropFiles";
-import { PARA, moveToPara } from "../state/pkm";
+import { PARA, moveToPara, newNoteFolder } from "../state/pkm";
 
 type DisplayKey = "updated" | "last-opened" | "words" | "backlinks" | "tags";
 const DISPLAY: DisplayKey[] = ["updated", "last-opened", "words", "backlinks", "tags"];
@@ -33,7 +33,7 @@ async function copyText(text: string) {
 export async function promptNewNote(folder?: string) {
   const name = await askText(t("prompt-note-name"), t("untitled-note"), t("action-create"));
   if (name) {
-    await createNote(name, folder ?? (pref("newNoteFolder") || undefined));
+    await createNote(name, folder ?? newNoteFolder());
     if (isMobile()) setDrawer("none");
   }
 }

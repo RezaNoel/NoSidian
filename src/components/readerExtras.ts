@@ -72,7 +72,7 @@ export function youtubeEmbeds(root: HTMLElement): void {
     const thumb = box.querySelector<HTMLButtonElement>(".yt-thumb")!;
     thumb.addEventListener("click", (e) => {
       e.preventDefault();
-      if (card) { window.open(href, "_blank", "noopener"); return; }
+      if (card) { void backend.openUrl(href); return; }
       const frame = document.createElement("iframe");
       frame.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0${start ? `&start=${start}` : ""}`;
       frame.title = box.querySelector(".yt-title")!.textContent ?? "YouTube";

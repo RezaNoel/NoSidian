@@ -229,6 +229,7 @@ export const memoryBackend: VaultBackend = {
     return null;
   },
   async openExternalFile() {},
+  async openUrl(url) { window.open(url, "_blank", "noopener"); },
   async youtubeInfo(id: string) {
     try {
       const r = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}`);

@@ -1,3 +1,4 @@
+import { backend } from "../../backend";
 // Google Calendar connection: sign in, choose what NoSidian sends, sync now.
 import { Show, onMount } from "solid-js";
 import { CalendarCheck, LogOut, RefreshCw } from "lucide-solid";
@@ -25,7 +26,7 @@ export function GoogleCalendarSettings() {
               <Show when={googleBusy() === "connect" && googleAuthUrl()}>
                 <p class="hint">{t("cal-google-manual")}</p>
                 <div class="row wrap">
-                  <button class="btn sm" onClick={() => window.open(googleAuthUrl(), "_blank", "noopener")}>{t("cal-google-open-link")}</button>
+                  <button class="btn sm" onClick={() => void backend.openUrl(googleAuthUrl())}>{t("cal-google-open-link")}</button>
                   <button class="btn sm" onClick={() => void navigator.clipboard?.writeText(googleAuthUrl()).then(() => toast(t("copied")))}>{t("cal-google-copy-link")}</button>
                 </div>
               </Show>

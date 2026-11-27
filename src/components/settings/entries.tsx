@@ -10,6 +10,7 @@ import {
   MessageSquareText, Monitor, Music2, Palette, PanelTop, PartyPopper, Play, Plus, Rocket, RotateCcw, Ruler, ScanEye,
   Sparkles, SpellCheck, SquareRadical, Trash2, User, Vault as VaultIcon, Volume2, VolumeX, RefreshCw, Brackets, Type, Cake,
   ListChecks, Paperclip, Film, Link2, Users, Network,
+  LayoutGrid,
 } from "lucide-solid";
 import { t, type MessageKey } from "../../i18n";
 import { LANGUAGES, type LanguageCode } from "../../i18n/languages";
@@ -18,7 +19,8 @@ import { stopSpeaking } from "../../a11y/speech";
 import { formatDailyName } from "../../lib/dates";
 import { MODULE_MIN_LEVEL, enabledModules } from "../../state/modules";
 import { settings, updateSettings } from "../../state/settings";
-import { setupPara } from "../../state/pkm";
+import { START_BUTTONS, startButtonIds } from "../StartPage";
+import { autoNoteFolder, setupPara, setupZettel } from "../../state/pkm";
 import { pref, setPref, type DefaultMode, type StartupScreen } from "../../state/prefs";
 import { commandById } from "../../state/commands";
 import { profile, updateProfile } from "../../state/workspace";
@@ -32,7 +34,7 @@ import { Hotkeys } from "./hotkeys";
 import { CalendarSettings } from "./calendar";
 
 export type TabId =
-  | "you" | "appearance" | "editor" | "files" | "features" | "calendar" | "companion"
+  | "you" | "appearance" | "editor" | "files" | "daily" | "organize" | "features" | "calendar" | "companion"
   | "hotkeys" | "ai" | "advanced" | "access" | "vault";
 
 type Icon = typeof User;
@@ -175,9 +177,37 @@ const THEME_SWATCH: Record<ThemeId, [string, string, string]> = {
   "catppuccin-mocha": ["#151522", "#2b2c44", "#cdd6f4"],
   "paper-daylight": ["#edf1f8", "#ffffff", "#141720"],
   "warm-parchment": ["#f2ead8", "#fcf7ec", "#31261b"],
-  christmas: ["#0c1d15", "#b3122e", "#f6f0e4"],
+  christmas: ["#f6f1ea", "#b11e31", "#ffffff"],
   matrix: ["#020803", "#0b3a14", "#00ff41"],
 };
+
+/** Which buttons the start page shows, in the order they were turned on. */
+function StartButtonsPicker() {
+  const on = () => startButtonIds();
+  const toggle = (id: string) => {
+    const cur = on();
+    setPref("startButtons", (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]).join(","));
+  };
+  return (
+    <div class="set-block">
+      <div class="set-block-head"><span>{t("start-buttons")}</span></div>
+      <small class="muted">{t("start-buttons-hint")}</small>
+      <div class="start-btn-pick">
+        <For each={START_BUTTONS}>
+          {(b) => {
+            const at = () => on().indexOf(b.id!);
+            return (
+              <button class="chip" classList={{ on: at() >= 0 }} aria-pressed={at() >= 0} onClick={() => toggle(b.id!)}>
+                <Show when={at() >= 0} fallback={<b.icon />}><span class="start-btn-n">{at() + 1}</span></Show>
+                <span>{t(b.key)}</span>
+              </button>
+            );
+          }}
+        </For>
+      </div>
+    </div>
+  );
+}
 
 function ThemePicker() {
   return (
@@ -187,7 +217,7 @@ function ThemePicker() {
           <button role="radio" aria-checked={settings.appearance.theme === id} class="theme-tile" onClick={() => changeTheme(id)}>
             <span class="theme-swatch" style={{ background: THEME_SWATCH[id][0] }} aria-hidden="true">
               <span style={{ background: THEME_SWATCH[id][1] }} />
-              <span style={{ background: settings.appearance.accent }} />
+              <span style={{ background: id === "christmas" ? "#b11e31" : settings.appearance.accent }} />
               <i style={{ background: THEME_SWATCH[id][2] }} />
             </span>
             <span class="theme-name">{t(`theme-${id}`)}</span>
@@ -202,8 +232,8 @@ function ThemePicker() {
 function AccentPicker() {
   return (
     <div class="set-row">
-      <span class="set-label"><span>{t("field-accent")}</span></span>
-      <div class="set-control accent-row" role="radiogroup" aria-label={t("field-accent")}>
+      <span class="set-label"><span>{t("field-accent")}</span><Show when={settings.appearance.theme === "christmas"}><small class="muted">{t("accent-theme-fixed")}</small></Show></span>
+      <div class="set-control accent-row" classList={{ "is-off": settings.appearance.theme === "christmas" }} role="radiogroup" aria-label={t("field-accent")}>
         <For each={ACCENTS}>
           {(c) => (
             <button role="radio" class="accent-dot" aria-checked={settings.appearance.accent.toLowerCase() === c} aria-label={c} title={c}
@@ -323,6 +353,7 @@ export const ENTRIES: Entry[] = [
       onChange={(v) => applyFocusProfile(v)} />
   ), { tags: "layout panels sidebars workspace minimal" }),
   e("appearance", Sparkles, ["field-ambient-mesh"], () => <Toggle label={t("field-ambient-mesh")} checked={settings.appearance.ambientMesh} onChange={(v) => updateSettings((c) => { c.appearance.ambientMesh = v; })} />, { tags: "background glow animation" }),
+  e("appearance", LayoutGrid, ["start-buttons", "start-buttons-hint"], () => <StartButtonsPicker />, { tags: "start page empty buttons shortcuts home new tab" }),
   e("appearance", PanelTop, ["shell-status-bar-label"], () => <Toggle label={t("shell-status-bar-label")} checked={profile.panels.statusBar} onChange={(v) => updateProfile((p) => { p.panels.statusBar = v; })} />, { tags: "footer bottom bar words count" }),
   e("appearance", Image, ["banner-title"], () => (
     <div class="set-row"><span class="set-label"><span>{t("banner-title")}</span></span><button class="btn sm" onClick={() => setOverlay("banner")}>{t("banner-edit")}</button></div>
@@ -370,8 +401,8 @@ export const ENTRIES: Entry[] = [
 
   // Files and daily notes
   e("files", FilePlus, ["files-new-note-folder", "files-root"], () => (
-    <Select<string> label={t("files-new-note-folder")} value={pref("newNoteFolder")}
-      options={[{ value: "", label: t("files-root") }, ...[...tree.folders].sort().map((f) => ({ value: f, label: f }))]}
+    <Select<string> label={t("files-new-note-folder")} hint={pref("pkmMethod") !== "none" && !pref("newNoteFolder") ? t("files-new-note-auto-hint", { path: autoNoteFolder() || "/" }) : undefined} value={pref("newNoteFolder")}
+      options={[{ value: "", label: pref("pkmMethod") === "none" ? t("files-root") : t("files-new-note-auto") }, ...[...tree.folders].sort().map((f) => ({ value: f, label: f }))]}
       onChange={(v) => setPref("newNoteFolder", v)} />
   ), { tags: "folder location new note where" }),
   e("files", Paperclip, ["pref-attachment-folder", "pref-attachment-mode", "attach-copy", "attach-move", "attach-link"], () => (
@@ -382,42 +413,42 @@ export const ENTRIES: Entry[] = [
         onChange={(v) => setPref("attachmentMode", v)} />
     </>
   ), { tags: "image picture attachment paste drop folder copy move link assets" }),
-  e("files", Film, ["pref-media-books-folder", "pref-media-movies-folder"], () => (
+  e("organize", Network, ["pref-pkm-method", "pref-pkm-method-hint"], () => (
+    <>
+      <Select<"none" | "para" | "zettel"> label={t("pref-pkm-method")} hint={t("pref-pkm-method-hint")} value={pref("pkmMethod")}
+        options={[{ value: "none", label: t("pkm-none") }, { value: "para", label: t("pkm-para") }, { value: "zettel", label: t("pkm-zettel") }]}
+        onChange={(v) => { setPref("pkmMethod", v); if (v === "para") void setupPara(); if (v === "zettel") void setupZettel(); }} />
+      <Show when={pref("pkmMethod") === "zettel"}>
+        <Select<string> label={t("pref-zettel-folder")} value={pref("zettelFolder")} options={folderOptions(pref("zettelFolder"), false)} onChange={(v) => { setPref("zettelFolder", v); void setupZettel(); }} />
+      </Show>
+    </>
+  ), { tags: "para zettelkasten projects areas resources archive method organize pkm" }),
+  e("organize", Film, ["pref-media-books-folder", "pref-media-movies-folder"], () => (
     <>
       <Select<string> label={t("pref-media-books-folder")} value={pref("mediaBooksFolder")} options={folderOptions(pref("mediaBooksFolder"), false)} onChange={(v) => setPref("mediaBooksFolder", v)} />
       <Select<string> label={t("pref-media-movies-folder")} value={pref("mediaMoviesFolder")} options={folderOptions(pref("mediaMoviesFolder"), false)} onChange={(v) => setPref("mediaMoviesFolder", v)} />
     </>
   ), { tags: "books movies films series cinema shelf folder" }),
-  e("files", Users, ["pref-people-folder"], () => (
+  e("organize", Users, ["pref-people-folder"], () => (
     <Select<string> label={t("pref-people-folder")} value={pref("peopleFolder")} options={folderOptions(pref("peopleFolder"), false)} onChange={(v) => setPref("peopleFolder", v)} />
   ), { tags: "people persons contacts network friends folder" }),
-  e("files", Network, ["pref-pkm-method", "pref-pkm-method-hint"], () => (
-    <>
-      <Select<"none" | "para" | "zettel"> label={t("pref-pkm-method")} hint={t("pref-pkm-method-hint")} value={pref("pkmMethod")}
-        options={[{ value: "none", label: t("pkm-none") }, { value: "para", label: t("pkm-para") }, { value: "zettel", label: t("pkm-zettel") }]}
-        onChange={(v) => { setPref("pkmMethod", v); if (v === "para") void setupPara(); }} />
-      <Show when={pref("pkmMethod") === "zettel"}>
-        <Select<string> label={t("pref-zettel-folder")} value={pref("zettelFolder")} options={folderOptions(pref("zettelFolder"), false)} onChange={(v) => setPref("zettelFolder", v)} />
-      </Show>
-    </>
-  ), { tags: "para zettelkasten projects areas resources archive method organize pkm" }),
   e("files", Trash2, ["files-confirm-delete"], () => <Toggle label={t("files-confirm-delete")} checked={pref("confirmDelete")} onChange={(v) => setPref("confirmDelete", v)} />, { tags: "delete trash remove confirm ask" }),
   e("files", FileClock, ["pref-history-auto"], () => <PrefToggle k="historyAuto" label={t("pref-history-auto")} />, { tags: "history versions snapshots backup undo" }),
-  e("files", CalendarDays, ["daily-folder"], () => (
+  e("daily", CalendarDays, ["daily-folder"], () => (
     <Row label={t("daily-folder")}>{(id) => <input id={id} class="input" value={pref("dailyFolder")} dir="auto" onChange={(ev) => setPref("dailyFolder", ev.currentTarget.value.trim())} />}</Row>
   ), { tags: "daily journal diary folder" }),
-  e("files", CalendarDays, ["daily-format"], () => (
+  e("daily", CalendarDays, ["daily-format"], () => (
     <Row label={t("daily-format")} hint={`${formatDailyName(new Date(), pref("dailyFormat"))}.md`}>
       {(id) => <input id={id} class="input" dir="ltr" value={pref("dailyFormat")} onInput={(ev) => setPref("dailyFormat", ev.currentTarget.value)} />}
     </Row>
   ), { tags: "daily date format name journal" }),
-  e("files", FileText, ["daily-template", "daily-template-none"], () => (
+  e("daily", FileText, ["daily-template", "daily-template-none"], () => (
     <Select<string> label={t("daily-template")} value={pref("dailyTemplate")}
       options={[{ value: "", label: t("daily-template-none") }, ...tree.notes.filter((n) => n.kind === "markdown").map((n) => ({ value: n.path, label: n.path.replace(/\.md$/i, "") }))]}
       onChange={(v) => setPref("dailyTemplate", v)} />
   ), { tags: "daily template journal" }),
-  e("files", Rocket, ["daily-open-startup"], () => <Toggle label={t("daily-open-startup")} checked={pref("dailyOnStartup")} onChange={(v) => setPref("dailyOnStartup", v)} />, { tags: "daily open start launch" }),
-  e("files", ListChecks, ["daily-tasks", "daily-tasks-help"], () => <Toggle label={t("daily-tasks")} hint={t("daily-tasks-help")} checked={pref("dailyTasks")} onChange={(v) => setPref("dailyTasks", v)} />, { tags: "daily tasks todo google calendar agenda" }),
+  e("daily", Rocket, ["daily-open-startup"], () => <Toggle label={t("daily-open-startup")} checked={pref("dailyOnStartup")} onChange={(v) => setPref("dailyOnStartup", v)} />, { tags: "daily open start launch" }),
+  e("daily", ListChecks, ["daily-tasks", "daily-tasks-help"], () => <Toggle label={t("daily-tasks")} hint={t("daily-tasks-help")} checked={pref("dailyTasks")} onChange={(v) => setPref("dailyTasks", v)} />, { tags: "daily tasks todo google calendar agenda" }),
 
   // Features
   e("features", Gauge, ["field-experience", "experience-beginner", "experience-intermediate", "experience-advanced"], () => (

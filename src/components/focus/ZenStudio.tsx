@@ -25,10 +25,10 @@ export default function ZenStudio(props: { onClose?: () => void }) {
           <button class="icon-btn" title={t("zen-back")} aria-label={t("zen-back")} onClick={() => props.onClose?.()}><ArrowLeft class="flip-rtl" /></button>
         </Show>
         <h1>{t("view-zen")}</h1>
-        <button class="btn primary" onClick={() => setZenOpen(true)}><Maximize2 />{t("focus-zen-mode")}</button>
+        <button class="btn primary zen-full" title={t("focus-zen-mode")} aria-label={t("focus-zen-mode")} onClick={() => setZenOpen(true)}><Maximize2 /><span class="btn-label">{t("focus-zen-mode")}</span></button>
       </header>
       <div class="zen-grid">
-        <section class="card glass-soft">
+        <section class="card glass-soft zen-plan">
           <h2 class="section-title">{t("focus-plan")}</h2>
           <label class="field"><span>{t("focus-goal")}</span><input class="input" dir="auto" value={zen.state.goalTitle} onChange={(e) => { const v = e.currentTarget.value; zen.update((z) => { z.goalTitle = v; }); }} /></label>
           <label class="field"><span>{t("focus-reward")}</span><input class="input" dir="auto" value={zen.state.rewardText} onChange={(e) => { const v = e.currentTarget.value; zen.update((z) => { z.rewardText = v; }); }} /></label>
@@ -40,10 +40,12 @@ export default function ZenStudio(props: { onClose?: () => void }) {
                   <input class="input sm" dir="auto" value={b.label} aria-label={t("focus-block-name")} onChange={(e) => { const v = e.currentTarget.value; setBlocks((x) => updateZenBlock(x, b.id, { label: v })); }} />
                   <input class="input sm num" type="number" min="1" max="180" value={b.minutes} aria-label={t("focus-minutes")} onChange={(e) => { const v = Math.max(1, Math.min(180, Number(e.currentTarget.value) || 1)); setBlocks((x) => updateZenBlock(x, b.id, { minutes: v })); }} />
                   <span class="muted">{t("focus-min")}</span>
+                  <span class="zen-block-tools">
                   <button class="icon-btn sm" aria-label={t("dash-move-back")} onClick={() => swap(i(), i() - 1)}><ArrowUp /></button>
                   <button class="icon-btn sm" aria-label={t("dash-move-forward")} onClick={() => swap(i(), i() + 1)}><ArrowDown /></button>
                   <button class="icon-btn sm" aria-label={t("focus-add-break")} title={t("focus-add-break")} onClick={() => setBlocks((x) => addBreakAfterBlock(x, i(), 5, t("focus-break")))}><Coffee /></button>
                   <button class="icon-btn sm" aria-label={t("action-delete")} onClick={() => setBlocks((x) => removeZenBlock(x, b.id))}><Trash2 /></button>
+                  </span>
                 </li>
               )}
             </For>
@@ -54,7 +56,7 @@ export default function ZenStudio(props: { onClose?: () => void }) {
           </div>
           <Toggle label={t("focus-one-minute-warning")} checked={zen.state.oneMinuteWarningEnabled} onChange={(v) => zen.update((z) => { z.oneMinuteWarningEnabled = v; })} />
         </section>
-        <section class="card glass-soft center">
+        <section class="card glass-soft center zen-timer">
           <MiniTimer />
           <Show when={sessionFinished()}>
             <div class="reward">

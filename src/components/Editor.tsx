@@ -36,7 +36,8 @@ const highlight = HighlightStyle.define([
 
 const theme = EditorView.theme({
   "&": { height: "100%", backgroundColor: "transparent", color: "var(--text-primary)", fontSize: "var(--editor-font-size)" },
-  ".cm-scroller": { fontFamily: "var(--font-editor)", lineHeight: "var(--editor-line-height)", overflow: "auto" },
+  // The pane around the editor scrolls (so the properties above the text scroll with it).
+  ".cm-scroller": { fontFamily: "var(--font-editor)", lineHeight: "var(--editor-line-height)", overflow: "visible" },
   ".cm-content": { maxWidth: "var(--editor-max-width)", margin: "0 auto", padding: "28px 28px 40vh", caretColor: "var(--accent)" },
   ".cm-line": { padding: "0" },
   ".cm-cursor": { borderInlineStartColor: "var(--accent)", borderInlineStartWidth: "2px" },
@@ -245,7 +246,7 @@ export function Editor(props: { path: string }) {
             if (u.focusChanged && u.view.hasFocus) { activeView = u.view; activeViewPath = props.path; }
           }),
           EditorView.domEventHandlers({
-            scroll: (_e, v) => { syncReaderScroll(v); },
+            scroll: (_e, v) => { syncReaderScroll(v.scrollDOM); },
             // Files from the system: save them under attachments/ and embed them where they land.
             dragover: (e) => {
               if (!hasOsFiles(e)) return false;
@@ -323,11 +324,10 @@ async function insertFiles(v: EditorView, files: FileList, at: number) {
 }
 
 /** Split view: keep the reader roughly aligned with the editor's top line. */
-function syncReaderScroll(view: EditorView) {
+export function syncReaderScroll(sc: HTMLElement) {
   if (!pref("scrollSync")) return;
-  const reader = view.dom.closest(".panes")?.querySelector<HTMLElement>("[data-sync=reader]");
+  const reader = sc.closest(".panes")?.querySelector<HTMLElement>("[data-sync=reader]");
   if (!reader) return;
-  const sc = view.scrollDOM;
   const max = sc.scrollHeight - sc.clientHeight;
   const frac = max > 0 ? sc.scrollTop / max : 0;
   reader.scrollTop = frac * (reader.scrollHeight - reader.clientHeight);

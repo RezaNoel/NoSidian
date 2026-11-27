@@ -12,7 +12,7 @@ export const THEMES: ThemeId[] = [
   "christmas", "matrix",
 ];
 /** Themes that show a "new" badge, and the last day (inclusive) they show it. */
-export const NEW_THEMES: Partial<Record<ThemeId, string>> = { christmas: "2026-12-10", matrix: "2026-12-10" };
+export const NEW_THEMES: Partial<Record<ThemeId, string>> = { christmas: "2026-12-31", matrix: "2026-12-31" };
 export function themeIsNew(id: ThemeId, now = new Date()): boolean {
   const until = NEW_THEMES[id];
   if (!until) return false;

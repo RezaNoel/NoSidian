@@ -240,6 +240,11 @@ export async function moveEntry(from: string, folder: string): Promise<void> {
   }
 }
 
+type TrashListener = (gone: (p: string) => boolean) => void | Promise<void>;
+const trashListeners: TrashListener[] = [];
+/** Run after a file or folder went to the trash, with a test for the removed paths. */
+export function onTrashed(fn: TrashListener): void { trashListeners.push(fn); }
+
 export async function trashEntry(path: string): Promise<void> {
   try {
     await backend.trash(path);
@@ -252,6 +257,7 @@ export async function trashEntry(path: string): Promise<void> {
     });
     v.setContents(produce((c) => { for (const k of Object.keys(c)) if (gone(k)) delete c[k]; }));
     await refresh();
+    for (const fn of trashListeners) void fn(gone);
   } catch (e) {
     reportError(e);
   }
