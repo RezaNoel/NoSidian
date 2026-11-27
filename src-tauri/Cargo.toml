@@ -15,8 +15,6 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
-# The phone share sheet (Telegram, Instagram, ...) for pet, book and film cards.
-tauri-plugin-sharekit = "0.3"
 serde.workspace = true
 serde_json.workspace = true
 nosidian-core.workspace = true
@@ -24,3 +22,8 @@ base64.workspace = true
 uuid.workspace = true
 sha2 = "0.10"
 ureq = { version = "2", features = ["json"] }
+
+# The phone share sheet (Telegram, Instagram, ...) for pet, book and film cards.
+# Android only: its Windows code does not build against the windows crate Tauri uses.
+[target.'cfg(target_os = "android")'.dependencies]
+tauri-plugin-sharekit = "0.3"
