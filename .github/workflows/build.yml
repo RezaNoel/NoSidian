@@ -80,7 +80,7 @@ jobs:
         run: |
           SDKM="$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin | sort -V | tail -1)/sdkmanager"
           yes | "$SDKM" --licenses > /dev/null || true
-          "$SDKM" --install "ndk;${NDK_VERSION}" "platforms;android-35" "build-tools;35.0.0"
+          "$SDKM" --install "ndk;${NDK_VERSION}" "platforms;android-35" "platforms;android-36" "build-tools;35.0.0"
           echo "NDK_HOME=$ANDROID_HOME/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -88,6 +88,19 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: npm ci
       - run: npx tauri android init --ci
+      - name: Compile every Android library against SDK 36
+        # tauri-android needs 36, and plugins such as sharekit still pin 35.
+        run: |
+          cat >> src-tauri/gen/android/build.gradle.kts <<'KTS'
+
+          subprojects {
+              plugins.withId("com.android.library") {
+                  afterEvaluate {
+                      extensions.configure<com.android.build.gradle.LibraryExtension>("android") { compileSdk = 36 }
+                  }
+              }
+          }
+          KTS
       - name: Build APK
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
