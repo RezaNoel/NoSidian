@@ -1,6 +1,7 @@
 // CodeMirror 6 Markdown editor. One instance per open note; mixed RTL/LTR
 // lines get their own direction, and the theme follows the app tokens.
 import { createEffect, createRoot, onCleanup, onMount } from "solid-js";
+import { peoplePaths } from "../state/people";
 import { Compartment, EditorState, type Extension } from "@codemirror/state";
 import { autocompletion, closeBrackets, closeBracketsKeymap, type Completion, type CompletionContext } from "@codemirror/autocomplete";
 import { foldGutter, foldKeymap, indentUnit } from "@codemirror/language";
@@ -81,6 +82,19 @@ function linkSource(ctx: CompletionContext) {
   if (!m) return null;
   const options: Completion[] = markdownPaths().map((p) => ({ label: noteTitle(p), detail: p.includes("/") ? p.slice(0, p.lastIndexOf("/")) : undefined, apply: `${noteTitle(p)}]]`, type: "text" }));
   return { from: m.from + 2, options, validFor: /^[^\]\n]*$/ };
+}
+/** "@Name" suggests people from the people network and inserts a link to their note. */
+function peopleSource(ctx: CompletionContext) {
+  const m = ctx.matchBefore(/(?:^|\s)@[\p{L}\p{N}_ .-]*$/u);
+  if (!m) return null;
+  const people = peoplePaths();
+  if (!people.length) return null;
+  const from = m.from + m.text.indexOf("@");
+  return {
+    from,
+    options: people.map((p) => { const name = p.split("/").pop()!.replace(/\.md$/i, ""); return { label: `@${name}`, detail: t("view-people"), apply: `[[${p.replace(/\.md$/i, "")}|${name}]]`, type: "variable" }; }),
+    validFor: /^@[\p{L}\p{N}_ .-]*$/u,
+  };
 }
 function tagSource(ctx: CompletionContext) {
   const m = ctx.matchBefore(/(?:^|\s)#[\p{L}\p{N}_/-]*$/u);
@@ -222,7 +236,7 @@ export function Editor(props: { path: string }) {
           syntaxHighlighting(highlight),
           keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, indentWithTab]),
           placeholder(t("editor-label")),
-          autocompletion({ override: [linkSource, tagSource, slashSource], icons: false }),
+          autocompletion({ override: [linkSource, peopleSource, tagSource, slashSource], icons: false }),
           EditorView.contentAttributes.of({ "aria-label": `${t("editor-label")}: ${noteTitle(props.path)}`, "aria-multiline": "true", dir: "auto" }),
           theme,
           prefsSlot.of(prefExtensions()),
