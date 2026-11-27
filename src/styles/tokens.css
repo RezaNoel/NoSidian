@@ -100,7 +100,10 @@
   --hover: rgb(0 255 65 / 0.08); --specular: rgb(180 255 190 / 0.08);
   --shadow: 0 14px 36px rgb(0 0 0 / 0.7);
   --mesh-1: #00a82d; --mesh-2: #004d14; --mesh-3: #0b6b2a;
+  --mx-green: #00c83a; --mx-bright: #5dff8a;
 }
+/* Terminal green for buttons and links while the Matrix theme is on. */
+:root[data-theme="matrix"] { --accent: #00c83a !important; --accent-ink: #021405 !important; }
 :root, [data-theme] {
   --bg-secondary: rgb(var(--l1) / var(--glass-opacity));
   --bg-tertiary: rgb(var(--l2) / var(--glass-surface));

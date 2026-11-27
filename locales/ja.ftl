@@ -1615,3 +1615,5 @@ stab-organize = ノートの方法
 start-buttons = スタートページのボタン
 start-buttons-hint = ノートを開いていないときに表示するボタンを選びます。オンにした順に並びます。
 accent-theme-fixed = クリスマステーマは専用の赤を使います。
+xmas-countdown = クリスマスまであと { $days } 日
+xmas-today = メリークリスマス！

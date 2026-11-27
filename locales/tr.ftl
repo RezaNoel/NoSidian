@@ -1620,3 +1620,5 @@ stab-organize = Not sistemi
 start-buttons = Başlangıç sayfası düğmeleri
 start-buttons-hint = Açık not yokken görünen düğmeleri seçin. Açtığınız sırayla görünürler.
 accent-theme-fixed = Noel teması kendi kırmızısını kullanır.
+xmas-countdown = Noel'e kalan gün: { $days }
+xmas-today = Mutlu Noeller!

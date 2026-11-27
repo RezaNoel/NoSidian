@@ -65,7 +65,17 @@ function ChipList(props: { items: string[]; label: string; onRemove: (x: string)
   const [v, setV] = createSignal("");
   const [open, setOpen] = createSignal(false);
   const [hi, setHi] = createSignal(0);
-  const add = (x = v().trim()) => { if (x) props.onAdd(x); setV(""); setHi(0); };
+  // Never add the same item twice (Enter and leaving the field can both fire, or the item is already there).
+  let last = { x: "", at: 0 };
+  const add = (x = v().trim()) => {
+    setV(""); setHi(0);
+    if (!x) return;
+    const now = performance.now();
+    if (last.x === x && now - last.at < 800) return;
+    last = { x, at: now };
+    if (props.items.some((y) => nameOf(y).toLowerCase() === x.toLowerCase() || y.toLowerCase() === x.toLowerCase())) return;
+    props.onAdd(x);
+  };
   // Themed suggestion list (no browser datalist): every option, filtered as you type.
   const matches = createMemo(() => {
     if (!props.options) return [];
@@ -92,7 +102,7 @@ function ChipList(props: { items: string[]; label: string; onRemove: (x: string)
       <form class="person-chip-add" onSubmit={(e) => { e.preventDefault(); add(); }}>
         <input class="input sm" dir="auto" placeholder={props.label} aria-label={props.label} value={v()} autocomplete="off"
           role={props.options ? "combobox" : undefined} aria-expanded={props.options ? open() : undefined}
-          onFocus={() => setOpen(true)} onKeyDown={key}
+          onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onKeyDown={key}
           onInput={(e) => { setV(e.currentTarget.value); setHi(0); setOpen(true); }}
           onBlur={() => { setOpen(false); if (!props.options) add(); }} />
         <Show when={props.options && open() && matches().length}>
@@ -166,7 +176,7 @@ function Profile(props: { path: string; onBack: () => void; select: (p: string) 
 
       <section class="person-section">
         <h2 class="section-title">{t("people-traits")}</h2>
-        <ChipList items={person().traits} label={t("people-add-trait")} onAdd={(x) => patchPerson(props.path, { traits: [...person().traits, x] })} onRemove={(x) => patchPerson(props.path, { traits: person().traits.filter((y) => y !== x) })} />
+        <ChipList items={person().traits} label={t("people-add-trait")} onAdd={(x) => patchPerson(props.path, { traits: [...new Set([...person().traits, x])] })} onRemove={(x) => { const list = [...person().traits]; list.splice(list.indexOf(x), 1); patchPerson(props.path, { traits: list }); }} />
       </section>
 
       <section class="person-section">

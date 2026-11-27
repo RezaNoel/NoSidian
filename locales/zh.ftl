@@ -1615,3 +1615,5 @@ stab-organize = 笔记方法
 start-buttons = 起始页按钮
 start-buttons-hint = 选择没有打开笔记时显示的按钮。按你开启的顺序排列。
 accent-theme-fixed = 圣诞主题使用自己的红色。
+xmas-countdown = 距圣诞节还有 { $days } 天
+xmas-today = 圣诞快乐！

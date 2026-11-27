@@ -1620,3 +1620,5 @@ stab-organize = Sistema de notas
 start-buttons = Botões da página inicial
 start-buttons-hint = Escolha os botões mostrados quando nenhuma nota está aberta. Eles aparecem na ordem em que você os ativa.
 accent-theme-fixed = O tema de Natal usa o próprio vermelho.
+xmas-countdown = Dias até o Natal: { $days }
+xmas-today = Feliz Natal!

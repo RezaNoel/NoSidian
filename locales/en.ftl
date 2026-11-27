@@ -1622,3 +1622,5 @@ stab-organize = Note system
 start-buttons = Start page buttons
 start-buttons-hint = Pick the buttons shown when no note is open. They appear in the order you turn them on.
 accent-theme-fixed = The Christmas theme uses its own red.
+xmas-countdown = Days to Christmas: { $days }
+xmas-today = Merry Christmas!

@@ -217,7 +217,7 @@ function ThemePicker() {
           <button role="radio" aria-checked={settings.appearance.theme === id} class="theme-tile" onClick={() => changeTheme(id)}>
             <span class="theme-swatch" style={{ background: THEME_SWATCH[id][0] }} aria-hidden="true">
               <span style={{ background: THEME_SWATCH[id][1] }} />
-              <span style={{ background: id === "christmas" ? "#b11e31" : settings.appearance.accent }} />
+              <span style={{ background: id === "christmas" ? "#b11e31" : id === "matrix" ? "#00c83a" : settings.appearance.accent }} />
               <i style={{ background: THEME_SWATCH[id][2] }} />
             </span>
             <span class="theme-name">{t(`theme-${id}`)}</span>
@@ -230,10 +230,11 @@ function ThemePicker() {
 }
 
 function AccentPicker() {
+  const fixed = () => settings.appearance.theme === "christmas" || settings.appearance.theme === "matrix";
   return (
     <div class="set-row">
-      <span class="set-label"><span>{t("field-accent")}</span><Show when={settings.appearance.theme === "christmas"}><small class="muted">{t("accent-theme-fixed")}</small></Show></span>
-      <div class="set-control accent-row" classList={{ "is-off": settings.appearance.theme === "christmas" }} role="radiogroup" aria-label={t("field-accent")}>
+      <span class="set-label"><span>{t("field-accent")}</span><Show when={fixed()}><small class="muted">{t("accent-theme-fixed")}</small></Show></span>
+      <div class="set-control accent-row" classList={{ "is-off": fixed() }} role="radiogroup" aria-label={t("field-accent")}>
         <For each={ACCENTS}>
           {(c) => (
             <button role="radio" class="accent-dot" aria-checked={settings.appearance.accent.toLowerCase() === c} aria-label={c} title={c}

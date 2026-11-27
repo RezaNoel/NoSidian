@@ -1577,6 +1577,8 @@ export interface MessageArgs {
   "start-buttons": undefined;
   "start-buttons-hint": undefined;
   "accent-theme-fixed": undefined;
+  "xmas-countdown": { days: string | number };
+  "xmas-today": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -3157,5 +3159,7 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "stab-organize",
   "start-buttons",
   "start-buttons-hint",
-  "accent-theme-fixed"
+  "accent-theme-fixed",
+  "xmas-countdown",
+  "xmas-today"
 ];

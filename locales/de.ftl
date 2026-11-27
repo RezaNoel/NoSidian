@@ -1620,3 +1620,5 @@ stab-organize = Notizsystem
 start-buttons = Schaltflächen der Startseite
 start-buttons-hint = Wähle die Schaltflächen, die erscheinen, wenn keine Notiz offen ist. Sie erscheinen in der Reihenfolge, in der du sie einschaltest.
 accent-theme-fixed = Das Weihnachtsdesign nutzt sein eigenes Rot.
+xmas-countdown = Tage bis Weihnachten: { $days }
+xmas-today = Frohe Weihnachten!

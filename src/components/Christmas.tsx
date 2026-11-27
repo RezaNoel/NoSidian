@@ -3,11 +3,21 @@
 // (reindeer, gingerbread man, candy cane, snowflake, bauble) and Christmas
 // icons on the toolbar. Everything here only shows while the Christmas theme
 // is on; choosing another theme brings the normal look back.
-import { Show, type JSX } from "solid-js";
-import { Bell, CandyCane, CloudSnow, Cookie, Gift, Snowflake, Star, TreePine } from "lucide-solid";
+//
+// The Matrix theme gets a programming pack from the same file: digital rain
+// behind the panels, code icons on the toolbar, a small terminal on the start
+// page and binary digits that burst out of a ticked task.
+import { Show, createEffect, createSignal, onCleanup, onMount, type JSX } from "solid-js";
+import {
+  Bell, Binary, Bug, CandyCane, CloudSnow, CodeXml, Cookie, Cpu, Database, FileCode, Gift, GitBranch,
+  Snowflake, SquareTerminal, Star, TreePine,
+} from "lucide-solid";
 import { settings } from "../state/settings";
+import { t } from "../i18n";
 
 export const isXmas = () => settings.appearance.theme === "christmas";
+export const isMatrix = () => settings.appearance.theme === "matrix";
+const still = () => settings.accessibility.reduceMotion;
 
 type IconC = (p: JSX.SvgSVGAttributes<SVGSVGElement>) => JSX.Element;
 /** Toolbar icons that change with the Christmas theme (by tool or button key). */
@@ -21,9 +31,21 @@ const XMAS_ICONS: Record<string, IconC> = {
   ambience: CloudSnow as IconC,
   settings: Snowflake as IconC,
 };
-/** The icon to show for `key`: its Christmas version while that theme is on. */
+/** Toolbar icons for the Matrix theme: programming tools. */
+const MATRIX_ICONS: Record<string, IconC> = {
+  "ribbon-dashboard": SquareTerminal as IconC,
+  "ribbon-flashcards": Binary as IconC,
+  "ribbon-daily-note": FileCode as IconC,
+  "ribbon-focus": CodeXml as IconC,
+  "ribbon-graph": GitBranch as IconC,
+  "pet-studio": Bug as IconC,
+  ambience: Database as IconC,
+  settings: Cpu as IconC,
+};
+/** The icon to show for `key`: its themed version while a theme pack is on. */
 export function themedIcon<T>(key: string, normal: T): T {
-  return (isXmas() && XMAS_ICONS[key] ? XMAS_ICONS[key] : normal) as T;
+  const map = isXmas() ? XMAS_ICONS : isMatrix() ? MATRIX_ICONS : null;
+  return (map?.[key] ?? normal) as T;
 }
 
 // ---------- Figures (flat SVG, sized by the caller) ----------
@@ -112,6 +134,41 @@ export function Holly(props: { size?: number }) {
   );
 }
 
+export function Snowman(props: { size?: number }) {
+  return (
+    <svg class="xmas-fig" width={props.size ?? 40} height={props.size ?? 40} viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="46" r="14" fill="#fff" stroke="#d5dde6" stroke-width="1.5" />
+      <circle cx="32" cy="24" r="10" fill="#fff" stroke="#d5dde6" stroke-width="1.5" />
+      <rect x="23" y="5" width="18" height="10" rx="1.5" fill="#2a1215" /><rect x="19" y="14" width="26" height="3.5" rx="1.5" fill="#2a1215" />
+      <rect x="23" y="12" width="18" height="2.5" fill="#b11e31" />
+      <circle cx="28.5" cy="22" r="1.5" fill="#2a1215" /><circle cx="35.5" cy="22" r="1.5" fill="#2a1215" />
+      <path d="M32 25 L40 27 L32 28Z" fill="#e8772e" />
+      <path d="M22 32 q10 5 20 0 l2 4 q-12 5 -24 0Z" fill="#b11e31" /><rect x="35" y="33" width="5" height="10" rx="1.5" fill="#b11e31" />
+      <circle cx="32" cy="42" r="1.6" fill="#2a1215" /><circle cx="32" cy="49" r="1.6" fill="#2a1215" />
+    </svg>
+  );
+}
+
+export function XmasTree(props: { size?: number }) {
+  return (
+    <svg class="xmas-fig" width={props.size ?? 40} height={props.size ?? 40} viewBox="0 0 64 64" aria-hidden="true">
+      <rect x="28" y="52" width="8" height="9" rx="1" fill="#6b4226" />
+      <path d="M32 8 L50 32 H42 L54 52 H10 L22 32 H14Z" fill="#1e6b45" />
+      <path d="M20 40 q12 6 26 -2 M18 48 q14 5 30 -1" fill="none" stroke="#d9a441" stroke-width="1.6" />
+      <circle cx="26" cy="30" r="2.4" fill="#b11e31" /><circle cx="38" cy="36" r="2.4" fill="#fff" /><circle cx="24" cy="46" r="2.4" fill="#d9a441" />
+      <circle cx="40" cy="47" r="2.4" fill="#b11e31" /><circle cx="33" cy="22" r="2" fill="#d9a441" />
+      <path d="M32 1 l2.2 4.6 5 .7 -3.6 3.5 .9 5 -4.5 -2.4 -4.5 2.4 .9 -5 -3.6 -3.5 5 -.7Z" fill="#d9a441" />
+    </svg>
+  );
+}
+
+/** Whole days until the next 25 December, 0 on the day itself. */
+export function daysToChristmas(now = new Date()): number {
+  const y = now.getMonth() === 11 && now.getDate() > 25 ? now.getFullYear() + 1 : now.getFullYear();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((new Date(y, 11, 25).getTime() - today.getTime()) / 86_400_000);
+}
+
 /** A Santa hat to sit on the app logo. */
 export function SantaHat() {
   return (
@@ -132,22 +189,107 @@ export function HatOn(props: { children: JSX.Element }) {
   );
 }
 
-/** A row of figures for the start page. */
+/** A row of figures for the start page (or a small terminal in the Matrix theme). */
 export function XmasFriends() {
   return (
+    <>
     <Show when={isXmas()}>
+      <div class="xmas-extra">
       <div class="xmas-friends" aria-hidden="true">
-        <Reindeer size={44} /><Bauble size={30} /><Gingerbread size={40} /><SnowflakeFig size={28} /><CandyCaneFig size={38} />
+        <XmasTree size={42} /><Reindeer size={44} /><Bauble size={30} /><Gingerbread size={40} /><SnowflakeFig size={28} /><CandyCaneFig size={38} /><Snowman size={42} />
+      </div>
+      <p class="xmas-countdown"><Holly size={20} />{daysToChristmas() === 0 ? t("xmas-today") : t("xmas-countdown", { days: daysToChristmas() })}</p>
       </div>
     </Show>
+    <Show when={isMatrix()}>
+      <div class="mx-term" aria-hidden="true" dir="ltr">
+        <div class="mx-term-bar"><i /><i /><i /><span>~/vault</span></div>
+        <code><b>$</b> nosidian --focus <span class="mx-cursor" /></code>
+      </div>
+    </Show>
+    </>
   );
 }
 
-/** Garland along the top of the window and snow behind the panels. */
+/** Digital rain behind the panels for the Matrix theme. Slow and faint, and still when motion is reduced. */
+function MatrixRain() {
+  let canvas!: HTMLCanvasElement;
+  onMount(() => {
+    const g = canvas.getContext("2d");
+    if (!g) return;
+    const glyphs = "01{}[]<>/=;:+*#$&|abcdef0123456789ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ";
+    const size = 16;
+    let drops: number[] = [];
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drops = Array.from({ length: Math.ceil(innerWidth / size) }, () => Math.random() * -innerHeight / size);
+      g.fillStyle = "#020803"; g.fillRect(0, 0, innerWidth, innerHeight);
+    };
+    const frame = () => {
+      g.fillStyle = "rgb(2 8 3 / 0.12)";
+      g.fillRect(0, 0, innerWidth, innerHeight);
+      g.font = `${size - 2}px ui-monospace, monospace`;
+      for (let i = 0; i < drops.length; i++) {
+        const y = drops[i] * size;
+        g.fillStyle = Math.random() < 0.06 ? "#d8ffd8" : "#00c83a";
+        g.fillText(glyphs[(Math.random() * glyphs.length) | 0], i * size, y);
+        drops[i] = y > innerHeight && Math.random() > 0.975 ? 0 : drops[i] + 1;
+      }
+    };
+    resize();
+    addEventListener("resize", resize);
+    let id = 0;
+    const start = () => { clearInterval(id); if (!still() && !document.hidden) id = window.setInterval(frame, 70); };
+    createEffect(start);
+    const vis = () => start();
+    document.addEventListener("visibilitychange", vis);
+    onCleanup(() => { clearInterval(id); removeEventListener("resize", resize); document.removeEventListener("visibilitychange", vis); });
+  });
+  return <canvas class="mx-rain" ref={canvas} aria-hidden="true" />;
+}
+
+/** Little pieces that burst out of a ticked task: snowflakes for Christmas, binary for Matrix. */
+function TaskBurst() {
+  const [bits, setBits] = createSignal<{ id: number; x: number; y: number; dx: number; dy: number; ch: string }[]>([]);
+  let n = 0;
+  const onClick = (e: MouseEvent) => {
+    if (still()) return;
+    const el = (e.target as HTMLElement | null)?.closest?.("input[type=checkbox].task-box, .widget input[type=checkbox], .cm-task-box, .task-check") as HTMLInputElement | null;
+    if (!el || ("checked" in el && !el.checked)) return;
+    const r = el.getBoundingClientRect();
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const chars = isXmas() ? ["❄", "❅", "❆", "✦"] : ["0", "1", "{", "}", ";"];
+    const made = Array.from({ length: 8 }, (_, i) => {
+      const a = (i / 8) * Math.PI * 2 + Math.random() * 0.5;
+      const d = 22 + Math.random() * 18;
+      return { id: ++n, x, y, dx: Math.cos(a) * d, dy: Math.sin(a) * d, ch: chars[i % chars.length] };
+    });
+    setBits((b) => [...b, ...made]);
+    const ids = new Set(made.map((m) => m.id));
+    setTimeout(() => setBits((b) => b.filter((m) => !ids.has(m.id))), 800);
+  };
+  onMount(() => document.addEventListener("click", onClick, true));
+  onCleanup(() => document.removeEventListener("click", onClick, true));
+  return (
+    <div class="task-burst" aria-hidden="true">
+      {bits().map((b) => (
+        <span style={{ left: `${b.x}px`, top: `${b.y}px`, "--dx": `${b.dx}px`, "--dy": `${b.dy}px` }}>{b.ch}</span>
+      ))}
+    </div>
+  );
+}
+
+/** Garland and snow for Christmas, digital rain for Matrix, and the task burst for both. */
 export function XmasDecor() {
   return (
-    <Show when={isXmas()}>
-      <div class="xmas-garland" aria-hidden="true"><i /><i /></div>
-    </Show>
+    <>
+      <Show when={isXmas()}>
+        <div class="xmas-garland" aria-hidden="true"><i /><i /></div>
+      </Show>
+      <Show when={isMatrix()}><MatrixRain /></Show>
+      <Show when={isXmas() || isMatrix()}><TaskBurst /></Show>
+    </>
   );
 }

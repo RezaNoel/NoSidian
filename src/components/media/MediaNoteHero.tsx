@@ -2,8 +2,9 @@
 // shelf details (status, rating, progress, who recommended it). The note text
 // below stays as it is; this card only shows what the shelf knows.
 import { Show, createMemo, createResource } from "solid-js";
-import { BookOpen, ChevronDown, ChevronUp, Film, Library, Star, Tv, UserRound } from "lucide-solid";
+import { BookOpen, ChevronDown, ChevronRight, Film, Library, Star, Tv, UserRound } from "lucide-solid";
 import { pref, setPref } from "../../state/prefs";
+import type { JSX } from "solid-js";
 import { t } from "../../i18n";
 import { blobUrl } from "../../lib/attachments";
 import { media } from "../../state/media";
@@ -34,18 +35,8 @@ export function MediaNoteHero(props: { path: string }) {
         const status = () => (f().kind === "book" ? t(`media-book-${(f().e as BookEntry).status}` as "media-book-reading") : t(`media-status-${(f().e as CinemaEntry).status}` as "media-status-watched"));
         const pct = () => (f().kind === "book" ? computeBookProgressPercent(f().e as BookEntry) : (f().e as CinemaEntry).mediaType === "series" ? computeSeriesProgressPercent(f().e as CinemaEntry) : -1);
         return (
-          <Show when={!pref("mediaHeroCollapsed")} fallback={
-            <aside class="media-hero folded" aria-label={f().e.title}>
-              <span class="media-hero-mini" style={{ "--cover": coverColor(f().e.title || "?") }}>
-                <Show when={url()} fallback={f().kind === "book" ? <BookOpen /> : <Film />}>{(u) => <img src={u()} alt="" draggable={false} />}</Show>
-              </span>
-              <strong class="media-hero-title" dir="auto">{f().e.title}</strong>
-              <span class="chip on">{status()}</span>
-              <button class="icon-btn media-hero-fold" title={t("media-hero-show")} aria-label={t("media-hero-show")} aria-expanded="false" onClick={() => setPref("mediaHeroCollapsed", false)}><ChevronDown /></button>
-            </aside>
-          }>
+          <HeroFold label={f().kind === "book" ? t("media-books") : t("media-movies")} title={f().e.title}>
           <aside class="media-hero" aria-label={f().e.title}>
-            <button class="icon-btn media-hero-fold" title={t("media-hero-hide")} aria-label={t("media-hero-hide")} aria-expanded="true" onClick={() => setPref("mediaHeroCollapsed", true)}><ChevronUp /></button>
             <div class="media-hero-cover" classList={{ poster: f().kind === "movie" }} style={{ "--cover": coverColor(f().e.title || "?") }}>
               <Show when={url()} fallback={<span class="cover-icon">{f().kind === "book" ? <BookOpen /> : (f().e as CinemaEntry).mediaType === "series" ? <Tv /> : <Film />}</span>}>
                 {(u) => <img src={u()} alt="" draggable={false} />}
@@ -75,9 +66,24 @@ export function MediaNoteHero(props: { path: string }) {
               </div>
             </div>
           </aside>
-          </Show>
+          </HeroFold>
         );
       }}
     </Show>
+  );
+}
+
+/** Fold bar above the book, film and person cards, like the Properties header: it hides the card, it never closes it. */
+export function HeroFold(props: { label: string; title: string; children: JSX.Element }) {
+  const open = () => !pref("mediaHeroCollapsed");
+  return (
+    <section class="hero-fold">
+      <button class="props-head hero-fold-head" aria-expanded={open()} title={open() ? t("media-hero-hide") : t("media-hero-show")} onClick={() => setPref("mediaHeroCollapsed", open())}>
+        {open() ? <ChevronDown aria-hidden="true" /> : <ChevronRight class="flip-rtl" aria-hidden="true" />}
+        <span>{props.label}</span>
+        <Show when={!open()}><span class="hero-fold-title" dir="auto">{props.title}</span></Show>
+      </button>
+      <Show when={open()}>{props.children}</Show>
+    </section>
   );
 }

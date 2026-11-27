@@ -1615,3 +1615,5 @@ stab-organize = 노트 방식
 start-buttons = 시작 페이지 버튼
 start-buttons-hint = 열린 노트가 없을 때 보일 버튼을 고르세요. 켠 순서대로 표시됩니다.
 accent-theme-fixed = 크리스마스 테마는 고유한 빨간색을 사용합니다.
+xmas-countdown = 크리스마스까지 남은 날: { $days }
+xmas-today = 메리 크리스마스!

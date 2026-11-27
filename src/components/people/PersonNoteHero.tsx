@@ -9,6 +9,7 @@ import { isPersonPath, readPerson } from "../../state/people";
 import { openView } from "../../state/views";
 import { openNote } from "../../state/vault";
 import { Avatar } from "./Avatar";
+import { HeroFold } from "../media/MediaNoteHero";
 
 const nameOf = (p: string) => p.split("/").pop()!.replace(/\.md$/i, "");
 const QUICK = ["phone", "email", "telegram", "whatsapp", "instagram"] as const;
@@ -20,6 +21,7 @@ export function PersonNoteHero(props: { path: string }) {
   return (
     <Show when={person()}>
       {(p) => (
+        <HeroFold label={t("view-people")} title={p().name}>
         <aside class="media-hero person-hero" aria-label={p().name}>
           <Avatar path={props.path} photo={p().photo} size="lg" />
           <div class="media-hero-body">
@@ -41,6 +43,7 @@ export function PersonNoteHero(props: { path: string }) {
             </div>
           </div>
         </aside>
+        </HeroFold>
       )}
     </Show>
   );
