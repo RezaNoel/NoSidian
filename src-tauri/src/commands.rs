@@ -428,6 +428,20 @@ pub async fn youtube_info(id: String) -> CmdResult<String> {
     .map_err(internal)?
 }
 
+/// Write a generated image to the app's cache so the system share sheet can send it.
+#[tauri::command]
+pub fn share_temp_file(app: tauri::AppHandle, name: String, data: String) -> CmdResult<String> {
+    use base64::Engine;
+    use tauri::Manager;
+    let bytes = base64::engine::general_purpose::STANDARD.decode(data.trim()).map_err(|_| CommandError { code: "invalid-path", detail: name.clone() })?;
+    let safe: String = name.chars().map(|c| if c.is_alphanumeric() || c == '.' || c == '-' || c == '_' || c == ' ' { c } else { '_' }).collect();
+    let dir = app.path().app_cache_dir().map_err(internal)?.join("share");
+    std::fs::create_dir_all(&dir).map_err(internal)?;
+    let path = dir.join(if safe.trim().is_empty() { "share.png".to_string() } else { safe });
+    std::fs::write(&path, bytes).map_err(internal)?;
+    Ok(path.to_string_lossy().into_owned())
+}
+
 /// Absolute filesystem path of a vault entry, for "copy location".
 #[tauri::command]
 pub fn entry_abs_path(state: State<'_, AppState>, path: String) -> CmdResult<String> {

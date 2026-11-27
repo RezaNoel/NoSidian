@@ -1562,6 +1562,10 @@ export interface MessageArgs {
   "graph-layout-ring": undefined;
   "graph-centerforce": undefined;
   "graph-rearrange": undefined;
+  "cal-google-manual": undefined;
+  "cal-google-open-link": undefined;
+  "cal-google-copy-link": undefined;
+  "back-again-to-exit": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -3127,5 +3131,9 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "graph-layout-islands",
   "graph-layout-ring",
   "graph-centerforce",
-  "graph-rearrange"
+  "graph-rearrange",
+  "cal-google-manual",
+  "cal-google-open-link",
+  "cal-google-copy-link",
+  "back-again-to-exit"
 ];

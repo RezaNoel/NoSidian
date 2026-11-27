@@ -23,6 +23,7 @@ pub struct AppState {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_sharekit::init())
         .manage(bridge::McpBridge::default())
         .manage(google::Google::default())
         .setup(|app| {
@@ -74,6 +75,7 @@ pub fn run() {
             commands::export_bytes,
             google::google_status,
             google::google_connect,
+            google::google_cancel,
             google::google_disconnect,
             google::google_request,
             commands::vault_backup,
@@ -81,6 +83,7 @@ pub fn run() {
             commands::files_move_in,
             commands::open_external_file,
             commands::youtube_info,
+            commands::share_temp_file,
             commands::entry_abs_path,
             bridge::terminal_exec,
             bridge::mcp_start,

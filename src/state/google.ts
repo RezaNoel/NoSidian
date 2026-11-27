@@ -34,6 +34,9 @@ const sig = createRoot(() => {
   return { status, setStatus, busy, setBusy };
 });
 export const googleStatus = sig.status;
+/** The sign-in link while waiting, so it can be opened by hand when no browser opens. */
+const [authUrl, setAuthUrl] = createRoot(() => createSignal(""));
+export { authUrl as googleAuthUrl };
 export const googleBusy = sig.busy;
 
 async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
@@ -43,9 +46,16 @@ async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T> 
 
 const errorText = (e: unknown) => {
   const code = (e as { code?: string })?.code ?? "";
+  const detail = String((e as { detail?: string })?.detail ?? (typeof e === "string" ? e : "")).slice(0, 160);
   const known = ["google-not-configured", "google-signed-out", "google-offline", "google-timeout", "google-denied", "google-busy"];
-  return t((known.includes(code) ? `err-${code}` : "err-google-failed") as "err-google-failed");
+  const base = t((known.includes(code) ? `err-${code}` : "err-google-failed") as "err-google-failed");
+  // Show Google's own reason too, so a failure can be told apart from the others.
+  return detail && detail !== "cancelled" ? `${base} (${detail})` : base;
 };
+
+export async function cancelGoogleSignIn(): Promise<void> {
+  try { await call("google_cancel"); } catch { /* nothing to cancel */ }
+}
 
 export async function refreshGoogleStatus(): Promise<void> {
   if (!inTauri()) return;
@@ -55,11 +65,13 @@ export async function refreshGoogleStatus(): Promise<void> {
 export async function connectGoogle(): Promise<void> {
   if (sig.busy()) return;
   sig.setBusy("connect");
+  const { listen } = await import("@tauri-apps/api/event");
+  const stop = await listen<string>("google-auth-url", (ev) => setAuthUrl(ev.payload)).catch(() => () => undefined);
   try {
     sig.setStatus(await call<GoogleStatus>("google_connect", { doneText: t("cal-google-done") }));
     toast(t("cal-google-connected"));
     void syncGoogle();
-  } catch (e) { toast(errorText(e), true); } finally { sig.setBusy(""); }
+  } catch (e) { toast(errorText(e), true); } finally { sig.setBusy(""); setAuthUrl(""); stop(); }
 }
 
 export async function disconnectGoogle(): Promise<void> {

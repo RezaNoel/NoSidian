@@ -3,7 +3,8 @@ import { Show, onMount } from "solid-js";
 import { CalendarCheck, LogOut, RefreshCw } from "lucide-solid";
 import { locale, t } from "../../i18n";
 import { inTauri } from "../../state/backend";
-import { connectGoogle, disconnectGoogle, googleBusy, googlePrefs, googleStatus, refreshGoogleStatus, syncGoogle } from "../../state/google";
+import { toast } from "../../state/ui";
+import { cancelGoogleSignIn, connectGoogle, disconnectGoogle, googleAuthUrl, googleBusy, googlePrefs, googleStatus, refreshGoogleStatus, syncGoogle } from "../../state/google";
 import { Toggle } from "../controls";
 
 export function GoogleCalendarSettings() {
@@ -17,7 +18,17 @@ export function GoogleCalendarSettings() {
           fallback={
             <div class="stack">
               <p class="hint">{t("cal-google-about")}</p>
-              <div><button class="btn primary" disabled={!!googleBusy()} onClick={() => void connectGoogle()}><CalendarCheck />{googleBusy() === "connect" ? t("cal-google-waiting") : t("cal-google-connect")}</button></div>
+              <div class="row wrap">
+                <button class="btn primary" disabled={!!googleBusy()} onClick={() => void connectGoogle()}><CalendarCheck />{googleBusy() === "connect" ? t("cal-google-waiting") : t("cal-google-connect")}</button>
+                <Show when={googleBusy() === "connect"}><button class="btn" onClick={() => void cancelGoogleSignIn()}>{t("action-cancel")}</button></Show>
+              </div>
+              <Show when={googleBusy() === "connect" && googleAuthUrl()}>
+                <p class="hint">{t("cal-google-manual")}</p>
+                <div class="row wrap">
+                  <button class="btn sm" onClick={() => window.open(googleAuthUrl(), "_blank", "noopener")}>{t("cal-google-open-link")}</button>
+                  <button class="btn sm" onClick={() => void navigator.clipboard?.writeText(googleAuthUrl()).then(() => toast(t("copied")))}>{t("cal-google-copy-link")}</button>
+                </div>
+              </Show>
             </div>
           }
         >

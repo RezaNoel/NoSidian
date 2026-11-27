@@ -74,7 +74,7 @@ export function PetStudio() {
     setSharing(true);
     try {
       const bytes = await renderPetCard(pet.state, capture?.() ?? null);
-      if (await shareImage(cardFileName(pet.state.name), bytes)) toast(t("pet-card-saved"));
+      if ((await shareImage(cardFileName(pet.state.name), bytes)) === "saved") toast(t("pet-card-saved"));
     } catch { toast(t("pet-card-failed"), true); } finally { setSharing(false); }
   };
   const label = () => t("pet-label", { name: pet.state.name, mood: t(`pet-mood-${getPetMoodLabel(pet.state).toLowerCase()}` as "pet-mood-happy") });

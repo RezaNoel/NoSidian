@@ -1,12 +1,13 @@
 // Root: boots into the first-launch wizard or straight into the last vault.
 import { petEvent, petWelcome, startPetTalk } from "./state/petTalk";
+import { installBackNav } from "./state/backNav";
 import { HoverPreview } from "./components/HoverPreview";
 import { For, Match, Show, Switch, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
 import { t } from "./i18n";
 import { LiveAnnouncer } from "./a11y/announcer";
 import { settings } from "./state/settings";
 import { restoreVault } from "./state/session";
-import { overlay, setOverlay, setZenPage, toasts, zenPage } from "./state/ui";
+import { isMobile, overlay, setOverlay, setZenPage, toasts, zenPage } from "./state/ui";
 import { Suspense, lazy } from "solid-js";
 const ZenStudioPage = lazy(() => import("./components/focus/ZenStudio"));
 import { vault } from "./state/vault";
@@ -49,6 +50,7 @@ export function App() {
   installContextMenuGuard();
   installSelectEnhancer();
   installUiSounds();
+  if (isMobile()) installBackNav();
 
   const mods = createMemo(() => enabledModules(settings.experienceLevel, settings.moduleOverrides));
   const inWorkspace = () => phase() === "workspace" && !!vault();

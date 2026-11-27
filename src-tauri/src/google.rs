@@ -19,7 +19,7 @@ use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::commands::{internal, CmdResult, CommandError};
 
@@ -46,6 +46,7 @@ pub struct Google {
     tokens: Mutex<Option<Tokens>>,
     loaded: AtomicBool,
     signing_in: AtomicBool,
+    cancel: AtomicBool,
 }
 
 #[derive(Serialize)]
@@ -196,10 +197,13 @@ fn token_request(form: &[(&str, &str)]) -> CmdResult<Value> {
 
 /// Wait for Google to redirect the browser back to the loopback listener and
 /// return the query string of that request.
-fn wait_for_redirect(listener: &TcpListener, done_html: &str) -> CmdResult<String> {
+fn wait_for_redirect(listener: &TcpListener, done_html: &str, cancel: &AtomicBool) -> CmdResult<String> {
     listener.set_nonblocking(true).map_err(internal)?;
     let deadline = Instant::now() + SIGN_IN_TIMEOUT;
     loop {
+        if cancel.swap(false, Ordering::SeqCst) {
+            return Err(err("google-denied", "cancelled"));
+        }
         if Instant::now() > deadline {
             return Err(err("google-timeout", "sign-in took too long"));
         }
@@ -274,8 +278,12 @@ pub fn google_connect(app: AppHandle, g: State<'_, Google>, done_text: String) -
             enc(&redirect),
             enc(SCOPE)
         );
-        open_browser(&url).map_err(internal)?;
-        let query = wait_for_redirect(&listener, &done_text)?;
+        // The page also gets the link, so it can offer it when no browser opens
+        // (phones, locked-down PCs): sign-in still finishes through the loopback.
+        let _ = app.emit("google-auth-url", &url);
+        let _ = open_browser(&url);
+        g.cancel.store(false, Ordering::SeqCst);
+        let query = wait_for_redirect(&listener, &done_text, &g.cancel)?;
         if let Some(e) = query_param(&query, "error") {
             return Err(err("google-denied", e));
         }
@@ -317,6 +325,14 @@ pub fn google_connect(app: AppHandle, g: State<'_, Google>, done_text: String) -
     })();
     g.signing_in.store(false, Ordering::SeqCst);
     result
+}
+
+/// Stop waiting for a sign-in the person gave up on.
+#[tauri::command]
+pub fn google_cancel(g: State<'_, Google>) {
+    if g.signing_in.load(Ordering::SeqCst) {
+        g.cancel.store(true, Ordering::SeqCst);
+    }
 }
 
 #[tauri::command(async)]

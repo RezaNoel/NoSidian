@@ -60,7 +60,7 @@ const bestEntries = (kind: Kind): Entry[] => {
 
 async function shareCard(bytes: Promise<Uint8Array>, name: string) {
   try {
-    if (await shareImage(safeName(name, "share"), await bytes)) toast(t("pet-card-saved"));
+    if ((await shareImage(safeName(name, "share"), await bytes)) === "saved") toast(t("pet-card-saved"));
   } catch { toast(t("pet-card-failed"), true); }
 }
 const shareEntry = (kind: Kind, e: Entry) => shareCard(renderEntryCard(e, rankOf(kind, e.id)), e.title);

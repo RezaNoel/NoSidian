@@ -103,7 +103,7 @@ function Profile(props: { path: string; onBack: () => void; select: (p: string) 
   return (
     <article class="person-profile">
       <header class="person-head">
-        <button class="icon-btn person-back" aria-label={t("action-back")} onClick={props.onBack}><ArrowLeft class="flip-rtl" /></button>
+        <button class="icon-btn person-back" data-back aria-label={t("action-back")} onClick={props.onBack}><ArrowLeft class="flip-rtl" /></button>
         <button class="person-photo" title={t("people-photo")} aria-label={t("people-photo")} onClick={async () => { const p = await pickPhoto(); if (p) patchPerson(props.path, { photo: `"[[${p}]]"` }); }}>
           <Avatar path={props.path} photo={person().photo} size="lg" />
           <span class="person-photo-edit"><Camera aria-hidden="true" /></span>
