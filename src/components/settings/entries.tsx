@@ -314,8 +314,8 @@ export const ENTRIES: Entry[] = [
   ), { tags: "open launch start begin home" }),
   e("you", Music2, ["personal-startup-sound"], () => (
     <div class="set-row">
-      <Toggle label={t("personal-startup-sound")} checked={personal.state.startupSound} onChange={(v) => personal.update((p) => { p.startupSound = v; })} />
       <button class="icon-btn" title={t("personal-sound-test")} aria-label={t("personal-sound-test")} onClick={playStartSound}><Play /></button>
+      <Toggle label={t("personal-startup-sound")} checked={personal.state.startupSound} onChange={(v) => personal.update((p) => { p.startupSound = v; })} />
     </div>
   ), { tags: "sound chime audio welcome launch" }),
   e("you", MessageSquareText, ["personal-greet"], () => (

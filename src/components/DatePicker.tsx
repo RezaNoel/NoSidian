@@ -33,6 +33,9 @@ export function DatePicker(props: {
   });
   return (
     <span class="date-field" classList={{ sm: props.size === "sm" }}>
+      <Show when={props.clearable && props.value && !props.disabled}>
+        <button type="button" class="icon-btn date-clear" aria-label={t("date-clear")} title={t("date-clear")} onClick={() => props.onChange("")}><X /></button>
+      </Show>
       <button
         ref={btn}
         id={props.id}
@@ -48,9 +51,6 @@ export function DatePicker(props: {
         <CalendarDays aria-hidden="true" />
         <span dir="auto">{text() || t("date-pick")}</span>
       </button>
-      <Show when={props.clearable && props.value && !props.disabled}>
-        <button type="button" class="icon-btn date-clear" aria-label={t("date-clear")} title={t("date-clear")} onClick={() => props.onChange("")}><X /></button>
-      </Show>
       <Show when={open()}>
         <DatePopover anchor={btn} value={props.value} noYear={props.noYear} onPick={(v) => { props.onChange(v); setOpen(false); btn.focus(); }} onClose={() => { setOpen(false); btn.focus(); }} />
       </Show>
