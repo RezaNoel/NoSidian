@@ -1,7 +1,10 @@
 // Quick switcher (find or create a note) and command palette. Both are a
 // combobox over a listbox: type to filter, arrows to move, Enter to run.
 import { For, Show, createMemo, createSignal, createUniqueId, type JSX } from "solid-js";
-import { FilePlus, FileText, Terminal } from "lucide-solid";
+import { FilePlus, FileText, Terminal, TextSearch } from "lucide-solid";
+import { backend } from "../backend";
+import type { SearchHit } from "../state/types";
+import { revealLine } from "./Editor";
 import { t } from "../i18n";
 import { rank, type FuzzyResult } from "../lib/fuzzy";
 import { noteTitle } from "../lib/markdown";
@@ -9,7 +12,7 @@ import { COMMANDS, formatCombo, keyFor } from "../state/commands";
 import { profile } from "../state/workspace";
 import { setOverlay } from "../state/ui";
 import { createNote, openNote, tree } from "../state/vault";
-import { pref } from "../state/prefs";
+import { newNoteFolder } from "../state/pkm";
 import { Modal } from "./Modal";
 
 interface Row { id: string; label: string; detail?: string; match?: FuzzyResult; icon: JSX.Element; hint?: string; run: () => unknown }
@@ -89,9 +92,18 @@ function PaletteList(props: { title: string; placeholder: string; rows: (q: stri
   );
 }
 
+/** Full-text results for the switcher, by query, filled in the background. */
+const [textHits, setTextHits] = createSignal<{ q: string; hits: SearchHit[] }>({ q: "", hits: [] });
+let textTimer: ReturnType<typeof setTimeout> | undefined;
+function searchText(q: string) {
+  clearTimeout(textTimer);
+  if (q.length < 3 || textHits().q === q) return;
+  textTimer = setTimeout(() => void backend.search(q, "relevance", 12).then((hits) => setTextHits({ q, hits })).catch(() => undefined), 160);
+}
+
 export function QuickSwitcher() {
   const folderOf = (p: string) => (p.includes("/") ? p.slice(0, p.lastIndexOf("/")) : "");
-  const create = (name: string) => void createNote(name, pref("newNoteFolder") || undefined);
+  const create = (name: string) => void createNote(name, newNoteFolder());
   const rows = (q: string): Row[] => {
     const recent = new Map(profile.recent.map((r, i) => [r.path, i]));
     const notes = tree.notes.map((n) => n.path);
@@ -107,6 +119,16 @@ export function QuickSwitcher() {
       icon: <FileText />,
       run: () => openNote(item),
     }));
+    // Notes whose text (not only their name) matches, below the name matches.
+    const qq = q.trim();
+    searchText(qq);
+    if (qq.length >= 3 && textHits().q === qq) {
+      const have = new Set(hits.map((h) => h.id));
+      for (const h of textHits().hits) {
+        if (have.has(h.path)) continue;
+        hits.push({ id: h.path, label: h.title || noteTitle(h.path), detail: h.matches[0]?.text ?? (folderOf(h.path) || undefined), icon: <TextSearch />, run: () => { openNote(h.path); if (h.matches[0]) revealLine(h.path, h.matches[0].line); } });
+      }
+    }
     const name = q.trim();
     if (name && !notes.some((p) => noteTitle(p).toLocaleLowerCase() === name.toLocaleLowerCase())) {
       hits.push({ id: "__create", label: t("switcher-create", { name }), icon: <FilePlus />, hint: "Shift+↵", run: () => create(name) });

@@ -20,7 +20,9 @@ export type ThemeId =
   | 'nord-arctic'
   | 'catppuccin-mocha'
   | 'paper-daylight'
-  | 'warm-parchment';
+  | 'warm-parchment'
+  | 'christmas'
+  | 'matrix';
 
 export type ViewMode = 'editor' | 'split' | 'preview' | 'mindmap' | 'kanban';
 export type MainSurface = 'workspace' | 'dashboard' | 'projects' | 'media';
@@ -82,6 +84,8 @@ export interface AppearanceConfig {
   ambientMesh: boolean;
   meshIntensity: number;
   uiFont: string;
+  /** Interface text size in px (the base for everything set in em). */
+  uiFontSize?: number;
   customFonts?: CustomFontDef[];
   editorFontSize: number;
   editorLineHeight: number;
@@ -247,6 +251,7 @@ export type DashboardTemplateId =
 
 export type DashboardWidgetType =
   | 'cover'
+  | 'plugin'
   | 'deadline-hero'
   | 'stats'
   | 'recent-notes'
@@ -264,7 +269,13 @@ export type DashboardWidgetType =
   | 'watchlist'
   | 'writing-goal'
   | 'quick-capture'
-  | 'countdown';
+  | 'countdown'
+  | 'kanban'
+  | 'open-tasks'
+  | 'people'
+  | 'random-note'
+  | 'para'
+  | 'zettel';
 
 export interface DashboardShortcutItem {
   id: string;
@@ -293,6 +304,9 @@ export interface DashboardWidget {
   dailyWordTarget?: number;
   todos?: DashboardTodoItem[];
   shortcuts?: DashboardShortcutItem[];
+  /** For a plugin widget: which plugin it runs, and whether it runs when the home opens. */
+  pluginId?: string;
+  autoRun?: boolean;
 }
 
 export interface DashboardConfig {
@@ -313,6 +327,8 @@ export interface ProjectItem {
   name: string;
   description: string;
   color: string;
+  /** Icon id from the explorer icon set (ENTRY_ICONS). */
+  icon?: string;
   deadline: string; // ISO YYYY-MM-DD
   isPrimary: boolean;
   status: 'active' | 'on-hold' | 'completed';
@@ -353,6 +369,8 @@ export interface ProjectTask {
   timeBlockDate?: string;
   timeBlockStartHour?: number;
   timeBlockDurationMin?: number;
+  /** Set when the task was made from a Google Calendar event. */
+  googleEventId?: string;
   createdAt: number;
 }
 
@@ -699,10 +717,23 @@ export interface CinemaEntry {
   episodesWatched: number;
   episodesTotal: number;
   rating: number; // 0..5
+  /** Personal score out of 10 (one decimal). */
+  score?: number;
+  /** Vault path of a chosen cover or poster image. */
+  cover?: string;
   watchedDate?: string;
   favoriteQuotes: string[];
   notes: string;
   linkedNotePath?: string;
+  /** Person note (vault path) who recommended it. */
+  recommendedBy?: string;
+  /** Where to buy, read or watch it. */
+  link?: string;
+  tags?: string[];
+  /** How many times finished again after the first time. */
+  repeats?: number;
+  /** Where to watch it (service or cinema). */
+  platform?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -725,11 +756,24 @@ export interface BookEntry {
   totalPages: number;
   genre: string;
   rating: number; // 0..5
+  /** Personal score out of 10 (one decimal). */
+  score?: number;
+  /** Vault path of a chosen cover image. */
+  cover?: string;
   startedDate?: string;
   finishedDate?: string;
   highlights: BookHighlight[];
   notes: string;
   linkedNotePath?: string;
+  /** Person note (vault path) who recommended it. */
+  recommendedBy?: string;
+  /** Where to buy, read or watch it. */
+  link?: string;
+  tags?: string[];
+  /** How many times finished again after the first time. */
+  repeats?: number;
+  /** Paper, e-book or audiobook. */
+  format?: 'paper' | 'ebook' | 'audio';
   createdAt: number;
   updatedAt: number;
 }
@@ -739,6 +783,9 @@ export interface MediaLibraryState {
   books: BookEntry[];
   /** Books to finish this year (0 or missing: no goal). */
   readingGoal?: number;
+  /** "Best of my life": ids in personal rank order, best first. */
+  bestBooks?: string[];
+  bestMovies?: string[];
 }
 
 export interface CustomScriptPlugin {
@@ -747,6 +794,10 @@ export interface CustomScriptPlugin {
   description?: string;
   enabled: boolean;
   runOnStartup?: boolean;
+  /** Show a button for it on the tools ribbon. */
+  ribbon?: boolean;
+  /** Icon id (from the file icon set) for its ribbon button. */
+  icon?: string;
   code: string;
   lastRunAt?: number;
   lastError?: string;

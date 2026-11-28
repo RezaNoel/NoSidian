@@ -70,7 +70,7 @@ export function greeting(now = new Date()): string {
 
 let welcomed = false;
 /** Play the start sound and show the greeting once per app launch. */
-export async function welcome(toast: (msg: string) => void, announce?: (msg: string) => void): Promise<void> {
+export async function welcome(toast: (msg: string) => void, announce?: (msg: string) => void, speak?: () => string | null): Promise<void> {
   if (welcomed) return;
   welcomed = true;
   for (let i = 0; i < 40 && !personal.ready(); i++) await new Promise((r) => setTimeout(r, 50));
@@ -80,8 +80,10 @@ export async function welcome(toast: (msg: string) => void, announce?: (msg: str
     void a.play().catch(() => undefined);
   }
   if (personal.state.greet) {
-    const msg = greeting();
-    toast(msg);
+    // The companion says hello when it can; otherwise a plain greeting toast.
+    const said = speak?.();
+    const msg = said ?? greeting();
+    if (!said) toast(msg);
     announce?.(msg);
   }
 }

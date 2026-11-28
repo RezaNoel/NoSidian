@@ -7,7 +7,7 @@ import { stats } from "../lib/markdown";
 import { backend } from "../backend";
 import { activePath, contents, indexRev, saving } from "../state/vault";
 import { settings } from "../state/settings";
-import { setOverlay } from "../state/ui";
+import { openSettings } from "./settings/SettingsWindow";
 
 export function StatusBar() {
   const s = createMemo(() => (activePath() ? stats(contents[activePath()!] ?? "") : null));
@@ -18,10 +18,10 @@ export function StatusBar() {
   );
   return (
     <footer class="statusbar glass" aria-label={t("shell-status-bar-label")}>
-      <button class="status-item" onClick={() => setOverlay("settings")} title={t("field-language")}>
+      <button class="status-item" onClick={() => openSettings("you")} title={t("field-language")}>
         <Globe aria-hidden="true" />{languageInfo(settings.language ?? "en").name}
       </button>
-      <button class="status-item" onClick={() => setOverlay("settings")} title={t("field-theme")}>
+      <button class="status-item" onClick={() => openSettings("appearance")} title={t("field-theme")}>
         <Palette aria-hidden="true" />{t(`theme-${settings.appearance.theme}`)}
       </button>
       <span class="status-spacer" />

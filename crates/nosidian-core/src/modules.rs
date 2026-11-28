@@ -21,6 +21,7 @@ pub enum ModuleId {
     Dashboard,
     Flashcards,
     MediaShelf,
+    People,
     KnowledgeGraph,
     Mindmap,
     Kanban,
@@ -40,10 +41,11 @@ pub enum ModuleId {
 }
 
 impl ModuleId {
-    pub const ALL: [ModuleId; 19] = [
+    pub const ALL: [ModuleId; 20] = [
         ModuleId::Dashboard,
         ModuleId::Flashcards,
         ModuleId::MediaShelf,
+        ModuleId::People,
         ModuleId::KnowledgeGraph,
         ModuleId::Mindmap,
         ModuleId::Kanban,
@@ -70,7 +72,7 @@ impl ModuleId {
             DailyCalendar | RecentFiles | PdfSupport | ZenFocus | AmbientEffects
             | CompanionPet => ExperienceLevel::Beginner,
             // Core PKM and study tools.
-            Dashboard | Flashcards | MediaShelf | KnowledgeGraph | Mindmap | Kanban | Slides => {
+            Dashboard | Flashcards | MediaShelf | People | KnowledgeGraph | Mindmap | Kanban | Slides => {
                 ExperienceLevel::Intermediate
             }
             // Power and developer surfaces.

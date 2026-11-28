@@ -15,6 +15,7 @@ import { openView } from "./views";
 import { setSlidesFor } from "./ui";
 import { setZenOpen } from "./focus";
 import { exportBackup, exportStandalone, importIntoVault } from "./export";
+import { openSettings } from "../components/settings/SettingsWindow";
 
 export interface Command {
   id: string;
@@ -63,7 +64,7 @@ export const COMMANDS: Command[] = [
     requestAnimationFrame(() => document.querySelector<HTMLInputElement>("#search-input")?.focus());
   } },
   { id: "focus-files", label: "cmd-focus-files", defaultKey: "Mod+Shift+E", run: focusFiles },
-  { id: "settings", label: "footer-settings", defaultKey: "Mod+,", run: () => setOverlay("settings") },
+  { id: "settings", label: "footer-settings", defaultKey: "Mod+,", run: () => openSettings("home") },
   { id: "vaults", label: "vault-switcher-title", run: () => setOverlay("vaults") },
   { id: "toggle-left", label: "ribbon-toggle-left", defaultKey: "Mod+Alt+[", run: () => updateProfile((p) => { p.panels.left = !p.panels.left; }) },
   { id: "toggle-right", label: "ribbon-toggle-right", defaultKey: "Mod+Alt+]", run: () => updateProfile((p) => { p.panels.right = !p.panels.right; }) },
@@ -87,6 +88,10 @@ export const COMMANDS: Command[] = [
   { id: "open-flashcards", label: "view-flashcards", defaultKey: "Mod+Shift+R", run: () => void openView("flashcards") },
   { id: "open-projects", label: "view-projects", defaultKey: "Mod+Shift+P", run: () => void openView("projects") },
   { id: "open-media", label: "view-media", run: () => void openView("media") },
+  { id: "open-people", label: "view-people", run: () => void openView("people") },
+  { id: "new-person", label: "people-new", run: async () => { const { askText } = await import("./ui"); const { createPerson } = await import("./people"); const n = await askText(t("people-new"), "", t("action-add")); if (n?.trim()) await createPerson(n, true); } },
+  { id: "new-zettel", label: "cmd-new-zettel", run: async () => { const { askText } = await import("./ui"); const { newZettel } = await import("./pkm"); const n = await askText(t("cmd-new-zettel"), "", t("action-create")); if (n !== null) { const cur = activePath(); await newZettel(n, cur && !cur.startsWith("app:") ? cur : undefined); } } },
+  { id: "setup-para", label: "widget-para-setup", run: async () => { const { setupPara } = await import("./pkm"); await setupPara(); setPref("pkmMethod", "para"); } },
   { id: "open-zen", label: "view-zen", run: () => void openView("zen") },
   { id: "zen-mode", label: "focus-zen-mode", defaultKey: "Mod+Shift+Z", run: () => setZenOpen(true) },
   { id: "present", label: "slides-present", defaultKey: "Mod+Shift+S", when: hasNote, run: () => setSlidesFor(activePath()!) },

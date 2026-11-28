@@ -1,7 +1,9 @@
 // The start page: shown when no note is open and in the "+" tab. Logo with the
 // companion running around it, clock and date, shortcuts and recent files.
 import { For, Show, createMemo, createSignal, onCleanup } from "solid-js";
-import { Brain, CalendarDays, Command, FilePlus, FileSearch, FileText, LayoutDashboard, Timer } from "lucide-solid";
+import { Dynamic } from "solid-js/web";
+import { Brain, CalendarDays, Command, FilePlus, FileSearch, FileText, Film, FolderKanban, LayoutDashboard, Network, Timer, Users } from "lucide-solid";
+import { pref } from "../state/prefs";
 import { locale, t, type MessageKey } from "../i18n";
 import { noteTitle } from "../lib/markdown";
 import { relativeTime } from "../lib/tree";
@@ -16,37 +18,52 @@ import { pet } from "../state/pet";
 import { greeting } from "../state/personal";
 import { promptNewNote } from "./FileTree";
 import { Logo } from "./Logo";
+import { XmasFriends } from "./Christmas";
 import { PetViewport } from "./pet/PetViewport";
 import type { ModuleId } from "../state/types";
 import { noteItemMenu, recentExtras } from "./itemMenus";
 
-interface Shortcut { key: MessageKey; icon: typeof Brain; module?: ModuleId; combo?: string; run: () => void }
+interface Shortcut { id?: string; key: MessageKey; icon: typeof Brain; module?: ModuleId; combo?: string; run: () => void }
 
-const SHORTCUTS: Shortcut[] = [
+/** The main action: the dashboard, or a new note when the dashboard is off. */
+const PRIMARY: Shortcut[] = [
+  { key: "start-open-dashboard", icon: LayoutDashboard, module: "dashboard", run: () => void openView("dashboard") },
   { key: "action-new-note", icon: FilePlus, combo: "Ctrl+N", run: () => void promptNewNote() },
-  { key: "ribbon-daily-note", icon: CalendarDays, module: "daily-calendar", combo: "Alt+D", run: () => void openDailyNote(new Date()) },
-  { key: "ribbon-quick-switcher", icon: FileSearch, combo: "Ctrl+O", run: () => setOverlay("switcher") },
-  { key: "ribbon-command-palette", icon: Command, combo: "Ctrl+K", run: () => setOverlay("palette") },
-  { key: "ribbon-dashboard", icon: LayoutDashboard, module: "dashboard", run: () => void openView("dashboard") },
-  { key: "ribbon-flashcards", icon: Brain, module: "flashcards", run: () => void openView("flashcards") },
-  { key: "ribbon-focus", icon: Timer, module: "zen-focus", run: () => void openView("zen") },
 ];
+
+/** Buttons that can sit under it; Settings > Appearance picks which and in what order. */
+export const START_BUTTONS: Shortcut[] = [
+  { id: "new-note", key: "action-new-note", icon: FilePlus, combo: "Ctrl+N", run: () => void promptNewNote() },
+  { id: "daily", key: "ribbon-daily-note", icon: CalendarDays, module: "daily-calendar", combo: "Alt+D", run: () => void openDailyNote(new Date()) },
+  { id: "switcher", key: "ribbon-quick-switcher", icon: FileSearch, combo: "Ctrl+O", run: () => setOverlay("switcher") },
+  { id: "palette", key: "ribbon-command-palette", icon: Command, combo: "Ctrl+K", run: () => setOverlay("palette") },
+  { id: "flashcards", key: "ribbon-flashcards", icon: Brain, module: "flashcards", run: () => void openView("flashcards") },
+  { id: "focus", key: "ribbon-focus", icon: Timer, module: "zen-focus", run: () => void openView("zen") },
+  { id: "media", key: "ribbon-media", icon: Film, module: "media-shelf", run: () => void openView("media") },
+  { id: "people", key: "ribbon-people", icon: Users, module: "people", run: () => void openView("people") },
+  { id: "graph", key: "ribbon-graph", icon: Network, module: "knowledge-graph", run: () => void openView("graph") },
+  { id: "projects", key: "ribbon-projects", icon: FolderKanban, module: "project-mode", run: () => void openView("projects") },
+];
+export const startButtonIds = () => pref("startButtons").split(",").map((x) => x.trim()).filter((x) => START_BUTTONS.some((b) => b.id === x));
 
 export function StartPage() {
   const [now, setNow] = createSignal(new Date());
   const tick = setInterval(() => setNow(new Date()), 1000);
   onCleanup(() => clearInterval(tick));
   const mods = createMemo(() => enabledModules(settings.experienceLevel, settings.moduleOverrides));
-  const shortcuts = createMemo(() => SHORTCUTS.filter((s) => !s.module || mods().has(s.module)));
+  const allowed = (s: Shortcut) => !s.module || mods().has(s.module);
+  const primary = createMemo(() => PRIMARY.find(allowed)!);
+  const suggestions = createMemo(() => startButtonIds().map((id) => START_BUTTONS.find((b) => b.id === id)!).filter((s) => allowed(s) && s.key !== primary().key));
   const recent = createMemo(() => {
     const exists = new Set(tree.notes.map((n) => n.path));
-    return profile.recent.filter((r) => exists.has(r.path)).slice(0, 6);
+    return profile.recent.filter((r) => exists.has(r.path)).slice(0, 5);
   });
   const time = () => now().toLocaleTimeString(locale(), { hour: "numeric", minute: "2-digit" });
   const date = () => now().toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const showPet = () => mods().has("companion-pet") && settings.petEnabled && pet.ready();
 
   return (
+    <div class="start-wrap">
     <div class="start-page">
       <div class="start-hero">
         <div class="start-orbit" classList={{ "with-pet": showPet() }}>
@@ -62,18 +79,25 @@ export function StartPage() {
           <span class="start-date">{date()}</span>
         </div>
         <p class="start-greeting" dir="auto">{greeting(now())}</p>
+        <XmasFriends />
       </div>
 
-      <nav class="start-shortcuts" aria-label={t("start-shortcuts")}>
-        <For each={shortcuts()}>
-          {(s) => (
-            <button class="start-tile" onClick={s.run} title={t(s.key)}>
-              <s.icon aria-hidden="true" />
-              <span>{t(s.key)}</span>
-              <Show when={s.combo}><kbd dir="ltr">{s.combo}</kbd></Show>
-            </button>
-          )}
-        </For>
+      <nav class="start-actions" aria-label={t("start-shortcuts")}>
+        <button class="start-primary" onClick={primary().run}>
+          <Dynamic component={primary().icon} aria-hidden="true" />
+          <span>{t(primary().key)}</span>
+          <Show when={primary().combo}><kbd dir="ltr">{primary().combo}</kbd></Show>
+        </button>
+        <div class="start-suggest">
+          <For each={suggestions()}>
+            {(s) => (
+              <button class="start-chip" onClick={s.run} title={s.combo ? `${t(s.key)} (${s.combo})` : t(s.key)}>
+                <s.icon aria-hidden="true" />
+                <span>{t(s.key)}</span>
+              </button>
+            )}
+          </For>
+        </div>
       </nav>
 
       <Show when={recent().length}>
@@ -94,6 +118,7 @@ export function StartPage() {
           </ul>
         </section>
       </Show>
+    </div>
     </div>
   );
 }

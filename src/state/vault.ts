@@ -9,6 +9,7 @@ import { loadProfile, profile, updateProfile } from "./workspace";
 import { toast } from "./ui";
 import type { Vault, VaultTree } from "./types";
 import { loadVaultDocs } from "./persist";
+import { onFlush } from "./flush";
 import { pref } from "./prefs";
 import { isAppView, tabTitle } from "./views";
 
@@ -66,6 +67,15 @@ export async function ensureLoaded(path: string): Promise<void> {
   if (v.contents[path] === undefined) v.setContents(path, text);
 }
 
+/** Leave the open vault (after its pending changes are written). */
+export function leaveVault(): void {
+  batch(() => {
+    v.setVault(null);
+    v.setContents(reconcile({}));
+    v.setTree(reconcile({ notes: [], folders: [] }));
+  });
+}
+
 /** Switch to a vault: load its profile, files and last open tabs. */
 export async function enterVault(next: Vault): Promise<void> {
   batch(() => {
@@ -105,27 +115,34 @@ export function closeTab(path: string): void {
   });
 }
 
+const pendingText = new Map<string, string>();
+
+async function writeNow(path: string): Promise<void> {
+  clearTimeout(v.timers.get(path));
+  v.timers.delete(path);
+  const text = pendingText.get(path);
+  if (text === undefined) return;
+  pendingText.delete(path);
+  try {
+    await backend.write(path, text);
+    const now = Date.now();
+    v.setTree("notes", (n) => n.path === path, "modified", now);
+    bumpIndex(400);
+    autoSnapshot(path, text, now);
+  } catch (e) {
+    reportError(e);
+  } finally {
+    if (v.timers.size === 0) v.setSaving(false);
+  }
+}
+onFlush(() => Promise.all([...pendingText.keys()].map(writeNow)).then(() => undefined));
+
 export function setContent(path: string, text: string): void {
   v.setContents(path, text);
   v.setSaving(true);
+  pendingText.set(path, text);
   clearTimeout(v.timers.get(path));
-  v.timers.set(
-    path,
-    setTimeout(async () => {
-      v.timers.delete(path);
-      try {
-        await backend.write(path, text);
-        const now = Date.now();
-        v.setTree("notes", (n) => n.path === path, "modified", now);
-        bumpIndex(400);
-        autoSnapshot(path, text, now);
-      } catch (e) {
-        reportError(e);
-      } finally {
-        if (v.timers.size === 0) v.setSaving(false);
-      }
-    }, SAVE_DELAY_MS),
-  );
+  v.timers.set(path, setTimeout(() => void writeNow(path), SAVE_DELAY_MS));
 }
 
 const lastSnap = new Map<string, number>();
@@ -164,6 +181,7 @@ export async function createFolder(name: string, parent?: string): Promise<void>
   try {
     await backend.createFolder(joinPath(parent, clean));
     await refresh();
+    window.dispatchEvent(new CustomEvent("nosidian:talk", { detail: "folder" }));
   } catch (e) {
     reportError(e);
   }
@@ -186,6 +204,7 @@ async function relocate(from: string, to: string): Promise<boolean> {
         p.recent = p.recent.map((r) => ({ ...r, path: move(r.path) }));
         p.collapsedFolders = p.collapsedFolders.map(move);
         p.noteModes = Object.fromEntries(Object.entries(p.noteModes).map(([k, m]) => [move(k), m]));
+        p.fileStyles = Object.fromEntries(Object.entries(p.fileStyles ?? {}).map(([k, m]) => [move(k), m]));
       });
     });
     await refresh();
@@ -221,6 +240,11 @@ export async function moveEntry(from: string, folder: string): Promise<void> {
   }
 }
 
+type TrashListener = (gone: (p: string) => boolean) => void | Promise<void>;
+const trashListeners: TrashListener[] = [];
+/** Run after a file or folder went to the trash, with a test for the removed paths. */
+export function onTrashed(fn: TrashListener): void { trashListeners.push(fn); }
+
 export async function trashEntry(path: string): Promise<void> {
   try {
     await backend.trash(path);
@@ -233,6 +257,7 @@ export async function trashEntry(path: string): Promise<void> {
     });
     v.setContents(produce((c) => { for (const k of Object.keys(c)) if (gone(k)) delete c[k]; }));
     await refresh();
+    for (const fn of trashListeners) void fn(gone);
   } catch (e) {
     reportError(e);
   }

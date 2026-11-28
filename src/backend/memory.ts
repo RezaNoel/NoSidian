@@ -197,9 +197,11 @@ export const memoryBackend: VaultBackend = {
     return h.content;
   },
   async attachments() {
-    return [];
+    return [...bins.keys()];
   },
   async fileRead(path) {
+    const b = bins.get(path);
+    if (b) return b;
     const f = need().files[path];
     if (!f) throw { code: "not-found", detail: path };
     return new TextEncoder().encode(f.content);
@@ -207,8 +209,33 @@ export const memoryBackend: VaultBackend = {
   async fileWrite(path) {
     throw { code: "io", detail: path };
   },
+  async fileAdd(folder, name, data) {
+    need();
+    const clean = name.replace(/[/\\:*?"<>|]/g, "").trim() || "file";
+    const dot = clean.lastIndexOf(".");
+    const [stem, ext] = dot > 0 ? [clean.slice(0, dot), clean.slice(dot)] : [clean, ""];
+    let rel = "";
+    for (let i = 0; ; i++) {
+      rel = `${folder ? `${folder}/` : ""}${i ? `${stem} ${i}` : stem}${ext}`;
+      if (!bins.has(rel)) break;
+    }
+    bins.set(rel, Uint8Array.from(atob(data), (c) => c.charCodeAt(0)));
+    return rel;
+  },
   async importFiles() {
     return [];
+  },
+  async attachFiles() {
+    return null;
+  },
+  async openExternalFile() {},
+  async openUrl(url) { window.open(url, "_blank", "noopener"); },
+  async youtubeInfo(id: string) {
+    try {
+      const r = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}`);
+      const j = (await r.json()) as { title?: string; author_name?: string };
+      return j.title ? { title: j.title, author: j.author_name ?? "" } : null;
+    } catch { return null; }
   },
   async saveText(name, content) {
     const a = document.createElement("a");
@@ -242,4 +269,6 @@ export const memoryBackend: VaultBackend = {
   async mcpRespond() {},
 };
 
+/** Binary files added in this session (attachments dropped into notes). */
+const bins = new Map<string, Uint8Array>();
 const history = new Map<string, { ts: number; content: string }[]>();

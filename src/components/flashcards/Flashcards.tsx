@@ -3,7 +3,8 @@
 // editing cards without leaving the page, undo, read aloud, a session
 // summary, a filterable card browser, statistics, deck presets and CSV/Anki
 // import and export.
-import { For, Match, Show, Switch, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { petEvent } from "../../state/petTalk";
+import { For, Match, Show, Switch, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
 import {
   BarChart3, Brain, CircleCheck, CircleX, Clock, Download, Ellipsis, EyeOff, FileText, GraduationCap, Layers, LayoutGrid, List, ListChecks,
   Pause, Pencil, Play, Plus, Repeat, RotateCcw, Settings2, Sparkles, Undo2, Upload, Volume2, Zap,
@@ -164,6 +165,8 @@ function Study(props: { deck: string | null; mode: Mode; onExit: () => void; onA
   const preview = createMemo(() => (card() && scheduled ? previewRatingIntervals(stateOf(card()!), card()!.id, presetFor(card()!.folder)) : null));
   const diff = createMemo(() => (shown() && srs.state.typeAnswers && typed() ? diffTypedAnswer(typed(), (flip ? card()?.question : card()?.answer) ?? "", { ignoreCase: true, ignorePunctuation: true, ignoreDiacritics: false }) : null));
   const done = () => tally()[1] + tally()[2] + tally()[3] + tally()[4] + tally().right + tally().wrong;
+  // The companion cheers at the end of a session, or notes that nothing is due.
+  createEffect(on(() => !card(), (empty) => { if (empty) petEvent(done() ? "cards-done" : "cards-none"); }));
   const options = createMemo(() => {
     const c = card();
     if (!c || props.mode !== "quiz") return [];
@@ -191,6 +194,8 @@ function Study(props: { deck: string | null; mode: Mode; onExit: () => void; onA
     setUndo({ u, card: c, ...before });
     window.dispatchEvent(new CustomEvent("nosidian:activity", { detail: "review-card" }));
     setTally((x) => ({ ...x, [r]: x[r] + 1, ms: x.ms + ms }));
+    if (r === 4) petEvent("cards-easy");
+    else if (r <= 2) petEvent("cards-hard");
     advance(r === 1);
   };
   const pick = (i: number) => {

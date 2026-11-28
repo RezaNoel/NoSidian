@@ -42,6 +42,32 @@ export const GOOGLE_FONTS_CATALOG: GoogleFontEntry[] = [
   { family: 'Noto Sans Devanagari', category: 'multilingual', weights: '400;500;700', sample: 'सुंदर देवनागरी फ़ॉन्ट' }
 ];
 
+export interface FontOption {
+  value: string;
+  family: string;
+  category: FontCategory | 'system';
+  sample: string;
+  source: 'bundled' | 'system';
+}
+
+/** Stored font values: "google:<family>" (bundled), "sys:<family>" (this computer), "custom:<id>". */
+export function normalizeFontValue(v: string): string {
+  if (!v || v === 'jakarta') return 'google:Plus Jakarta Sans';
+  if (v === 'manrope') return 'google:Manrope';
+  if (v === 'vazirmatn') return 'google:Vazirmatn';
+  return v;
+}
+
+export function fontFamilyOf(v: string): string {
+  const n = normalizeFontValue(v);
+  const i = n.indexOf(':');
+  return i > 0 && /^(google|sys|custom)$/.test(n.slice(0, i)) ? n.slice(i + 1).trim() : n;
+}
+
+export function bundledFontOptions(): FontOption[] {
+  return GOOGLE_FONTS_CATALOG.map((f) => ({ value: `google:${f.family}`, family: f.family, category: f.category, sample: f.sample, source: 'bundled' as const }));
+}
+
 export const SYSTEM_FONTS_FALLBACK: string[] = [
   'Arial',
   'Helvetica Neue',
@@ -98,6 +124,8 @@ export function buildGoogleFontHref(family: string, weights = '400;500;600;700')
 export function loadGoogleFont(family: string): void {
   if (typeof document === 'undefined' || !family.trim()) return;
   const clean = family.trim();
+  // Fonts in the catalog ship with the app (public/fonts/fonts.css), so no download is needed.
+  if (GOOGLE_FONTS_CATALOG.some(f => f.family.toLowerCase() === clean.toLowerCase())) return;
   const id = `nosidian-gf-${clean.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   if (document.getElementById(id)) return;
   const meta = GOOGLE_FONTS_CATALOG.find(f => f.family.toLowerCase() === clean.toLowerCase());

@@ -1,6 +1,6 @@
 // Rendered Markdown: math, callouts, code with copy, Mermaid, task toggles,
 // embeds (images, audio, video, notes, PDFs), zoomable images and tags.
-import { createEffect, createMemo, on } from "solid-js";
+import { createEffect, createMemo, on, onCleanup } from "solid-js";
 import { t } from "../i18n";
 import { renderMarkdown, resolveLink, toggleTask } from "../lib/markdown";
 import { blobUrl, fileKind, resolveAttachment } from "../lib/attachments";
@@ -10,6 +10,21 @@ import { setZoomImage, toast } from "../state/ui";
 import { contents, createNote, ensureLoaded, markdownPaths, openNote, setContent } from "../state/vault";
 import { openPdfAt } from "../state/pdf";
 import { Properties } from "./Properties";
+import { mountPlayer } from "./MediaPlayer";
+import { embedDroppedFiles, hasOsFiles } from "../state/dropFiles";
+import { backend } from "../backend";
+import { hoverRow, leaveRow } from "./HoverPreview";
+import { linkCards, makeResizable, tableTools, youtubeEmbeds } from "./readerExtras";
+
+type ReaderCtx = { path: string; editable: boolean; get: () => string; set: (text: string) => void };
+const ctxOf = new WeakMap<HTMLElement, ReaderCtx>();
+
+// Players mounted into rendered Markdown, per reader, disposed on re-render.
+const players = new WeakMap<HTMLElement, (() => void)[]>();
+function disposePlayers(root: HTMLElement) {
+  for (const d of players.get(root) ?? []) d();
+  players.delete(root);
+}
 
 export function scrollReaderTo(slug: string): boolean {
   const el = document.getElementById(`h-${slug}`);
@@ -47,7 +62,7 @@ async function renderMermaid(root: HTMLElement) {
 }
 
 /** Fill `<span class="embed">` placeholders. Note embeds render one level deep. */
-async function renderEmbeds(root: HTMLElement, from: string, depth: number) {
+async function renderEmbeds(root: HTMLElement, from: string, depth: number, top: HTMLElement = root) {
   for (const el of [...root.querySelectorAll<HTMLElement>("span.embed:not([data-done])")]) {
     el.dataset.done = "1";
     const target = el.dataset.embed ?? "";
@@ -71,7 +86,7 @@ async function renderEmbeds(root: HTMLElement, from: string, depth: number) {
       head.textContent = path.replace(/\.md$/i, "");
       box.prepend(head);
       el.replaceWith(box);
-      await renderEmbeds(box, path, depth + 1);
+      await renderEmbeds(box, path, depth + 1, top);
       await renderMermaid(box);
       continue;
     }
@@ -104,14 +119,14 @@ async function renderEmbeds(root: HTMLElement, from: string, depth: number) {
         img.tabIndex = 0;
         const w = /^(\d+)(?:x(\d+))?$/.exec(size);
         if (w) img.style.width = `${w[1]}px`;
-        node = img;
+        const ctx = root === top ? ctxOf.get(top) : undefined;
+        node = ctx ? makeResizable(img, target, ctx) : img;
       } else {
-        const media = document.createElement(kind);
-        media.controls = true;
-        media.src = url;
-        media.preload = "metadata";
-        media.setAttribute("aria-label", path.split("/").pop()!);
-        node = media;
+        node = document.createElement("div");
+        node.className = "media-embed";
+        const list = players.get(top) ?? [];
+        list.push(mountPlayer(node, kind, url, path.split("/").pop()!));
+        players.set(top, list);
       }
       el.replaceWith(node);
     } catch {
@@ -122,6 +137,11 @@ async function renderEmbeds(root: HTMLElement, from: string, depth: number) {
 }
 
 function enhance(root: HTMLElement, path: string) {
+  disposePlayers(root);
+  const ctx = ctxOf.get(root);
+  linkCards(root);
+  youtubeEmbeds(root);
+  if (ctx) tableTools(root, ctx);
   for (const b of root.querySelectorAll<HTMLButtonElement>(".code-copy")) {
     b.textContent = t("action-copy");
     b.setAttribute("aria-label", t("action-copy"));
@@ -155,7 +175,17 @@ export function Reader(props: { path: string; source?: () => string; readOnly?: 
   let el!: HTMLElement;
   const text = () => (props.source ? props.source() : contents[props.path] ?? "");
   const html = createMemo(() => renderMarkdown(text(), { breaks: !pref("strictBreaks") }));
-  createEffect(on(html, () => queueMicrotask(() => el && enhance(el, props.path))));
+  createEffect(on(html, () => queueMicrotask(() => {
+    if (!el) return;
+    ctxOf.set(el, { path: props.path, editable: !props.readOnly && !props.source, get: () => contents[props.path] ?? "", set: (v) => setContent(props.path, v) });
+    enhance(el, props.path);
+  })));
+  const onMove = (e: MouseEvent) => {
+    const a = (e.target as HTMLElement).closest<HTMLElement>("a.wikilink[data-target]");
+    const p = a ? resolveLink((a.dataset.target ?? "").split("#")[0], markdownPaths()) : null;
+    if (p) hoverRow(e, p); else leaveRow();
+  };
+  onCleanup(() => el && disposePlayers(el));
   const dir = () => "auto" as const;
 
   const onClick = (e: MouseEvent) => {
@@ -186,7 +216,12 @@ export function Reader(props: { path: string; source?: () => string; readOnly?: 
     const href = a.getAttribute("href") ?? "";
     if (/^https?:/i.test(href)) {
       e.preventDefault();
-      window.open(href, "_blank", "noopener");
+      void backend.openUrl(href);
+    } else if (/^file:/i.test(href)) {
+      // A file linked where it is, outside the vault.
+      e.preventDefault();
+      const abs = decodeURIComponent(href.replace(/^file:\/+/i, ""));
+      void backend.openExternalFile(/^[a-z]:/i.test(abs) ? abs : `/${abs}`).catch(() => toast(t("embed-missing", { name: abs.split(/[\\/]/).pop() ?? abs }), true));
     } else if (href.startsWith("#")) {
       e.preventDefault();
     }
@@ -203,10 +238,25 @@ export function Reader(props: { path: string; source?: () => string; readOnly?: 
     if (!cb.matches("input.task-box") || props.readOnly) return;
     setContent(props.path, toggleTask(contents[props.path] ?? "", Number(cb.dataset.task), cb.checked));
   };
+  // Files dropped on the reading view are saved and embedded at the end of the note.
+  const canDrop = (e: DragEvent) => !props.readOnly && !props.source && hasOsFiles(e);
+  const onDragOver = (e: DragEvent) => {
+    if (!canDrop(e)) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+  };
+  const onDrop = async (e: DragEvent) => {
+    if (!canDrop(e) || !e.dataTransfer?.files.length) return;
+    e.preventDefault();
+    const md = await embedDroppedFiles(Array.from(e.dataTransfer.files));
+    if (!md) return;
+    const cur = contents[props.path] ?? "";
+    setContent(props.path, `${cur}${cur && !cur.endsWith("\n") ? "\n" : ""}\n${md}\n`);
+  };
   return (
-    <div class="reader-wrap">
+    <div class="reader-wrap" onDragOver={onDragOver} onDrop={(e) => void onDrop(e)}>
       {pref("propsInReader") && !props.source && <Properties path={props.path} readOnly />}
-      <article ref={el} class="reader markdown-body" dir={dir()} aria-label={t("mode-reader")} innerHTML={html()} onClick={onClick} onKeyDown={onKey} onChange={onChange} tabIndex={0} />
+      <article ref={el} class="reader markdown-body" dir={dir()} aria-label={t("mode-reader")} innerHTML={html()} onClick={onClick} onKeyDown={onKey} onChange={onChange} onMouseMove={onMove} onMouseLeave={leaveRow} tabIndex={0} />
     </div>
   );
 }

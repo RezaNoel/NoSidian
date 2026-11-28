@@ -1201,6 +1201,389 @@ export interface MessageArgs {
   "cal-add-yearly": undefined;
   "cal-add-once": undefined;
   "cal-remove-date": { name: string | number };
+  "start-open-dashboard": undefined;
+  "startup-dashboard": undefined;
+  "vault-close": undefined;
+  "glass-preview-badge": undefined;
+  "entry-style-title": undefined;
+  "entry-style-color": undefined;
+  "entry-style-icon": undefined;
+  "entry-style-default": undefined;
+  "entry-style-reset": undefined;
+  "drop-too-big": { name: string | number };
+  "drop-failed": { name: string | number };
+  "drop-copied": { count: string | number };
+  "player-back": undefined;
+  "player-forward": undefined;
+  "player-seek": undefined;
+  "player-speed": undefined;
+  "player-mute": undefined;
+  "player-unmute": undefined;
+  "player-fullscreen": undefined;
+  "image-zoom-in": undefined;
+  "image-zoom-out": undefined;
+  "image-zoom-reset": undefined;
+  "date-pick": undefined;
+  "date-none": undefined;
+  "date-clear": undefined;
+  "proj-edit": undefined;
+  "proj-icon": undefined;
+  "media-score": undefined;
+  "media-cover-choose": undefined;
+  "media-cover-change": undefined;
+  "media-cover-remove": undefined;
+  "media-best": undefined;
+  "media-best-add": undefined;
+  "media-best-remove": undefined;
+  "media-best-rank": { rank: string | number };
+  "media-best-help": undefined;
+  "media-best-empty": undefined;
+  "media-best-up": undefined;
+  "media-best-down": undefined;
+  "media-share": undefined;
+  "media-share-list": undefined;
+  "best-card-books": undefined;
+  "best-card-films": undefined;
+  "media-card-owner": { owner: string | number };
+  "media-card-finished": { date: string | number };
+  "media-card-watched": { date: string | number };
+  "pt-welcome-morning-1": undefined;
+  "pt-welcome-morning-2": undefined;
+  "pt-welcome-morning-3": undefined;
+  "pt-welcome-morning-4": undefined;
+  "pt-welcome-morning-5": undefined;
+  "pt-welcome-morning-6": undefined;
+  "pt-welcome-afternoon-1": undefined;
+  "pt-welcome-afternoon-2": undefined;
+  "pt-welcome-afternoon-3": undefined;
+  "pt-welcome-afternoon-4": undefined;
+  "pt-welcome-afternoon-5": undefined;
+  "pt-welcome-afternoon-6": undefined;
+  "pt-welcome-evening-1": undefined;
+  "pt-welcome-evening-2": undefined;
+  "pt-welcome-evening-3": undefined;
+  "pt-welcome-evening-4": undefined;
+  "pt-welcome-evening-5": undefined;
+  "pt-welcome-evening-6": undefined;
+  "pt-welcome-night-1": undefined;
+  "pt-welcome-night-2": undefined;
+  "pt-welcome-night-3": undefined;
+  "pt-welcome-night-4": undefined;
+  "pt-welcome-night-5": undefined;
+  "pt-welcome-night-6": undefined;
+  "pt-welcome-named-1": { name: string | number };
+  "pt-welcome-named-2": { name: string | number };
+  "pt-welcome-named-3": { name: string | number };
+  "pt-welcome-named-4": { name: string | number };
+  "pt-welcome-named-5": { name: string | number };
+  "pt-welcome-named-6": { name: string | number };
+  "pt-welcome-back-1": undefined;
+  "pt-welcome-back-2": undefined;
+  "pt-welcome-back-3": undefined;
+  "pt-welcome-back-4": undefined;
+  "pt-bored-1": undefined;
+  "pt-bored-2": undefined;
+  "pt-bored-3": undefined;
+  "pt-bored-4": undefined;
+  "pt-bored-5": undefined;
+  "pt-bored-6": undefined;
+  "pt-sleepy-1": undefined;
+  "pt-sleepy-2": undefined;
+  "pt-sleepy-3": undefined;
+  "pt-sleepy-4": undefined;
+  "pt-sleepy-5": undefined;
+  "pt-hungry-1": undefined;
+  "pt-hungry-2": undefined;
+  "pt-hungry-3": undefined;
+  "pt-hungry-4": undefined;
+  "pt-hungry-5": undefined;
+  "pt-woke-1": undefined;
+  "pt-woke-2": undefined;
+  "pt-woke-3": undefined;
+  "pt-woke-4": undefined;
+  "pt-busy-1": undefined;
+  "pt-busy-2": undefined;
+  "pt-busy-3": undefined;
+  "pt-busy-4": undefined;
+  "pt-note-1": undefined;
+  "pt-note-2": undefined;
+  "pt-note-3": undefined;
+  "pt-note-4": undefined;
+  "pt-note-5": undefined;
+  "pt-folder-1": undefined;
+  "pt-folder-2": undefined;
+  "pt-folder-3": undefined;
+  "pt-folder-4": undefined;
+  "pt-time30-1": undefined;
+  "pt-time30-2": undefined;
+  "pt-time30-3": undefined;
+  "pt-time60-1": undefined;
+  "pt-time60-2": undefined;
+  "pt-time60-3": undefined;
+  "pt-time120-1": undefined;
+  "pt-time120-2": undefined;
+  "pt-time120-3": undefined;
+  "pt-cards-easy-1": undefined;
+  "pt-cards-easy-2": undefined;
+  "pt-cards-easy-3": undefined;
+  "pt-cards-easy-4": undefined;
+  "pt-cards-hard-1": undefined;
+  "pt-cards-hard-2": undefined;
+  "pt-cards-hard-3": undefined;
+  "pt-cards-hard-4": undefined;
+  "pt-cards-done-1": undefined;
+  "pt-cards-done-2": undefined;
+  "pt-cards-done-3": undefined;
+  "pt-cards-done-4": undefined;
+  "pt-cards-none-1": undefined;
+  "pt-cards-none-2": undefined;
+  "pt-cards-none-3": undefined;
+  "pt-todo-added-1": undefined;
+  "pt-todo-added-2": undefined;
+  "pt-todo-added-3": undefined;
+  "pt-todo-added-4": undefined;
+  "pt-todo-done-1": undefined;
+  "pt-todo-done-2": undefined;
+  "pt-todo-done-3": undefined;
+  "pt-todo-done-4": undefined;
+  "pt-todo-done-5": undefined;
+  "pt-project-new-1": undefined;
+  "pt-project-new-2": undefined;
+  "pt-project-new-3": undefined;
+  "pt-project-new-4": undefined;
+  "pt-project-done-1": undefined;
+  "pt-project-done-2": undefined;
+  "pt-project-done-3": undefined;
+  "pt-project-done-4": undefined;
+  "pt-theme-1": undefined;
+  "pt-theme-2": undefined;
+  "pt-theme-3": undefined;
+  "pt-theme-4": undefined;
+  "pt-theme-5": undefined;
+  "pt-theme-6": undefined;
+  "pt-focus-done-1": undefined;
+  "pt-focus-done-2": undefined;
+  "pt-focus-done-3": undefined;
+  "pt-focus-done-4": undefined;
+  "pet-talk": undefined;
+  "pet-talk-help": undefined;
+  "cal-to-task": undefined;
+  "cal-in-tasks": undefined;
+  "cal-added-task": undefined;
+  "cal-google-to-tasks": undefined;
+  "cal-google-to-tasks-help": undefined;
+  "daily-tasks": undefined;
+  "daily-tasks-help": undefined;
+  "daily-tasks-heading": undefined;
+  "widget-plugin": undefined;
+  "plugin-widget-none": undefined;
+  "plugin-widget-open-settings": undefined;
+  "plugin-widget-pick": undefined;
+  "plugin-widget-autorun": undefined;
+  "plugin-widget-running": undefined;
+  "plugin-widget-empty": undefined;
+  "plugin-widget-disabled": undefined;
+  "dev-plugin-ribbon": undefined;
+  "dev-plugin-home": undefined;
+  "dev-plugin-home-hint": undefined;
+  "dev-plugin-home-added": { name: string | number };
+  "dev-plugin-icon": undefined;
+  "dev-plugin-description": undefined;
+  "dev-plugin-api-hint": undefined;
+  "field-ui-font": undefined;
+  "field-ui-font-size": undefined;
+  "editor-typeface": undefined;
+  "font-app-default": undefined;
+  "font-search": undefined;
+  "font-group-bundled": undefined;
+  "font-group-system": undefined;
+  "font-load-system": undefined;
+  "font-none": undefined;
+  "more-customize": undefined;
+  "theme-christmas": undefined;
+  "theme-matrix": undefined;
+  "theme-new": undefined;
+  "pref-ui-sounds": undefined;
+  "pref-attachment-folder": undefined;
+  "pref-attachment-mode": undefined;
+  "attach-copy": undefined;
+  "attach-move": undefined;
+  "attach-link": undefined;
+  "pref-media-books-folder": undefined;
+  "pref-media-movies-folder": undefined;
+  "pref-link-style": undefined;
+  "link-style-name": undefined;
+  "link-style-card": undefined;
+  "media-recommended-by": { name: string | number };
+  "media-open-shelf": undefined;
+  "media-recommended-label": undefined;
+  "media-recommended-none": undefined;
+  "media-person-new": undefined;
+  "media-platform": undefined;
+  "media-format": undefined;
+  "media-format-paper": undefined;
+  "media-format-ebook": undefined;
+  "media-format-audio": undefined;
+  "media-link": undefined;
+  "media-tags": undefined;
+  "media-pick": undefined;
+  "media-pick-empty": undefined;
+  "view-people": undefined;
+  "ribbon-people": undefined;
+  "people-new": undefined;
+  "people-search": undefined;
+  "people-empty": undefined;
+  "people-pick": undefined;
+  "people-photo": undefined;
+  "people-open-note": undefined;
+  "people-open-link": undefined;
+  "people-contact": undefined;
+  "people-traits": undefined;
+  "people-add-trait": undefined;
+  "people-connections": undefined;
+  "people-add-connection": undefined;
+  "people-places": undefined;
+  "people-add-place": undefined;
+  "people-recommended": undefined;
+  "people-mentioned-in": undefined;
+  "people-no-mentions": undefined;
+  "people-field-relation": undefined;
+  "people-field-birthday": undefined;
+  "people-field-phone": undefined;
+  "people-field-email": undefined;
+  "people-field-address": undefined;
+  "people-field-city": undefined;
+  "people-field-work": undefined;
+  "people-field-website": undefined;
+  "people-field-instagram": undefined;
+  "people-field-telegram": undefined;
+  "people-field-whatsapp": undefined;
+  "people-field-x": undefined;
+  "people-field-linkedin": undefined;
+  "people-field-github": undefined;
+  "widget-kanban": undefined;
+  "widget-kanban-pick": undefined;
+  "widget-kanban-new": undefined;
+  "widget-open-tasks": undefined;
+  "widget-open-tasks-count": { n: string | number };
+  "widget-open-tasks-none": undefined;
+  "widget-people": undefined;
+  "widget-people-today": undefined;
+  "widget-people-in-days": { n: string | number };
+  "widget-random-note": undefined;
+  "widget-random-another": undefined;
+  "widget-para": undefined;
+  "widget-para-intro": undefined;
+  "widget-para-setup": undefined;
+  "para-projects": undefined;
+  "para-areas": undefined;
+  "para-resources": undefined;
+  "para-archive": undefined;
+  "widget-zettel": undefined;
+  "widget-zettel-placeholder": undefined;
+  "widget-zettel-count": { n: string | number; orphans: string | number };
+  "widget-zettel-refresh": undefined;
+  "widget-cat-pkm": undefined;
+  "menu-copy-link-as": undefined;
+  "copy-link-wiki": undefined;
+  "copy-link-markdown": undefined;
+  "copy-link-embed": undefined;
+  "copy-link-vault": undefined;
+  "copy-link-relative": undefined;
+  "copy-link-absolute": undefined;
+  "copy-link-file-url": undefined;
+  "copy-link-name": undefined;
+  "menu-move-para": undefined;
+  "cmd-new-zettel": undefined;
+  "pref-people-folder": undefined;
+  "pref-pkm-method": undefined;
+  "pref-pkm-method-hint": undefined;
+  "pkm-none": undefined;
+  "pkm-para": undefined;
+  "pkm-zettel": undefined;
+  "pref-zettel-folder": undefined;
+  "tags-filter": undefined;
+  "tags-sort-count": undefined;
+  "tags-sort-name": undefined;
+  "tags-show-all": { n: string | number };
+  "props-type": { type: string | number };
+  "props-choose-image": undefined;
+  "prop-type-text": undefined;
+  "prop-type-number": undefined;
+  "prop-type-checkbox": undefined;
+  "prop-type-date": undefined;
+  "prop-type-list": undefined;
+  "prop-type-tags": undefined;
+  "prop-type-link": undefined;
+  "prop-type-url": undefined;
+  "prop-type-image": undefined;
+  "fmt-attach": undefined;
+  "callout-note": undefined;
+  "callout-info": undefined;
+  "callout-tip": undefined;
+  "callout-important": undefined;
+  "callout-success": undefined;
+  "callout-question": undefined;
+  "callout-warning": undefined;
+  "callout-danger": undefined;
+  "callout-bug": undefined;
+  "callout-example": undefined;
+  "callout-quote": undefined;
+  "callout-abstract": undefined;
+  "callout-todo": undefined;
+  "callout-failure": undefined;
+  "yt-play": undefined;
+  "yt-open": undefined;
+  "pref-youtube-style": undefined;
+  "pref-youtube-style-hint": undefined;
+  "youtube-style-player": undefined;
+  "youtube-style-card": undefined;
+  "img-resize": undefined;
+  "player-volume": undefined;
+  "table-row": undefined;
+  "table-column": undefined;
+  "table-edit-cell": undefined;
+  "table-insert-file": undefined;
+  "table-row-above": undefined;
+  "table-row-below": undefined;
+  "table-row-delete": undefined;
+  "table-col-left": undefined;
+  "table-col-right": undefined;
+  "table-col-delete": undefined;
+  "table-align-left": undefined;
+  "table-align-center": undefined;
+  "table-align-right": undefined;
+  "table-sort-asc": undefined;
+  "table-sort-desc": undefined;
+  "table-delete": undefined;
+  "graph-layout": undefined;
+  "graph-layout-network": undefined;
+  "graph-layout-islands": undefined;
+  "graph-layout-ring": undefined;
+  "graph-centerforce": undefined;
+  "graph-rearrange": undefined;
+  "cal-google-manual": undefined;
+  "cal-google-open-link": undefined;
+  "cal-google-copy-link": undefined;
+  "back-again-to-exit": undefined;
+  "media-delete-also-title": undefined;
+  "media-delete-also-body": { name: string | number };
+  "media-hero-hide": undefined;
+  "media-hero-show": undefined;
+  "files-new-note-auto": undefined;
+  "files-new-note-auto-hint": { path: string | number };
+  "stab-daily": undefined;
+  "stab-organize": undefined;
+  "start-buttons": undefined;
+  "start-buttons-hint": undefined;
+  "accent-theme-fixed": undefined;
+  "xmas-countdown": { days: string | number };
+  "xmas-today": undefined;
+  "update-available": { version: string | number };
+  "update-install": undefined;
+  "update-later": undefined;
+  "update-installing": undefined;
+  "update-failed": undefined;
 }
 
 export type MessageKey = keyof MessageArgs;
@@ -2405,5 +2788,388 @@ export const MESSAGE_KEYS: readonly MessageKey[] = [
   "tag-copy",
   "cal-add-yearly",
   "cal-add-once",
-  "cal-remove-date"
+  "cal-remove-date",
+  "start-open-dashboard",
+  "startup-dashboard",
+  "vault-close",
+  "glass-preview-badge",
+  "entry-style-title",
+  "entry-style-color",
+  "entry-style-icon",
+  "entry-style-default",
+  "entry-style-reset",
+  "drop-too-big",
+  "drop-failed",
+  "drop-copied",
+  "player-back",
+  "player-forward",
+  "player-seek",
+  "player-speed",
+  "player-mute",
+  "player-unmute",
+  "player-fullscreen",
+  "image-zoom-in",
+  "image-zoom-out",
+  "image-zoom-reset",
+  "date-pick",
+  "date-none",
+  "date-clear",
+  "proj-edit",
+  "proj-icon",
+  "media-score",
+  "media-cover-choose",
+  "media-cover-change",
+  "media-cover-remove",
+  "media-best",
+  "media-best-add",
+  "media-best-remove",
+  "media-best-rank",
+  "media-best-help",
+  "media-best-empty",
+  "media-best-up",
+  "media-best-down",
+  "media-share",
+  "media-share-list",
+  "best-card-books",
+  "best-card-films",
+  "media-card-owner",
+  "media-card-finished",
+  "media-card-watched",
+  "pt-welcome-morning-1",
+  "pt-welcome-morning-2",
+  "pt-welcome-morning-3",
+  "pt-welcome-morning-4",
+  "pt-welcome-morning-5",
+  "pt-welcome-morning-6",
+  "pt-welcome-afternoon-1",
+  "pt-welcome-afternoon-2",
+  "pt-welcome-afternoon-3",
+  "pt-welcome-afternoon-4",
+  "pt-welcome-afternoon-5",
+  "pt-welcome-afternoon-6",
+  "pt-welcome-evening-1",
+  "pt-welcome-evening-2",
+  "pt-welcome-evening-3",
+  "pt-welcome-evening-4",
+  "pt-welcome-evening-5",
+  "pt-welcome-evening-6",
+  "pt-welcome-night-1",
+  "pt-welcome-night-2",
+  "pt-welcome-night-3",
+  "pt-welcome-night-4",
+  "pt-welcome-night-5",
+  "pt-welcome-night-6",
+  "pt-welcome-named-1",
+  "pt-welcome-named-2",
+  "pt-welcome-named-3",
+  "pt-welcome-named-4",
+  "pt-welcome-named-5",
+  "pt-welcome-named-6",
+  "pt-welcome-back-1",
+  "pt-welcome-back-2",
+  "pt-welcome-back-3",
+  "pt-welcome-back-4",
+  "pt-bored-1",
+  "pt-bored-2",
+  "pt-bored-3",
+  "pt-bored-4",
+  "pt-bored-5",
+  "pt-bored-6",
+  "pt-sleepy-1",
+  "pt-sleepy-2",
+  "pt-sleepy-3",
+  "pt-sleepy-4",
+  "pt-sleepy-5",
+  "pt-hungry-1",
+  "pt-hungry-2",
+  "pt-hungry-3",
+  "pt-hungry-4",
+  "pt-hungry-5",
+  "pt-woke-1",
+  "pt-woke-2",
+  "pt-woke-3",
+  "pt-woke-4",
+  "pt-busy-1",
+  "pt-busy-2",
+  "pt-busy-3",
+  "pt-busy-4",
+  "pt-note-1",
+  "pt-note-2",
+  "pt-note-3",
+  "pt-note-4",
+  "pt-note-5",
+  "pt-folder-1",
+  "pt-folder-2",
+  "pt-folder-3",
+  "pt-folder-4",
+  "pt-time30-1",
+  "pt-time30-2",
+  "pt-time30-3",
+  "pt-time60-1",
+  "pt-time60-2",
+  "pt-time60-3",
+  "pt-time120-1",
+  "pt-time120-2",
+  "pt-time120-3",
+  "pt-cards-easy-1",
+  "pt-cards-easy-2",
+  "pt-cards-easy-3",
+  "pt-cards-easy-4",
+  "pt-cards-hard-1",
+  "pt-cards-hard-2",
+  "pt-cards-hard-3",
+  "pt-cards-hard-4",
+  "pt-cards-done-1",
+  "pt-cards-done-2",
+  "pt-cards-done-3",
+  "pt-cards-done-4",
+  "pt-cards-none-1",
+  "pt-cards-none-2",
+  "pt-cards-none-3",
+  "pt-todo-added-1",
+  "pt-todo-added-2",
+  "pt-todo-added-3",
+  "pt-todo-added-4",
+  "pt-todo-done-1",
+  "pt-todo-done-2",
+  "pt-todo-done-3",
+  "pt-todo-done-4",
+  "pt-todo-done-5",
+  "pt-project-new-1",
+  "pt-project-new-2",
+  "pt-project-new-3",
+  "pt-project-new-4",
+  "pt-project-done-1",
+  "pt-project-done-2",
+  "pt-project-done-3",
+  "pt-project-done-4",
+  "pt-theme-1",
+  "pt-theme-2",
+  "pt-theme-3",
+  "pt-theme-4",
+  "pt-theme-5",
+  "pt-theme-6",
+  "pt-focus-done-1",
+  "pt-focus-done-2",
+  "pt-focus-done-3",
+  "pt-focus-done-4",
+  "pet-talk",
+  "pet-talk-help",
+  "cal-to-task",
+  "cal-in-tasks",
+  "cal-added-task",
+  "cal-google-to-tasks",
+  "cal-google-to-tasks-help",
+  "daily-tasks",
+  "daily-tasks-help",
+  "daily-tasks-heading",
+  "widget-plugin",
+  "plugin-widget-none",
+  "plugin-widget-open-settings",
+  "plugin-widget-pick",
+  "plugin-widget-autorun",
+  "plugin-widget-running",
+  "plugin-widget-empty",
+  "plugin-widget-disabled",
+  "dev-plugin-ribbon",
+  "dev-plugin-home",
+  "dev-plugin-home-hint",
+  "dev-plugin-home-added",
+  "dev-plugin-icon",
+  "dev-plugin-description",
+  "dev-plugin-api-hint",
+  "field-ui-font",
+  "field-ui-font-size",
+  "editor-typeface",
+  "font-app-default",
+  "font-search",
+  "font-group-bundled",
+  "font-group-system",
+  "font-load-system",
+  "font-none",
+  "more-customize",
+  "theme-christmas",
+  "theme-matrix",
+  "theme-new",
+  "pref-ui-sounds",
+  "pref-attachment-folder",
+  "pref-attachment-mode",
+  "attach-copy",
+  "attach-move",
+  "attach-link",
+  "pref-media-books-folder",
+  "pref-media-movies-folder",
+  "pref-link-style",
+  "link-style-name",
+  "link-style-card",
+  "media-recommended-by",
+  "media-open-shelf",
+  "media-recommended-label",
+  "media-recommended-none",
+  "media-person-new",
+  "media-platform",
+  "media-format",
+  "media-format-paper",
+  "media-format-ebook",
+  "media-format-audio",
+  "media-link",
+  "media-tags",
+  "media-pick",
+  "media-pick-empty",
+  "view-people",
+  "ribbon-people",
+  "people-new",
+  "people-search",
+  "people-empty",
+  "people-pick",
+  "people-photo",
+  "people-open-note",
+  "people-open-link",
+  "people-contact",
+  "people-traits",
+  "people-add-trait",
+  "people-connections",
+  "people-add-connection",
+  "people-places",
+  "people-add-place",
+  "people-recommended",
+  "people-mentioned-in",
+  "people-no-mentions",
+  "people-field-relation",
+  "people-field-birthday",
+  "people-field-phone",
+  "people-field-email",
+  "people-field-address",
+  "people-field-city",
+  "people-field-work",
+  "people-field-website",
+  "people-field-instagram",
+  "people-field-telegram",
+  "people-field-whatsapp",
+  "people-field-x",
+  "people-field-linkedin",
+  "people-field-github",
+  "widget-kanban",
+  "widget-kanban-pick",
+  "widget-kanban-new",
+  "widget-open-tasks",
+  "widget-open-tasks-count",
+  "widget-open-tasks-none",
+  "widget-people",
+  "widget-people-today",
+  "widget-people-in-days",
+  "widget-random-note",
+  "widget-random-another",
+  "widget-para",
+  "widget-para-intro",
+  "widget-para-setup",
+  "para-projects",
+  "para-areas",
+  "para-resources",
+  "para-archive",
+  "widget-zettel",
+  "widget-zettel-placeholder",
+  "widget-zettel-count",
+  "widget-zettel-refresh",
+  "widget-cat-pkm",
+  "menu-copy-link-as",
+  "copy-link-wiki",
+  "copy-link-markdown",
+  "copy-link-embed",
+  "copy-link-vault",
+  "copy-link-relative",
+  "copy-link-absolute",
+  "copy-link-file-url",
+  "copy-link-name",
+  "menu-move-para",
+  "cmd-new-zettel",
+  "pref-people-folder",
+  "pref-pkm-method",
+  "pref-pkm-method-hint",
+  "pkm-none",
+  "pkm-para",
+  "pkm-zettel",
+  "pref-zettel-folder",
+  "tags-filter",
+  "tags-sort-count",
+  "tags-sort-name",
+  "tags-show-all",
+  "props-type",
+  "props-choose-image",
+  "prop-type-text",
+  "prop-type-number",
+  "prop-type-checkbox",
+  "prop-type-date",
+  "prop-type-list",
+  "prop-type-tags",
+  "prop-type-link",
+  "prop-type-url",
+  "prop-type-image",
+  "fmt-attach",
+  "callout-note",
+  "callout-info",
+  "callout-tip",
+  "callout-important",
+  "callout-success",
+  "callout-question",
+  "callout-warning",
+  "callout-danger",
+  "callout-bug",
+  "callout-example",
+  "callout-quote",
+  "callout-abstract",
+  "callout-todo",
+  "callout-failure",
+  "yt-play",
+  "yt-open",
+  "pref-youtube-style",
+  "pref-youtube-style-hint",
+  "youtube-style-player",
+  "youtube-style-card",
+  "img-resize",
+  "player-volume",
+  "table-row",
+  "table-column",
+  "table-edit-cell",
+  "table-insert-file",
+  "table-row-above",
+  "table-row-below",
+  "table-row-delete",
+  "table-col-left",
+  "table-col-right",
+  "table-col-delete",
+  "table-align-left",
+  "table-align-center",
+  "table-align-right",
+  "table-sort-asc",
+  "table-sort-desc",
+  "table-delete",
+  "graph-layout",
+  "graph-layout-network",
+  "graph-layout-islands",
+  "graph-layout-ring",
+  "graph-centerforce",
+  "graph-rearrange",
+  "cal-google-manual",
+  "cal-google-open-link",
+  "cal-google-copy-link",
+  "back-again-to-exit",
+  "media-delete-also-title",
+  "media-delete-also-body",
+  "media-hero-hide",
+  "media-hero-show",
+  "files-new-note-auto",
+  "files-new-note-auto-hint",
+  "stab-daily",
+  "stab-organize",
+  "start-buttons",
+  "start-buttons-hint",
+  "accent-theme-fixed",
+  "xmas-countdown",
+  "xmas-today",
+  "update-available",
+  "update-install",
+  "update-later",
+  "update-installing",
+  "update-failed"
 ];

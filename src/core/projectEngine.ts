@@ -184,6 +184,7 @@ export function discoverFolderProjects(notes: Note[]): ProjectItem[] {
       name,
       description: str('description') || firstParagraph.slice(0, 140),
       color,
+      icon: str('icon') || undefined,
       deadline,
       isPrimary: false,
       status,
@@ -642,15 +643,20 @@ export function getTaskBacklinksForNote(note: Pick<Note, 'path'>, allTasks: Proj
 export function injectDueTasksIntoDailyNote(
   dailyContent: string,
   isoDate: string,
-  allTasks: ProjectTask[]
+  allTasks: ProjectTask[],
+  heading = 'Due Tasks'
 ): { content: string; injectedCount: number } {
-  const dueTasks = allTasks.filter(t => t.dueDate === isoDate);
+  // Due that day, or scheduled for that day (including Google events added as tasks).
+  const dueTasks = allTasks
+    .filter(t => t.dueDate === isoDate || t.timeBlockDate === isoDate)
+    .sort((a, b) => (a.timeBlockStartHour ?? 99) - (b.timeBlockStartHour ?? 99));
   if (dueTasks.length === 0) {
     return { content: dailyContent, injectedCount: 0 };
   }
 
   const lines = dailyContent.split(/\r?\n/);
-  const sectionIdx = lines.findIndex(l => /^##\s+(Due Tasks|Tasks Due Today|تسک‌های سررسید امروز)/i.test(l.trim()));
+  const headingText = heading.trim().toLowerCase();
+  const sectionIdx = lines.findIndex(l => /^##\s+(Due Tasks|Tasks Due Today|تسک‌های سررسید امروز)/i.test(l.trim()) || l.trim().toLowerCase().replace(/^##\s+/, '') === headingText);
 
   const existingNormalized = new Set(
     lines.map(l => l.toLowerCase().replace(/\[[ xX]\]/, '').trim())
@@ -668,8 +674,9 @@ export function injectDueTasksIntoDailyNote(
       t.linkedNotePath || t.sourcePath
         ? ` [[${noteBaseName(t.linkedNotePath || t.sourcePath || '')}]]`
         : '';
+    const at = t.timeBlockDate === isoDate && t.timeBlockStartHour !== undefined ? `${String(t.timeBlockStartHour).padStart(2, '0')}:00 ` : '';
     linesToInsert.push(
-      `- [${t.done ? 'x' : ' '}] ${cleanTitle}${sourceSuffix && !cleanTitle.includes('[[') ? sourceSuffix : ''}`
+      `- [${t.done ? 'x' : ' '}] ${at}${cleanTitle}${sourceSuffix && !cleanTitle.includes('[[') ? sourceSuffix : ''}`
     );
   }
 
@@ -685,7 +692,7 @@ export function injectDueTasksIntoDailyNote(
 
   const trimmed = dailyContent.trimEnd();
   return {
-    content: `${trimmed}\n\n## Due Tasks (${isoDate})\n${linesToInsert.join('\n')}\n`,
+    content: `${trimmed}\n\n## ${heading}\n${linesToInsert.join('\n')}\n`,
     injectedCount: linesToInsert.length
   };
 }

@@ -1,3 +1,4 @@
+import { syncAppearanceFont } from "../core/fonts";
 // Global reactive settings store. Every change is applied to the document
 // immediately and saved (debounced) through the backend.
 import { createRoot, createEffect } from "solid-js";
@@ -5,6 +6,7 @@ import { createStore, produce, reconcile } from "solid-js/store";
 import { setLocale } from "../i18n";
 import { detectLanguage } from "../i18n/languages";
 import { loadConfig, saveConfig } from "./backend";
+import { onFlush } from "./flush";
 import { defaultConfig, type AppConfig } from "./types";
 
 const SAVE_DELAY_MS = 300;
@@ -14,12 +16,20 @@ const store = createRoot(() => {
   let loaded = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  const persist = () => {
+  let dirty = false;
+  const flush = async () => {
     clearTimeout(timer);
-    timer = setTimeout(() => {
-      // Plain copy: the store proxy can't cross the IPC boundary.
-      void saveConfig(JSON.parse(JSON.stringify(config)));
-    }, SAVE_DELAY_MS);
+    timer = undefined;
+    if (!dirty) return;
+    dirty = false;
+    // Plain copy: the store proxy can't cross the IPC boundary.
+    await saveConfig(JSON.parse(JSON.stringify(config))).catch(() => { dirty = true; });
+  };
+  onFlush(flush);
+  const persist = () => {
+    dirty = true;
+    clearTimeout(timer);
+    timer = setTimeout(() => void flush(), SAVE_DELAY_MS);
   };
 
   createEffect(() => applyToDocument(config));
@@ -67,11 +77,13 @@ export function applyToDocument(cfg: AppConfig, root: HTMLElement = document.doc
   root.dataset.theme = a.theme;
   root.dataset.radius = a.radius;
   root.dataset.density = a.density;
-  root.dataset.mesh = String(a.ambientMesh && !acc.reduceMotion);
+  root.dataset.mesh = !a.ambientMesh ? "false" : acc.reduceMotion ? "static" : "true";
   root.dataset.a11y = String(acc.screenReaderMode);
   root.dataset.reduceMotion = String(acc.reduceMotion || acc.screenReaderMode);
   root.style.setProperty("--accent", a.accent);
   root.style.setProperty("--accent-ink", accentInk(a.accent));
   root.style.setProperty("--glass-blur", `${a.glassBlur}px`);
   root.style.setProperty("--glass-opacity", String(a.glassOpacity));
+  root.style.setProperty("--ui-font-size", `${a.uiFontSize ?? 16}px`);
+  root.style.setProperty("--font-ui", syncAppearanceFont(a.uiFont || "google:Plus Jakarta Sans", a.customFonts));
 }

@@ -60,18 +60,17 @@ export function changeTheme(theme: ThemeId): void {
   announce(t("announce-theme-changed", { theme: t(`theme-${theme}`) }));
 }
 
-/** Live sample of the glass material over sharp content, so blur and opacity changes are visible. */
+/** Live sample of the glass material: shapes behind a frosted card, so blur changes are visible. Not selectable. */
 export function GlassPreview() {
   return (
-    <div class="glass-preview" role="img" aria-label={t("glass-preview-label")}>
+    <div class="glass-preview" role="img" aria-label={`${t("glass-preview-badge")}: ${t("field-glass-blur")} ${settings.appearance.glassBlur}px`}>
+      <span class="gp-badge" aria-hidden="true">{t("glass-preview-badge")}</span>
       <div class="gp-scene" aria-hidden="true">
         <span class="gp-dot a" /><span class="gp-dot b" /><span class="gp-dot c" />
-        <span class="gp-text">NoSidian · Aa Bb 123 · نوسیدین</span>
-        <span class="gp-text two">Markdown · [[links]] · #tags</span>
+        <span class="gp-bar" /><span class="gp-bar short" />
       </div>
       <div class="gp-pane glass" aria-hidden="true">
-        <strong>{t("glass-preview-label")}</strong>
-        <span>{t("field-glass-blur")}: {settings.appearance.glassBlur}px</span>
+        <i /><i /><i class="short" />
       </div>
     </div>
   );

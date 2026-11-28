@@ -29,8 +29,9 @@ export function updateWidget(id: string, fn: (w: DashboardWidget) => void): void
   updateHub((h) => { const w = h.widgets.find((x) => x.id === id); if (w) fn(w); });
 }
 
-export function addWidget(type: DashboardWidgetType): void {
+export function addWidget(type: DashboardWidgetType, extra?: Partial<DashboardWidget>): void {
   const w = buildWidgetFromType(type, { ...COVERS });
   w.title = "";
+  if (extra) Object.assign(w, extra);
   updateHub((h) => { h.widgets.push(w); });
 }

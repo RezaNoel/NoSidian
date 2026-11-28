@@ -90,14 +90,21 @@ function mathHtml(tex: string, display: boolean): string {
 }
 
 /** Known callout types and the icon class used for each. */
-export const CALLOUTS = ["note", "abstract", "info", "todo", "tip", "success", "question", "warning", "failure", "danger", "bug", "example", "quote"] as const;
+export const CALLOUTS = ["note", "abstract", "info", "todo", "tip", "important", "success", "question", "warning", "failure", "danger", "bug", "example", "quote"] as const;
 const CALLOUT_ALIAS: Record<string, string> = {
-  summary: "abstract", tldr: "abstract", hint: "tip", important: "tip", check: "success", done: "success",
+  summary: "abstract", tldr: "abstract", hint: "tip", check: "success", done: "success",
   help: "question", faq: "question", caution: "warning", attention: "warning", fail: "failure", missing: "failure",
   error: "danger", cite: "quote",
 };
 
 let taskCounter = 0;
+
+/** Display name for a link target: last path part, no .md, "Note > Heading" for fragments. */
+export function linkName(target: string): string {
+  const [name, frag] = target.trim().split("#");
+  const base = name.split("/").pop()!.replace(/\.md$/i, "") || name;
+  return frag ? `${base} › ${frag.replace(/^\^/, "")}` : base;
+}
 
 const marked = new Marked({ gfm: true, breaks: false });
 marked.use({
@@ -148,7 +155,8 @@ marked.use({
       start: (src: string) => src.indexOf("[["),
       tokenizer(src: string) {
         const m = /^\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/.exec(src);
-        if (m) return { type: "wikilink", raw: m[0], target: m[1].trim(), label: (m[2] ?? m[1]).trim() };
+        // Without an alias, show the note's name, not its folder path: [[Books/Dune]] reads "Dune".
+        if (m) return { type: "wikilink", raw: m[0], target: m[1].trim(), label: (m[2] ?? linkName(m[1])).trim() };
         return undefined;
       },
       renderer(tok: unknown) {

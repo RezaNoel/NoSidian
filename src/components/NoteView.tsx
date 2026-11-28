@@ -8,7 +8,7 @@ import { activePath, toggleStar } from "../state/vault";
 import { profile, updateProfile } from "../state/workspace";
 import { isMobile } from "../state/ui";
 import type { ViewMode } from "../state/types";
-import { Editor } from "./Editor";
+import { Editor, syncReaderScroll } from "./Editor";
 import { Reader } from "./Reader";
 import { hasTitleBar } from "./TitleBar";
 import { setNoteSource } from "../a11y/voice";
@@ -27,6 +27,8 @@ import { StartPage } from "./StartPage";
 import { AppViewHost } from "./AppViewHost";
 import { FormatBar } from "./FormatBar";
 import { Properties } from "./Properties";
+import { MediaNoteHero } from "./media/MediaNoteHero";
+import { PersonNoteHero } from "./people/PersonNoteHero";
 
 setNoteSource(() => (activePath() ? contents[activePath()!] ?? null : null));
 
@@ -116,6 +118,7 @@ function NoteBody(props: { path: string }) {
       <Show when={/\.pdf$/i.test(path)} fallback={
         <>
           <Show when={editing() && pref("formatBar")}><FormatBar /></Show>
+          <Show when={mode() !== "mindmap" && mode() !== "kanban"}><MediaNoteHero path={path} /><PersonNoteHero path={path} /></Show>
           <div class="panes" data-mode={mode()}>
             <Switch>
               <Match when={mode() === "editor"}><EditorPane path={path} /></Match>
@@ -138,7 +141,7 @@ function NoteBody(props: { path: string }) {
 
 function EditorPane(props: { path: string }) {
   return (
-    <div class="editor-pane" dir="auto">
+    <div class="editor-pane" dir="auto" onScroll={(e) => syncReaderScroll(e.currentTarget)}>
       <Show when={pref("showProperties")}><Properties path={props.path} /></Show>
       <Editor path={props.path} />
     </div>

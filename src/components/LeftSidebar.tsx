@@ -1,6 +1,6 @@
 // Left sidebar: six section tabs (files, recent, search, tags, starred, calendar).
 import { For, Match, Show, Switch, createMemo, createResource, createSignal, onCleanup } from "solid-js";
-import { Calendar, Clock, Files, Hash, Search, Star, Tags } from "lucide-solid";
+import { Calendar, ChevronRight, Clock, Files, Hash, Search, Star, Tags } from "lucide-solid";
 import { locale, t } from "../i18n";
 import { rovingKeydown } from "../a11y/roving";
 import { noteTitle } from "../lib/markdown";
@@ -18,6 +18,7 @@ import { noteItemMenu, recentExtras, tagMenu } from "./itemMenus";
 import type { MenuItem } from "./ContextMenu";
 import { VaultBanner } from "./Banner";
 import { hasTitleBar } from "./TitleBar";
+import { hoverRow, leaveRow } from "./HoverPreview";
 
 const TABS: { id: LeftTab; icon: typeof Files; label: () => string }[] = [
   { id: "files", icon: Files, label: () => t("tab-files") },
@@ -39,7 +40,7 @@ const open = (path: string) => {
 function NoteLink(props: { path: string; meta?: string; snippet?: string; extra?: MenuItem[] }) {
   return (
     <li>
-      <button class="list-row" classList={{ active: activePath() === props.path }} onClick={() => open(props.path)} onContextMenu={(e) => noteItemMenu(e, props.path, props.extra)}>
+      <button class="list-row" classList={{ active: activePath() === props.path }} onClick={() => open(props.path)} onContextMenu={(e) => noteItemMenu(e, props.path, props.extra)} onMouseMove={(e) => hoverRow(e, props.path)} onMouseLeave={leaveRow}>
         <span class="list-title" dir="auto">{noteTitle(props.path)}</span>
         <Show when={props.meta}><span class="list-meta">{props.meta}</span></Show>
         <Show when={props.snippet}><span class="list-snippet" dir="auto">{props.snippet}</span></Show>
@@ -159,24 +160,54 @@ function SearchPanel() {
   );
 }
 
+type TagSort = "count" | "name";
+const TAG_PAGE = 40;
+
+/** Tags as a searchable list; each tag opens in place to show its notes, so the list never grows above the notes you are looking at. */
 function TagsPanel() {
-  const [selected, setSelected] = createSignal<string | null>(null);
+  const [open, setOpen] = createSignal<string | null>(null);
+  const [q, setQ] = createSignal("");
+  const [sort, setSort] = createSignal<TagSort>("count");
+  const [all, setAll] = createSignal(false);
   const [tags] = createResource(() => indexRev() + 1, () => backend.tags(), { initialValue: [] as TagCount[] });
+  const max = createMemo(() => tags().reduce((m, x) => Math.max(m, x.count), 1));
+  const list = createMemo(() => {
+    const s = q().trim().replace(/^#/, "").toLowerCase();
+    const xs = tags().filter((x) => !s || x.tag.toLowerCase().includes(s));
+    return [...xs].sort((a, b) => (sort() === "count" ? b.count - a.count || a.tag.localeCompare(b.tag) : a.tag.localeCompare(b.tag)));
+  });
+  const shown = () => (all() || q().trim() ? list() : list().slice(0, TAG_PAGE));
   return (
     <div class="panel">
-      <div class="panel-head"><h2 class="section-title">{t("tab-tags")}</h2></div>
+      <div class="panel-head"><h2 class="section-title">{t("tab-tags")}</h2><span class="muted sm">{tags().length}</span></div>
       <Show when={tags().length} fallback={<p class="empty">{t("no-tags")}</p>}>
-        <div class="tag-cloud">
-          <For each={tags()}>
+        <div class="panel-pad search-bar">
+          <input class="input" type="search" dir="auto" placeholder={t("tags-filter")} aria-label={t("tags-filter")} value={q()} onInput={(e) => setQ(e.currentTarget.value)} />
+          <select class="input select-sm" aria-label={t("search-sort-label")} value={sort()} onChange={(e) => setSort(e.currentTarget.value as TagSort)}>
+            <option value="count">{t("tags-sort-count")}</option>
+            <option value="name">{t("tags-sort-name")}</option>
+          </select>
+        </div>
+        <ul class="tag-list">
+          <For each={shown()} fallback={<li class="empty">{t("no-results")}</li>}>
             {(tag) => (
-              <button class="tag-chip" aria-pressed={selected() === tag.tag} onClick={() => setSelected(selected() === tag.tag ? null : tag.tag)} onContextMenu={(e) => tagMenu(e, tag.tag)}>
-                <Hash aria-hidden="true" />{tag.tag}<span class="count">{tag.count}</span>
-              </button>
+              <li>
+                <button class="tag-row" aria-expanded={open() === tag.tag} onClick={() => setOpen(open() === tag.tag ? null : tag.tag)} onContextMenu={(e) => tagMenu(e, tag.tag)}>
+                  <ChevronRight class="tag-caret flip-rtl" aria-hidden="true" />
+                  <Hash aria-hidden="true" />
+                  <span class="tag-name" dir="auto">{tag.tag}</span>
+                  <span class="tag-bar" aria-hidden="true"><span style={{ width: `${Math.max(8, (tag.count / max()) * 100)}%` }} /></span>
+                  <span class="count">{tag.count}</span>
+                </button>
+                <Show when={open() === tag.tag}>
+                  <ul class="list tag-notes"><For each={tag.paths}>{(p) => <NoteLink path={p} />}</For></ul>
+                </Show>
+              </li>
             )}
           </For>
-        </div>
-        <Show when={selected()}>
-          <ul class="list"><For each={tags().find((x) => x.tag === selected())?.paths ?? []}>{(p) => <NoteLink path={p} />}</For></ul>
+        </ul>
+        <Show when={!all() && !q().trim() && list().length > TAG_PAGE}>
+          <button class="btn sm ghost tag-more" onClick={() => setAll(true)}>{t("tags-show-all", { n: list().length })}</button>
         </Show>
       </Show>
     </div>

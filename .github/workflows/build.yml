@@ -1,5 +1,6 @@
 # Checks every push, and builds the Windows installer (.exe) and Android
-# package (.apk) for distribution. Run manually or by pushing a tag like v0.1.0.
+# package (.apk) for distribution. Run manually, or push a tag like v1.0.0:
+# a tag builds both and publishes them as a GitHub release.
 name: build
 
 on:
@@ -10,9 +11,13 @@ on:
   workflow_dispatch:
     inputs:
       android:
-        description: "Also build the Android APK (paused for now: Windows only)"
+        description: "Also build the Android APK"
         type: boolean
         default: false
+      release:
+        description: "Publish a GitHub release with this tag (for example v1.0.0) from this commit"
+        type: string
+        default: ""
 
 jobs:
   check:
@@ -52,15 +57,47 @@ jobs:
           # Google Calendar sign-in (desktop OAuth client). Read at compile time by src-tauri.
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          # Signs the update package so installed copies accept only releases from this key.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      - name: Write the update manifest (latest.json)
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          cd target/release/bundle/nsis
+          SIG=$(ls *-setup.exe.sig | head -1)
+          EXE=${SIG%.sig}
+          node -e '
+            const fs = require("fs");
+            const [exe, sigFile, version] = process.argv.slice(1);
+            const manifest = {
+              version,
+              notes: "",
+              pub_date: new Date().toISOString(),
+              platforms: {
+                "windows-x86_64": {
+                  signature: fs.readFileSync(sigFile, "utf8").trim(),
+                  url: `https://github.com/${process.env.REPO}/releases/download/v${version}/${encodeURIComponent(exe)}`,
+                },
+              },
+            };
+            fs.writeFileSync("latest.json", JSON.stringify(manifest, null, 2) + "\n");
+          ' "$EXE" "$SIG" "$VERSION"
+          cat latest.json
+        env:
+          REPO: ${{ github.repository }}
       - uses: actions/upload-artifact@v4
         with:
           name: NoSidian-windows-exe
-          path: target/release/bundle/nsis/*.exe
+          path: |
+            target/release/bundle/nsis/*.exe
+            target/release/bundle/nsis/*.exe.sig
+            target/release/bundle/nsis/latest.json
 
   android-apk:
     needs: check
-    # Android is paused until further notice; run only when asked for explicitly.
-    if: github.event_name == 'workflow_dispatch' && inputs.android
+    # Built when asked for by hand, and for every release tag.
+    if: (github.event_name == 'workflow_dispatch' && (inputs.android || inputs.release != '')) || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04
     env:
       NDK_VERSION: 27.2.12479018
@@ -75,34 +112,78 @@ jobs:
         run: |
           SDKM="$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin | sort -V | tail -1)/sdkmanager"
           yes | "$SDKM" --licenses > /dev/null || true
-          "$SDKM" --install "ndk;${NDK_VERSION}" "platforms;android-35" "build-tools;35.0.0"
+          "$SDKM" --install "ndk;${NDK_VERSION}" "platforms;android-35" "platforms;android-36" "build-tools;35.0.0"
           echo "NDK_HOME=$ANDROID_HOME/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+          targets: aarch64-linux-android,armv7-linux-androideabi
       - uses: Swatinem/rust-cache@v2
       - run: npm ci
       - run: npx tauri android init --ci
+      - name: Compile every Android library against SDK 36
+        # tauri-android needs 36, and the sharekit plugin still pins 35.
+        run: |
+          cargo fetch --manifest-path src-tauri/Cargo.toml
+          for f in "$HOME"/.cargo/registry/src/*/tauri-plugin-*/android/build.gradle.kts; do
+            sed -i -E 's/compileSdk = 3[0-5]\b/compileSdk = 36/' "$f"
+          done
+          grep -h compileSdk "$HOME"/.cargo/registry/src/*/tauri-plugin-sharekit-*/android/build.gradle.kts
       - name: Build APK
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
+          APK_DIR=src-tauri/gen/android/app/build/outputs/apk/universal/release
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           if [ -n "$KEYSTORE_B64" ]; then
-            npx tauri android build --apk --ci
             echo "$KEYSTORE_B64" | base64 -d > release.jks
-            BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
-            for f in src-tauri/gen/android/app/build/outputs/apk/universal/release/*-unsigned.apk; do
-              "$BT/zipalign" -f 4 "$f" aligned.apk
-              "$BT/apksigner" sign --ks release.jks --ks-pass env:KEYSTORE_PASSWORD --ks-key-alias "$KEY_ALIAS" --out NoSidian.apk aligned.apk
-            done
+            KS=release.jks; PASS="$KEYSTORE_PASSWORD"; ALIAS="$KEY_ALIAS"
           else
-            # No signing key configured yet: debug-signed APK, installable for testing.
-            npx tauri android build --apk --debug --ci
-            cp src-tauri/gen/android/app/build/outputs/apk/universal/debug/*.apk NoSidian-debug.apk
+            # No signing key configured yet: a throwaway key, installable for testing.
+            keytool -genkeypair -v -keystore release.jks -storepass nosidian-test -keypass nosidian-test \
+              -alias nosidian -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=NoSidian" > /dev/null
+            KS=release.jks; PASS=nosidian-test; ALIAS=nosidian
           fi
+          # Sign the release build found in APK_DIR into the named APK.
+          sign() {
+            for f in "$APK_DIR"/*-unsigned.apk; do
+              "$BT/zipalign" -f 4 "$f" aligned.apk
+              "$BT/apksigner" sign --ks "$KS" --ks-pass "pass:$PASS" --ks-key-alias "$ALIAS" --key-pass "pass:$PASS" --out "$1" aligned.apk
+            done
+          }
+          # Main build: 64-bit ARM phones only, small enough to download and install.
+          npx tauri android build --apk --target aarch64 --ci
+          sign NoSidian-android.apk
+          # Older phones: 32-bit ARM only.
+          rm -rf "$APK_DIR"
+          npx tauri android build --apk --target armv7 --ci
+          sign NoSidian-android-old.apk
       - uses: actions/upload-artifact@v4
         with:
           name: NoSidian-android-apk
-          path: NoSidian*.apk
+          path: |
+            NoSidian-android.apk
+            NoSidian-android-old.apk
+
+  release:
+    needs: [windows-exe, android-apk]
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release != '')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          tag_name: ${{ inputs.release || github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          body: |
+            **NoSidian-android-old.apk** is for older Android phones only (32-bit ARM). It is a separate build from NoSidian-android.apk. Phones from the last few years should use NoSidian-android.apk.
+
+            **NoSidian-android-old.apk** مخصوص گوشی‌های قدیمی است (معماری ۳۲ بیتی ARM). این نسخه جدا از NoSidian-android.apk ساخته شده؛ گوشی‌های جدید همان NoSidian-android.apk را نصب کنند.

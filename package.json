@@ -1,7 +1,7 @@
 {
   "name": "nosidian",
   "private": true,
-  "version": "0.2.0",
+  "version": "1.2.0",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -27,8 +27,11 @@
     "@lezer/highlight": "^1.2.5",
     "@tauri-apps/api": "^2.12.5",
     "@tauri-apps/plugin-dialog": "^2.8.4",
+    "@tauri-apps/plugin-process": "^2.4.0",
+    "@tauri-apps/plugin-updater": "^2.14.1",
     "dompurify": "^3.4.18",
     "highlight.js": "^11.12.0",
+    "hls.js": "^1.7.4",
     "jszip": "^3.10.1",
     "katex": "^0.19.1",
     "lucide-solid": "^1.77.0",

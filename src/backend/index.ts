@@ -52,8 +52,22 @@ export interface VaultBackend {
   attachments(): Promise<string[]>;
   fileRead(path: string): Promise<Uint8Array>;
   fileWrite(path: string, base64: string): Promise<void>;
+  /** Save a dropped file under a free name in `folder`; returns its path. */
+  fileAdd(folder: string, name: string, base64: string): Promise<string>;
   /** Ask for files on disk and copy them into `folder`. */
   importFiles(folder: string): Promise<string[]>;
+  /**
+   * Ask for any files on disk to attach to a note: copy or move them into
+   * `folder` (vault paths back), or keep them where they are (absolute paths back).
+   * Null when the person cancelled or the platform has no file dialog.
+   */
+  attachFiles(folder: string, mode: "copy" | "move" | "link"): Promise<{ vault: string[]; outside: string[] } | null>;
+  /** Open a file outside the vault with its default app. */
+  openExternalFile(path: string): Promise<void>;
+  /** Open a web, mail or phone link in the system browser or app. */
+  openUrl(url: string): Promise<void>;
+  /** Title and channel of a YouTube video, or null when offline. */
+  youtubeInfo(id: string): Promise<{ title: string; author: string } | null>;
   /** Ask where to save and write text there. Returns false if cancelled. */
   saveText(defaultName: string, content: string, ext: string): Promise<boolean>;
   /** Ask where to save and write binary data there. Returns false if cancelled. */
@@ -121,11 +135,28 @@ const tauriBackend: VaultBackend = {
     return buf instanceof ArrayBuffer ? new Uint8Array(buf) : Uint8Array.from(buf);
   },
   fileWrite: (path, data) => invoke("file_write", { path, data }),
+  fileAdd: (folder, name, data) => invoke("file_add", { folder, name, data }),
   async importFiles(folder) {
     const { open } = await import("@tauri-apps/plugin-dialog");
     const res = await open({ multiple: true, filters: [{ name: "Markdown / PDF / media", extensions: ["md", "markdown", "pdf", "png", "jpg", "jpeg", "gif", "webp", "svg", "mp3", "wav", "ogg", "m4a", "mp4", "webm"] }] });
     const sources = Array.isArray(res) ? res : res ? [res] : [];
     return sources.length ? invoke("files_import", { sources, folder }) : [];
+  },
+  async attachFiles(folder, mode) {
+    const { open } = await import("@tauri-apps/plugin-dialog");
+    const res = await open({ multiple: true });
+    const sources = Array.isArray(res) ? res : res ? [res] : [];
+    if (!sources.length) return null;
+    if (mode === "link") return { vault: [], outside: sources };
+    return { vault: await invoke<string[]>(mode === "move" ? "files_move_in" : "files_import", { sources, folder }), outside: [] };
+  },
+  openExternalFile: (path) => invoke("open_external_file", { path }),
+  openUrl: (url) => invoke("plugin:opener|open_url", { url }),
+  async youtubeInfo(id) {
+    try {
+      const j = JSON.parse(await invoke<string>("youtube_info", { id })) as { title?: string; author_name?: string };
+      return j.title ? { title: j.title, author: j.author_name ?? "" } : null;
+    } catch { return null; }
   },
   async saveText(defaultName, content, ext) {
     const { save } = await import("@tauri-apps/plugin-dialog");

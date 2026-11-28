@@ -2,7 +2,8 @@
 // app config; the settings store is updated the same way so a later debounced
 // save of settings doesn't overwrite it with stale data.
 import { backend } from "../backend";
-import { enterVault, reportError } from "./vault";
+import { flushAll } from "./flush";
+import { enterVault, leaveVault, reportError } from "./vault";
 import { applyStartup } from "./daily";
 import { settings, updateSettings } from "./settings";
 import type { Vault } from "./types";
@@ -20,6 +21,8 @@ async function activate(next: Vault): Promise<Vault> {
 }
 
 async function guarded(op: () => Promise<Vault>): Promise<Vault | null> {
+  // Write the open vault's pending changes before Rust switches to another one.
+  await flushAll();
   try {
     return await activate(await op());
   } catch (e) {
@@ -48,4 +51,12 @@ export async function restoreVault(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/** Close the open vault and go back to the vault picker. */
+export async function closeVault(): Promise<void> {
+  await flushAll();
+  leaveVault();
+  updateSettings((c) => { c.activeVault = null; });
+  window.dispatchEvent(new CustomEvent("nosidian:vault-closed"));
 }

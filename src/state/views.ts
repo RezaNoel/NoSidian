@@ -3,7 +3,7 @@
 import { t } from "../i18n";
 import { noteTitle } from "../lib/markdown";
 
-export const APP_VIEWS = ["start", "dashboard", "graph", "flashcards", "projects", "media", "zen"] as const;
+export const APP_VIEWS = ["start", "dashboard", "graph", "flashcards", "projects", "media", "people", "zen"] as const;
 export type AppView = (typeof APP_VIEWS)[number];
 
 export const isAppView = (path: string) => path.startsWith("app:");

@@ -1,13 +1,24 @@
+import type { CustomFontDef } from "../core/types";
 // Mirrors the Rust types in crates/nosidian-core (serde camelCase / kebab-case).
 import type { LanguageCode } from "../i18n/languages";
 
 export type ThemeId =
   | "obsidian-slate" | "midnight-carbon" | "nord-arctic"
-  | "catppuccin-mocha" | "paper-daylight" | "warm-parchment";
+  | "catppuccin-mocha" | "paper-daylight" | "warm-parchment"
+  | "christmas" | "matrix";
 export const THEMES: ThemeId[] = [
   "obsidian-slate", "midnight-carbon", "nord-arctic",
   "catppuccin-mocha", "paper-daylight", "warm-parchment",
+  "christmas", "matrix",
 ];
+/** Themes that show a "new" badge, and the last day (inclusive) they show it. */
+export const NEW_THEMES: Partial<Record<ThemeId, string>> = { christmas: "2026-12-31", matrix: "2026-12-31" };
+export function themeIsNew(id: ThemeId, now = new Date()): boolean {
+  const until = NEW_THEMES[id];
+  if (!until) return false;
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return today <= until;
+}
 
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
 export type UseCase = "study-languages" | "writing" | "projects-coding" | "general";
@@ -15,7 +26,7 @@ export type RadiusScale = "sharp" | "balanced" | "soft";
 export type Density = "compact" | "comfortable";
 
 export type ModuleId =
-  | "dashboard" | "flashcards" | "media-shelf" | "knowledge-graph" | "mindmap"
+  | "dashboard" | "flashcards" | "media-shelf" | "people" | "knowledge-graph" | "mindmap"
   | "kanban" | "slides" | "daily-calendar" | "recent-files" | "pdf-support"
   | "zen-focus" | "ambient-effects" | "companion-pet" | "project-mode"
   | "dependency-graph" | "integrated-terminal" | "mcp-bridge"
@@ -29,6 +40,11 @@ export interface Appearance {
   ambientMesh: boolean;
   radius: RadiusScale;
   density: Density;
+  /** Interface typeface: "google:<family>", "sys:<family>" or "custom:<id>". */
+  uiFont: string;
+  /** Interface text size in px. */
+  uiFontSize: number;
+  customFonts?: CustomFontDef[];
 }
 
 export interface Accessibility {
@@ -79,6 +95,8 @@ export function defaultConfig(): AppConfig {
       ambientMesh: true,
       radius: "balanced",
       density: "comfortable",
+      uiFont: "jakarta",
+      uiFontSize: 16,
     },
     accessibility: { screenReaderMode: false, reduceMotion: false, speechCues: false, soundCues: false, speechRate: 1 },
     petEnabled: true,
@@ -126,6 +144,8 @@ export interface WorkspaceProfile {
   ribbonOrder: string[];
   /** Ribbon tools the user hid with the right-click menu. */
   ribbonHidden: string[];
+  /** Tools left out of the phone's More sheet. */
+  moreHidden?: string[];
   /** Folders that are opened as projects. */
   projectFolders: string[];
 }

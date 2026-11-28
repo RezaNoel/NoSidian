@@ -1,6 +1,7 @@
 // CodeMirror 6 Markdown editor. One instance per open note; mixed RTL/LTR
 // lines get their own direction, and the theme follows the app tokens.
 import { createEffect, createRoot, onCleanup, onMount } from "solid-js";
+import { peoplePaths } from "../state/people";
 import { Compartment, EditorState, type Extension } from "@codemirror/state";
 import { autocompletion, closeBrackets, closeBracketsKeymap, type Completion, type CompletionContext } from "@codemirror/autocomplete";
 import { foldGutter, foldKeymap, indentUnit } from "@codemirror/language";
@@ -17,6 +18,7 @@ import { backend } from "../backend";
 import { formatDailyName } from "../lib/dates";
 import { createResource } from "solid-js";
 import { pref } from "../state/prefs";
+import { embedDroppedFiles, hasOsFiles } from "../state/dropFiles";
 
 const highlight = HighlightStyle.define([
   { tag: tg.heading1, fontSize: "1.4em", fontWeight: "700", color: "var(--text-primary)" },
@@ -34,7 +36,8 @@ const highlight = HighlightStyle.define([
 
 const theme = EditorView.theme({
   "&": { height: "100%", backgroundColor: "transparent", color: "var(--text-primary)", fontSize: "var(--editor-font-size)" },
-  ".cm-scroller": { fontFamily: "var(--font-ui)", lineHeight: "var(--editor-line-height)", overflow: "auto" },
+  // The pane around the editor scrolls (so the properties above the text scroll with it).
+  ".cm-scroller": { fontFamily: "var(--font-editor)", lineHeight: "var(--editor-line-height)", overflow: "visible" },
   ".cm-content": { maxWidth: "var(--editor-max-width)", margin: "0 auto", padding: "28px 28px 40vh", caretColor: "var(--accent)" },
   ".cm-line": { padding: "0" },
   ".cm-cursor": { borderInlineStartColor: "var(--accent)", borderInlineStartWidth: "2px" },
@@ -80,6 +83,19 @@ function linkSource(ctx: CompletionContext) {
   if (!m) return null;
   const options: Completion[] = markdownPaths().map((p) => ({ label: noteTitle(p), detail: p.includes("/") ? p.slice(0, p.lastIndexOf("/")) : undefined, apply: `${noteTitle(p)}]]`, type: "text" }));
   return { from: m.from + 2, options, validFor: /^[^\]\n]*$/ };
+}
+/** "@Name" suggests people from the people network and inserts a link to their note. */
+function peopleSource(ctx: CompletionContext) {
+  const m = ctx.matchBefore(/(?:^|\s)@[\p{L}\p{N}_ .-]*$/u);
+  if (!m) return null;
+  const people = peoplePaths();
+  if (!people.length) return null;
+  const from = m.from + m.text.indexOf("@");
+  return {
+    from,
+    options: people.map((p) => { const name = p.split("/").pop()!.replace(/\.md$/i, ""); return { label: `@${name}`, detail: t("view-people"), apply: `[[${p.replace(/\.md$/i, "")}|${name}]]`, type: "variable" }; }),
+    validFor: /^@[\p{L}\p{N}_ .-]*$/u,
+  };
 }
 function tagSource(ctx: CompletionContext) {
   const m = ctx.matchBefore(/(?:^|\s)#[\p{L}\p{N}_/-]*$/u);
@@ -141,6 +157,41 @@ export function applyFormat(kind: FormatKind): boolean {
   return true;
 }
 
+/** Turn the selected lines into a callout of `type` (or change the type of the callout already there). */
+export function applyCallout(type: string): boolean {
+  const view = activeView;
+  if (!view) return false;
+  const lines = new Set<number>();
+  for (const r of view.state.selection.ranges) for (let l = view.state.doc.lineAt(r.from).number; l <= view.state.doc.lineAt(r.to).number; l++) lines.add(l);
+  const nums = [...lines].sort((a, b) => a - b);
+  const first = view.state.doc.line(nums[0]);
+  const head = /^> \[!([\w-]+)\][+-]?/.exec(first.text);
+  if (head) {
+    view.dispatch({ changes: { from: first.from + 4, to: first.from + 4 + head[1].length, insert: type } });
+  } else {
+    const changes = nums.map((n, i) => {
+      const line = view.state.doc.line(n);
+      const cur = /^> /.exec(line.text)?.[0] ?? "";
+      return { from: line.from, to: line.from + cur.length, insert: i === 0 ? `> [!${type}] ` : "> " };
+    });
+    view.dispatch({ changes });
+  }
+  view.focus();
+  return true;
+}
+
+/** Insert text at the cursor on its own line (attachments, embeds). */
+export function insertBlockAtCursor(md: string): boolean {
+  const view = activeView;
+  if (!view || !md) return false;
+  const at = view.state.selection.main.head;
+  const line = view.state.doc.lineAt(at);
+  const insert = `${at > line.from ? "\n" : ""}${md}${at < line.to ? "\n" : ""}`;
+  view.dispatch({ changes: { from: at, insert }, selection: { anchor: at + insert.length } });
+  view.focus();
+  return true;
+}
+
 /** Imperative handle used by the outline panel. */
 let activeView: EditorView | null = null;
 export function editorGotoLine(line: number): boolean {
@@ -186,7 +237,7 @@ export function Editor(props: { path: string }) {
           syntaxHighlighting(highlight),
           keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, indentWithTab]),
           placeholder(t("editor-label")),
-          autocompletion({ override: [linkSource, tagSource, slashSource], icons: false }),
+          autocompletion({ override: [linkSource, peopleSource, tagSource, slashSource], icons: false }),
           EditorView.contentAttributes.of({ "aria-label": `${t("editor-label")}: ${noteTitle(props.path)}`, "aria-multiline": "true", dir: "auto" }),
           theme,
           prefsSlot.of(prefExtensions()),
@@ -194,7 +245,30 @@ export function Editor(props: { path: string }) {
             if (u.docChanged && !syncing) setContent(props.path, u.state.doc.toString());
             if (u.focusChanged && u.view.hasFocus) { activeView = u.view; activeViewPath = props.path; }
           }),
-          EditorView.domEventHandlers({ scroll: (_e, v) => { syncReaderScroll(v); } }),
+          EditorView.domEventHandlers({
+            scroll: (_e, v) => { syncReaderScroll(v.scrollDOM); },
+            // Files from the system: save them under attachments/ and embed them where they land.
+            dragover: (e) => {
+              if (!hasOsFiles(e)) return false;
+              e.preventDefault();
+              if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+              return true;
+            },
+            drop: (e, v) => {
+              if (!e.dataTransfer?.files.length) return false;
+              e.preventDefault();
+              const at = v.posAtCoords({ x: e.clientX, y: e.clientY }) ?? v.state.selection.main.head;
+              void insertFiles(v, e.dataTransfer.files, at);
+              return true;
+            },
+            paste: (e, v) => {
+              const files = e.clipboardData?.files;
+              if (!files?.length) return false;
+              e.preventDefault();
+              void insertFiles(v, files, v.state.selection.main.head);
+              return true;
+            },
+          }),
         ],
       }),
     });
@@ -237,12 +311,23 @@ export function Editor(props: { path: string }) {
   return <div ref={host} class="editor-host" />;
 }
 
+async function insertFiles(v: EditorView, files: FileList, at: number) {
+  const md = await embedDroppedFiles(Array.from(files));
+  if (!md) return;
+  const line = v.state.doc.lineAt(Math.min(at, v.state.doc.length));
+  // Put embeds on their own line so they render as a block.
+  const before = at > line.from ? "\n" : "";
+  const after = at < line.to ? "\n" : "";
+  const insert = `${before}${md}${after}`;
+  v.dispatch({ changes: { from: at, insert }, selection: { anchor: at + insert.length } });
+  v.focus();
+}
+
 /** Split view: keep the reader roughly aligned with the editor's top line. */
-function syncReaderScroll(view: EditorView) {
+export function syncReaderScroll(sc: HTMLElement) {
   if (!pref("scrollSync")) return;
-  const reader = view.dom.closest(".panes")?.querySelector<HTMLElement>("[data-sync=reader]");
+  const reader = sc.closest(".panes")?.querySelector<HTMLElement>("[data-sync=reader]");
   if (!reader) return;
-  const sc = view.scrollDOM;
   const max = sc.scrollHeight - sc.clientHeight;
   const frac = max > 0 ? sc.scrollTop / max : 0;
   reader.scrollTop = frac * (reader.scrollHeight - reader.clientHeight);

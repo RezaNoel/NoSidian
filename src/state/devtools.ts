@@ -57,19 +57,39 @@ const POSTLUDE = `
 const logs = createRoot(() => createSignal<Record<string, string[]>>({}));
 export const pluginLogs = logs[0];
 
+const running = createRoot(() => createSignal<Record<string, boolean>>({}));
+/** Whether a plugin is running right now. */
+export const pluginRunning = (id: string) => !!running[0]()[id];
+
+/** Run a plugin by id (from the ribbon or a home widget). Resolves when it finishes. */
+export function runPluginById(id: string): Promise<void> {
+  const p = dev.state.scripts.find((x) => x.id === id);
+  if (!p || !p.enabled || pluginRunning(id)) return Promise.resolve();
+  return runPlugin(JSON.parse(JSON.stringify(p)) as CustomScriptPlugin);
+}
+
+/** Run a plugin in its Worker. Resolves when it finishes, fails or times out. */
 export async function runPlugin(p: CustomScriptPlugin): Promise<void> {
-  await loadAllNotes();
+  running[1]((r) => ({ ...r, [p.id]: true }));
+  try { await loadAllNotes(); } catch { /* run with what is loaded */ }
+  let resolve!: () => void;
+  const ended = new Promise<void>((r) => { resolve = r; });
   const lines: string[] = [];
   const blob = new Blob([PRELUDE, p.code, POSTLUDE], { type: "text/javascript" });
   const url = URL.createObjectURL(blob);
   const worker = new Worker(url);
+  let finished = false;
   const finish = (err?: string) => {
+    if (finished) return;
+    finished = true;
     worker.terminate();
     URL.revokeObjectURL(url);
     clearTimeout(timer);
     if (err) lines.push(`[Error] ${err}`);
     logs[1]((l) => ({ ...l, [p.id]: lines }));
     dev.update((d) => { const x = d.scripts.find((s) => s.id === p.id); if (x) { x.lastRunAt = Date.now(); x.lastError = err; } });
+    running[1]((r) => ({ ...r, [p.id]: false }));
+    resolve();
   };
   const timer = setTimeout(() => finish(t("plugin-timeout")), 10_000);
   worker.onmessage = (e: MessageEvent<{ type: string; payload: unknown }>) => {
@@ -94,6 +114,7 @@ export async function runPlugin(p: CustomScriptPlugin): Promise<void> {
     notes: corpus().map((n) => ({ path: n.path, content: n.content, starred: n.starred, updatedAt: n.updatedAt })),
     active: active && contents[active] !== undefined ? { path: active, content: contents[active], starred: false } : null,
   });
+  return ended;
 }
 
 export function runStartupPlugins(): void {

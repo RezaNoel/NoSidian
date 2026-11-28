@@ -1,11 +1,14 @@
 // Settings sections for Phase 3–8 features: editor extras, history, the
 // companion, the MCP bridge, custom CSS, JavaScript plugins and the shell.
 import { For, Show, createSignal } from "solid-js";
-import { Copy, Play, Plus, RefreshCw, Trash2 } from "lucide-solid";
+import { Copy, LayoutDashboard, Play, Plus, RefreshCw, Trash2 } from "lucide-solid";
+import { Dynamic } from "solid-js/web";
+import { ENTRY_ICONS } from "../EntryStyle";
+import { addWidget } from "../../state/dashboard";
 import { t } from "../../i18n";
 import { pref, setPref, type Prefs } from "../../state/prefs";
 import { settings, updateSettings } from "../../state/settings";
-import { dev, applyCustomCss, decideProposal, mcp, mcpActivity, mcpEndpoint, mcpError, mcpProposals, mcpStatus, pluginLogs, regenerateToken, runPlugin } from "../../state/devtools";
+import { dev, applyCustomCss, decideProposal, mcp, mcpActivity, mcpEndpoint, mcpError, mcpProposals, mcpStatus, pluginLogs, pluginRunning, regenerateToken, runPluginById } from "../../state/devtools";
 import { DEVELOPER_CSS_PRESETS } from "../../core/devExtensions";
 import { buildClaudeCodeCommand, buildClaudeDesktopConfigSnippet, buildCursorSnippet, buildDirectHttpMcpSnippet, buildVsCodeSnippet, type McpAccessMode } from "../../core/mcp";
 import { exportBackup, exportStandalone, importIntoVault } from "../../state/export";
@@ -25,6 +28,7 @@ export function PetSettings() {
     <div class="stack">
       <Toggle label={t("onboarding-pet")} checked={settings.petEnabled} onChange={(v) => updateSettings((c) => { c.petEnabled = v; })} />
       <PrefToggle k="petFloating" label={t("pet-floating")} />
+      <PrefToggle k="petTalk" label={t("pet-talk")} hint={t("pet-talk-help")} />
       <button class="btn" onClick={openPetStudio}>{t("pet-open")}</button>
       <h3 class="set-sub">{t("pet-model-title")}</h3>
       <PetModelControls />
@@ -139,17 +143,37 @@ export function PluginSettings() {
       <For each={dev.state.scripts}>
         {(p) => (
           <div class="card glass-soft stack">
-            <div class="row wrap">
-              <input class="input sm" value={p.name} aria-label={t("dev-plugin-name")} onChange={(e) => { const v = e.currentTarget.value; upd(p.id, (x) => { x.name = v; }); }} />
-              <label class="check"><input type="checkbox" checked={p.enabled} onChange={(e) => { const v = e.currentTarget.checked; upd(p.id, (x) => { x.enabled = v; }); }} />{t("dev-plugin-enabled")}</label>
-              <label class="check"><input type="checkbox" checked={!!p.runOnStartup} onChange={(e) => { const v = e.currentTarget.checked; upd(p.id, (x) => { x.runOnStartup = v; }); }} />{t("dev-plugin-startup")}</label>
-              <span class="tb-fill" />
-              <button class="btn sm" disabled={!p.enabled} onClick={() => void runPlugin(JSON.parse(JSON.stringify(p)))}><Play />{t("dev-plugin-run")}</button>
-              <button class="btn sm" aria-expanded={openId() === p.id} onClick={() => setOpenId(openId() === p.id ? null : p.id)}>{t("dev-plugin-code")}</button>
+            <div class="row">
+              <input class="input sm" style={{ flex: "1 1 auto", "min-inline-size": "0" }} dir="auto" value={p.name} aria-label={t("dev-plugin-name")} onChange={(e) => { const v = e.currentTarget.value; upd(p.id, (x) => { x.name = v; }); }} />
               <button class="icon-btn sm" aria-label={t("action-delete")} onClick={() => dev.update((d) => { d.scripts = d.scripts.filter((x) => x.id !== p.id); })}><Trash2 /></button>
             </div>
+            <div class="row wrap">
+              <label class="check"><input type="checkbox" checked={p.enabled} onChange={(e) => { const v = e.currentTarget.checked; upd(p.id, (x) => { x.enabled = v; }); }} />{t("dev-plugin-enabled")}</label>
+              <label class="check"><input type="checkbox" checked={!!p.runOnStartup} onChange={(e) => { const v = e.currentTarget.checked; upd(p.id, (x) => { x.runOnStartup = v; }); }} />{t("dev-plugin-startup")}</label>
+              <label class="check"><input type="checkbox" checked={!!p.ribbon} onChange={(e) => { const v = e.currentTarget.checked; upd(p.id, (x) => { x.ribbon = v; }); }} />{t("dev-plugin-ribbon")}</label>
+              <span class="tb-fill" />
+              <button class="btn sm" disabled={!p.enabled || pluginRunning(p.id)} onClick={() => void runPluginById(p.id)}><Play />{t("dev-plugin-run")}</button>
+              <button class="btn sm" title={t("dev-plugin-home-hint")} onClick={() => { addWidget("plugin", { pluginId: p.id }); toast(t("dev-plugin-home-added", { name: p.name })); }}><LayoutDashboard />{t("dev-plugin-home")}</button>
+              <button class="btn sm" aria-expanded={openId() === p.id} onClick={() => setOpenId(openId() === p.id ? null : p.id)}>{t("dev-plugin-code")}</button>
+            </div>
             <Show when={openId() === p.id}>
+              <input class="input sm" dir="auto" value={p.description ?? ""} placeholder={t("dev-plugin-description")} aria-label={t("dev-plugin-description")} onChange={(e) => { const v = e.currentTarget.value.trim(); upd(p.id, (x) => { x.description = v || undefined; }); }} />
+              <Show when={p.ribbon}>
+                <fieldset class="field">
+                  <legend>{t("dev-plugin-icon")}</legend>
+                  <div class="entry-icons proj-icons" role="radiogroup" aria-label={t("dev-plugin-icon")}>
+                    <For each={Object.keys(ENTRY_ICONS)}>
+                      {(id) => (
+                        <button type="button" role="radio" class="entry-icon" aria-checked={(p.icon ?? "") === id} aria-label={id} title={id} onClick={() => upd(p.id, (x) => { x.icon = id; })}>
+                          <Dynamic component={ENTRY_ICONS[id]} />
+                        </button>
+                      )}
+                    </For>
+                  </div>
+                </fieldset>
+              </Show>
               <textarea class="input code" dir="ltr" rows="10" spellcheck={false} aria-label={t("dev-plugin-code")} value={p.code} onInput={(e) => { const v = e.currentTarget.value; upd(p.id, (x) => { x.code = v; }); }} />
+              <p class="hint">{t("dev-plugin-api-hint")}</p>
             </Show>
             <Show when={pluginLogs()[p.id]?.length || p.lastError}>
               <pre class="term-out small" dir="ltr">{[...(pluginLogs()[p.id] ?? []), p.lastError ? `[Error] ${p.lastError}` : ""].filter(Boolean).join("\n")}</pre>

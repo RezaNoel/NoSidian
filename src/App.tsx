@@ -1,15 +1,24 @@
 // Root: boots into the first-launch wizard or straight into the last vault.
-import { For, Match, Show, Switch, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { petEvent, petWelcome, startPetTalk } from "./state/petTalk";
+import { installBackNav } from "./state/backNav";
+import { HoverPreview } from "./components/HoverPreview";
+import { For, Match, Show, Switch, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
 import { t } from "./i18n";
 import { LiveAnnouncer } from "./a11y/announcer";
 import { settings } from "./state/settings";
 import { restoreVault } from "./state/session";
-import { overlay, setOverlay, setZenPage, toasts, zenPage } from "./state/ui";
+import { isMobile, overlay, setOverlay, setZenPage, toasts, zenPage } from "./state/ui";
 import { Suspense, lazy } from "solid-js";
 const ZenStudioPage = lazy(() => import("./components/focus/ZenStudio"));
 import { vault } from "./state/vault";
 import { BannerSettings } from "./components/Banner";
 import { ContextMenu, installContextMenuGuard, installSelectEnhancer } from "./components/ContextMenu";
+import { installUiSounds } from "./state/uiSound";
+import { backend } from "./backend";
+import { XmasDecor } from "./components/Christmas";
+import { UpdateBanner } from "./components/UpdateBanner";
+import { checkForUpdate } from "./state/updater";
+import "./state/mediaSync";
 import { Dialogs } from "./components/Dialogs";
 import { Modal } from "./components/Modal";
 import { Onboarding } from "./components/Onboarding";
@@ -26,7 +35,7 @@ import { Lightbox, SlidesOverlay } from "./components/Overlays";
 import { ZenOverlay } from "./components/focus/ZenOverlay";
 import { AmbientOverlay } from "./components/focus/AmbientOverlay";
 import { AmbiencePopover, MusicDock } from "./components/focus/Ambience";
-import { PetCompanion, PetStudio, openPetStudio } from "./components/pet/PetCard";
+import { PetBubble, PetCompanion, PetStudio, openPetStudio } from "./components/pet/PetCard";
 import { TerminalDrawer, terminalOpen } from "./components/terminal/Terminal";
 import { welcome } from "./state/personal";
 import { toast } from "./state/ui";
@@ -44,6 +53,17 @@ export function App() {
   onCleanup(installHotkeys());
   installContextMenuGuard();
   installSelectEnhancer();
+  installUiSounds();
+  // Any other web, mail or phone link opens outside the app (the app window never navigates away).
+  document.addEventListener("click", (e) => {
+    if (e.defaultPrevented) return;
+    const a = (e.target as HTMLElement | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+    const href = a?.getAttribute("href") ?? "";
+    if (!/^(https?|mailto|tel):/i.test(href)) return;
+    e.preventDefault();
+    void backend.openUrl(href);
+  });
+  if (isMobile()) installBackNav();
 
   const mods = createMemo(() => enabledModules(settings.experienceLevel, settings.moduleOverrides));
   const inWorkspace = () => phase() === "workspace" && !!vault();
@@ -52,7 +72,13 @@ export function App() {
   onCleanup(() => window.removeEventListener("nosidian:pet", onPet));
   createEffect(() => { if (dev.ready()) applyCustomCss(); });
   // Start sound and greeting once the app has opened (onboarding done).
-  createEffect(() => { if (phase() !== "onboarding" && settings.onboarding.completed) void welcome(toast, announce); });
+  // Wait for the workspace so the companion is there to say it.
+  createEffect(() => { if (inWorkspace() && settings.onboarding.completed) void welcome(toast, announce, petWelcome); });
+  startPetTalk();
+  // Google Calendar: sync as soon as the workspace is open.
+  createEffect(() => { if (inWorkspace()) void import("./state/google").then((g) => g.startGoogleSync()); });
+  // The companion notices a new theme (not the one the app opened with).
+  createEffect(on(() => settings.appearance.theme, () => petEvent("theme"), { defer: true }));
   let pluginsStarted = false;
   createEffect(() => {
     if (!inWorkspace() || !dev.ready() || pluginsStarted) return;
@@ -65,7 +91,12 @@ export function App() {
     void syncMcp();
   });
 
+  const onClosed = () => { setOverlay("none"); setPhase("pick-vault"); };
+  window.addEventListener("nosidian:vault-closed", onClosed);
+  onCleanup(() => window.removeEventListener("nosidian:vault-closed", onClosed));
+
   onMount(async () => {
+    void checkForUpdate();
     if (!settings.onboarding.completed) return setPhase("onboarding");
     setPhase((await restoreVault()) ? "workspace" : "pick-vault");
   });
@@ -74,6 +105,8 @@ export function App() {
     <>
       <a class="skip-link" href="#main">{t("shell-skip-to-content")}</a>
       <div class="backdrop" aria-hidden="true"><span /><span /><span /></div>
+      <XmasDecor />
+      <UpdateBanner />
       <Show when={hasTitleBar()}><TitleBar /></Show>
       <Switch>
         <Match when={phase() === "onboarding"}><Onboarding onFinish={() => setPhase("workspace")} /></Match>
@@ -90,6 +123,7 @@ export function App() {
       </Switch>
       <Show when={overlay() === "settings"}><SettingsWindow /></Show>
       <Show when={phase() === "workspace" && vault()}>
+        <HoverPreview />
         <Show when={overlay() === "switcher"}><QuickSwitcher /></Show>
         <Show when={overlay() === "palette"}><CommandPalette /></Show>
       </Show>
@@ -113,6 +147,7 @@ export function App() {
         <Show when={mods().has("integrated-terminal") && terminalOpen()}><TerminalDrawer /></Show>
         <Show when={mods().has("companion-pet") && settings.petEnabled}>
           <PetCompanion />
+          <PetBubble />
           <PetStudio />
         </Show>
       </Show>

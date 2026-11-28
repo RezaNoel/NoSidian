@@ -1,10 +1,11 @@
 // Dashboard: switchable hubs of widgets (notes, tasks, study, focus, media,
 // pet). Edit mode adds, removes, resizes and reorders widgets.
+import { petEvent } from "../../state/petTalk";
 import { For, Match, Show, Switch, createMemo, createResource, createSignal, onMount, type Component } from "solid-js";
 import {
-  ArrowLeft, ArrowRight, BarChart3, BookOpen, Brain, CalendarCheck, CalendarDays, CalendarHeart, Check, Clapperboard, Code2, Download, FilePlus2, FileText, FolderOpen,
+  ArrowLeft, ArrowRight, BarChart3, Blocks, BookOpen, Brain, CalendarCheck, CalendarDays, CalendarHeart, Check, Clapperboard, Code2, Download, FilePlus2, FileText, FolderOpen,
   GraduationCap, Hash, History, Hourglass, Image, Inbox, KanbanSquare, Layers, LayoutGrid, ListChecks, Network, PawPrint, PenLine, Pencil, Plus, SquareTerminal,
-  Star, StickyNote, Tags, Timer, Trash2, Upload, X, Zap,
+  Folders, ListTodo, Shuffle, Star, StickyNote, Tags, Timer, Trash2, Upload, Users, X, Zap,
 } from "lucide-solid";
 import { locale, t } from "../../i18n";
 import { backend } from "../../backend";
@@ -26,6 +27,9 @@ import { noteTitle } from "../../lib/markdown";
 import { PRESET_SRC } from "../Banner";
 import { CalendarPanel } from "../Calendar";
 import { CountdownWidget } from "./Countdown";
+import { PluginWidget } from "./PluginWidget";
+import { KanbanWidget, OpenTasksWidget, ParaWidget, PeopleWidget, RandomNoteWidget, ZettelWidget } from "./MoreWidgets";
+import { dev } from "../../state/devtools";
 import { promptNewNote } from "../FileTree";
 import { MiniTimer } from "../focus/MiniTimer";
 import { PetCard } from "../pet/PetCard";
@@ -37,7 +41,8 @@ type IconC = Component<{ class?: string; "aria-hidden"?: boolean | "true" }>;
 const WIDGET_ICON: Record<DashboardWidgetType, IconC> = {
   cover: Image, "deadline-hero": Hourglass, stats: BarChart3, "recent-notes": History, todos: ListChecks, calendar: CalendarDays, shortcuts: Zap,
   scratchpad: StickyNote, "project-spotlight": KanbanSquare, "pet-home": PawPrint, "flashcard-queue": Layers, "pomodoro-timer": Timer, "starred-notes": Star,
-  "tag-explorer": Hash, "reading-shelf": BookOpen, watchlist: Clapperboard, "writing-goal": PenLine, "quick-capture": Inbox, countdown: CalendarHeart,
+  "tag-explorer": Hash, "reading-shelf": BookOpen, watchlist: Clapperboard, "writing-goal": PenLine, "quick-capture": Inbox, countdown: CalendarHeart, plugin: Blocks,
+  kanban: KanbanSquare, "open-tasks": ListTodo, people: Users, "random-note": Shuffle, para: Folders, zettel: Network,
 };
 const SHORTCUT_ICON: Record<DashboardShortcutItem["actionType"], IconC> = {
   note: FileText, folder: FolderOpen, daily: CalendarCheck, flashcards: Brain, graph: Network, "new-note": FilePlus2, projects: KanbanSquare, media: Clapperboard, terminal: SquareTerminal,
@@ -45,7 +50,8 @@ const SHORTCUT_ICON: Record<DashboardShortcutItem["actionType"], IconC> = {
 const HUB_ICON: Record<string, IconC> = { study: GraduationCap, writer: PenLine, developer: Code2 };
 
 const hubName = (h: DashboardConfig) => h.name || t(`hub-${h.templateId === "writer" || h.templateId === "developer" ? h.templateId : "study"}`);
-const widgetTitle = (w: DashboardWidget) => w.title || t(`widget-${w.type}`);
+const widgetTitle = (w: DashboardWidget) =>
+  w.title || (w.type === "plugin" && dev.state.scripts.find((p) => p.id === w.pluginId)?.name) || t(`widget-${w.type}`);
 
 function coverSrc(img?: string) {
   if (!img) return PRESET_SRC.carbon;
@@ -118,18 +124,19 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
           <For each={w().todos ?? []}>
             {(item, i) => (
               <li classList={{ done: item.done }}>
-                <label><input type="checkbox" checked={item.done} onChange={(e) => { const v = e.currentTarget.checked; updateWidget(w().id, (x) => { x.todos![i()].done = v; }); }} /><span dir="auto">{item.text}</span></label>
+                <label><input type="checkbox" checked={item.done} onChange={(e) => { const v = e.currentTarget.checked; updateWidget(w().id, (x) => { x.todos![i()].done = v; }); if (v) petEvent("todo-done"); }} /><span dir="auto">{item.text}</span></label>
                 <button class="icon-btn sm ghost" aria-label={t("action-delete")} onClick={() => updateWidget(w().id, (x) => { x.todos!.splice(i(), 1); })}><X /></button>
               </li>
             )}
           </For>
         </ul>
-        <form onSubmit={(e) => { e.preventDefault(); const v = todo().trim(); if (!v) return; updateWidget(w().id, (x) => { (x.todos ??= []).push({ id: `td-${Date.now()}`, text: v, done: false }); }); setTodo(""); }}>
+        <form onSubmit={(e) => { e.preventDefault(); const v = todo().trim(); if (!v) return; updateWidget(w().id, (x) => { (x.todos ??= []).push({ id: `td-${Date.now()}`, text: v, done: false }); }); setTodo(""); petEvent("todo-added"); }}>
           <input class="input sm" dir="auto" placeholder={t("dash-todo-add")} aria-label={t("dash-todo-add")} value={todo()} onInput={(e) => setTodo(e.currentTarget.value)} />
         </form>
       </Match>
       <Match when={w().type === "calendar"}><CalendarPanel /></Match>
       <Match when={w().type === "countdown"}><CountdownWidget /></Match>
+      <Match when={w().type === "plugin"}><PluginWidget w={w()} edit={props.edit} /></Match>
       <Match when={w().type === "shortcuts"}>
         <div class="w-shortcuts">
           <For each={(w().shortcuts ?? []).filter((s) => !(isMobile() && s.actionType === "terminal"))}>
@@ -237,6 +244,12 @@ function WidgetBody(props: { w: DashboardWidget; edit: boolean }) {
         </ul>
       </Match>
       <Match when={w().type === "pet-home"}><PetCard compact /></Match>
+      <Match when={w().type === "kanban"}><KanbanWidget w={w()} edit={props.edit} /></Match>
+      <Match when={w().type === "open-tasks"}><OpenTasksWidget /></Match>
+      <Match when={w().type === "people"}><PeopleWidget /></Match>
+      <Match when={w().type === "random-note"}><RandomNoteWidget /></Match>
+      <Match when={w().type === "para"}><ParaWidget /></Match>
+      <Match when={w().type === "zettel"}><ZettelWidget /></Match>
     </Switch>
   );
 }

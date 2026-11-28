@@ -37,7 +37,7 @@ export const DASHBOARD_TEMPLATES: DashboardTemplateMeta[] = [
   }
 ];
 
-export type DashboardWidgetCategory = 'core' | 'study' | 'writing' | 'projects' | 'media';
+export type DashboardWidgetCategory = 'core' | 'study' | 'writing' | 'projects' | 'media' | 'pkm';
 
 export interface DashboardWidgetCatalogItem {
   type: DashboardWidgetType;
@@ -67,6 +67,13 @@ export const DASHBOARD_WIDGET_CATALOG: DashboardWidgetCatalogItem[] = [
   { type: 'writing-goal', defaultSpan: 1, category: 'writing', iconKey: 'target', titleEn: 'Writing Goal', titleFa: 'هدف کلمات روزانه' },
   { type: 'reading-shelf', defaultSpan: 1, category: 'media', iconKey: 'book-open', titleEn: 'Reading Shelf', titleFa: 'قفسه کتاب‌ها' },
   { type: 'watchlist', defaultSpan: 1, category: 'media', iconKey: 'film', titleEn: 'Cinema Watchlist', titleFa: 'لیست فیلم و سریال' },
+  { type: 'open-tasks', defaultSpan: 2, category: 'projects', iconKey: 'list-todo', titleEn: 'Open tasks', titleFa: 'کارهای باز' },
+  { type: 'kanban', defaultSpan: 3, category: 'projects', iconKey: 'kanban', titleEn: 'Kanban board', titleFa: 'کانبان' },
+  { type: 'people', defaultSpan: 1, category: 'core', iconKey: 'users', titleEn: 'People', titleFa: 'افراد' },
+  { type: 'random-note', defaultSpan: 1, category: 'pkm', iconKey: 'shuffle', titleEn: 'Revisit a note', titleFa: 'مرور یک یادداشت' },
+  { type: 'para', defaultSpan: 1, category: 'pkm', iconKey: 'folders', titleEn: 'PARA', titleFa: 'PARA' },
+  { type: 'zettel', defaultSpan: 1, category: 'pkm', iconKey: 'network', titleEn: 'Zettelkasten', titleFa: 'زتل‌کاستن' },
+  { type: 'plugin', defaultSpan: 1, category: 'core', iconKey: 'blocks', titleEn: 'Plugin', titleFa: 'افزونه' },
   { type: 'pet-home', defaultSpan: 2, category: 'study', iconKey: 'sparkles', titleEn: 'Companion Sanctuary', titleFa: 'خانه ۳بعدی پت' }
 ];
 

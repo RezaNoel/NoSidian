@@ -2,6 +2,10 @@
 // board fed by Markdown checkboxes and tag rules, a list with sprints, a day
 // planner with time blocks and a task timer, a dependency graph with blocker
 // editing, templates and tag rules. Linked notes open beside the board.
+import { petEvent } from "../../state/petTalk";
+import { DatePicker } from "../DatePicker";
+import { Dynamic } from "solid-js/web";
+import { ENTRY_ICONS } from "../EntryStyle";
 import { For, Match, Show, Switch, createMemo, createRoot, createSignal, onCleanup, onMount, type JSX } from "solid-js";
 import {
   CalendarClock, CalendarPlus, CheckCircle2, ChevronLeft, ChevronRight, Clock, ExternalLink, FilePlus2, FileText, Filter, GitBranch, Hash, KanbanSquare,
@@ -32,6 +36,7 @@ const TABS: { id: Tab; icon: typeof KanbanSquare }[] = [
   { id: "board", icon: KanbanSquare }, { id: "list", icon: ListTodo }, { id: "timeline", icon: CalendarClock }, { id: "graph", icon: GitBranch }, { id: "automation", icon: Wand2 },
 ];
 const COLORS = ["#3b7ddd", "#0ea5e9", "#10b981", "#7c3aed", "#f59e0b", "#e11d48"];
+const PROJECT_ICONS = ["folder", "rocket", "target", "briefcase", "code", "book-open", "school", "science", "idea", "star", "heart", "art", "music", "camera", "globe", "travel", "money", "sport", "nature", "brain"];
 const PRIORITIES: Priority[] = ["high", "medium", "low"];
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7);
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -93,7 +98,8 @@ async function deleteProject(p: ProjectItem) {
   });
 }
 /** Change a project's field: manual projects in the project file, folder projects in their _project.md front matter. */
-async function setProjectField(p: ProjectItem, key: "name" | "deadline" | "color" | "status", value: string) {
+async function setProjectField(p: ProjectItem, key: "name" | "deadline" | "color" | "status" | "icon", value: string) {
+  if (key === "status" && value === "completed" && p.status !== "completed") petEvent("project-done");
   if (!p.fromFolderProject) {
     projectState.update((s) => { const x = s.projects.find((y) => y.id === p.id); if (x) (x as unknown as Record<string, string>)[key] = value; });
     return;
@@ -121,10 +127,8 @@ function projectMenu(e: MouseEvent, p: ProjectItem, onRemoved: () => void) {
   ];
   if (p.folderPath) items.push({ label: t("proj-open-folder-note"), icon: <FileText />, run: () => { const n = tree.notes.find((x) => x.path.startsWith(`${p.folderPath}/`) && /_project\.md$|project\.md$/i.test(x.path)); if (n) openNote(n.path); } });
   items.push(
-    { label: t("action-rename"), icon: <Pencil />, sep: true, run: async () => { const v = await askText(t("action-rename"), p.name, t("action-save")); if (v?.trim()) void setProjectField(p, "name", v.trim()); } },
-    { label: t("proj-change-deadline"), icon: <CalendarClock />, run: async () => { const v = await askText(t("proj-deadline"), p.deadline, t("action-save")); if (v && /^\d{4}-\d{2}-\d{2}$/.test(v.trim())) void setProjectField(p, "deadline", v.trim()); } },
+    { label: t("proj-edit"), icon: <Pencil />, sep: true, run: () => setEditingProject(p) },
     { label: p.status === "completed" ? t("proj-reopen") : t("proj-mark-complete"), icon: <CheckCircle2 />, run: () => void setProjectField(p, "status", p.status === "completed" ? "active" : "completed") },
-    ...COLORS.map((c, i) => ({ label: t("proj-color-n", { n: i + 1 }), icon: <span class="color-dot" style={{ background: c }} />, mark: p.color === c, sep: i === 0, run: () => void setProjectField(p, "color", c) })),
   );
   if (!p.fromFolderProject) items.push({ label: t("proj-remove"), icon: <Trash2 />, danger: true, sep: true, run: () => { void deleteProject(p); onRemoved(); } });
   openMenu(e, items);
@@ -146,15 +150,79 @@ function taskMenu(e: MouseEvent, x: ProjectTask, onEdit: (x: ProjectTask) => voi
   openMenu(e, items);
 }
 
+const [editingProject, setEditingProject] = createRoot(() => createSignal<ProjectItem | null>(null));
+
+/** Colour swatches and icon choices shared by the new and edit dialogs. */
+function ProjectLook(props: { color: string; icon: string; onColor: (c: string) => void; onIcon: (i: string) => void }) {
+  return (
+    <>
+      <fieldset class="field color-pick">
+        <legend>{t("proj-color")}</legend>
+        <div class="color-row" role="radiogroup" aria-label={t("proj-color")}>
+          <For each={COLORS}>{(c, i) => <button type="button" role="radio" class="color-dot lg" style={{ background: c }} aria-checked={props.color === c} aria-label={t("proj-color-n", { n: i() + 1 })} title={t("proj-color-n", { n: i() + 1 })} onClick={() => props.onColor(c)} />}</For>
+        </div>
+      </fieldset>
+      <fieldset class="field">
+        <legend>{t("proj-icon")}</legend>
+        <div class="entry-icons proj-icons" role="radiogroup" aria-label={t("proj-icon")}>
+          <For each={PROJECT_ICONS}>
+            {(id) => (
+              <button type="button" role="radio" class="entry-icon" aria-checked={props.icon === id} aria-label={id} title={id} style={{ color: props.color }} onClick={() => props.onIcon(id)}>
+                <Dynamic component={ENTRY_ICONS[id]} />
+              </button>
+            )}
+          </For>
+        </div>
+      </fieldset>
+    </>
+  );
+}
+
+/** A project's chosen icon, or its colour dot when it has none. */
+export function ProjectIcon(props: { p: ProjectItem }) {
+  return (
+    <Show when={props.p.icon && ENTRY_ICONS[props.p.icon]} fallback={<span class="col-dot" />}>
+      {(I) => <Dynamic component={I()} class="proj-icon" aria-hidden="true" />}
+    </Show>
+  );
+}
+
+function EditProject(props: { p: ProjectItem; onClose: () => void }) {
+  const [name, setName] = createSignal(props.p.name);
+  const [deadline, setDeadline] = createSignal(props.p.deadline);
+  const [color, setColor] = createSignal(props.p.color);
+  const [icon, setIcon] = createSignal(props.p.icon ?? "");
+  const save = async () => {
+    const p = props.p;
+    if (name().trim() && name().trim() !== p.name) await setProjectField(p, "name", name().trim());
+    if (deadline() && deadline() !== p.deadline) await setProjectField(p, "deadline", deadline());
+    if (color() !== p.color) await setProjectField(p, "color", color());
+    if (icon() !== (p.icon ?? "")) await setProjectField(p, "icon", icon());
+    props.onClose();
+  };
+  return (
+    <Modal title={t("proj-edit")} onClose={props.onClose}>
+      <form class="stack" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+        <label class="field"><span>{t("proj-name")}</span><input class="input" data-autofocus dir="auto" value={name()} onInput={(e) => setName(e.currentTarget.value)} /></label>
+        <div class="field"><span>{t("proj-deadline")}</span><DatePicker label={t("proj-deadline")} value={deadline()} onChange={(v) => v && setDeadline(v)} /></div>
+        <ProjectLook color={color()} icon={icon()} onColor={setColor} onIcon={setIcon} />
+        <div class="modal-actions"><button type="button" class="btn" onClick={props.onClose}>{t("action-cancel")}</button><button class="btn primary" disabled={!name().trim()}>{t("action-save")}</button></div>
+      </form>
+    </Modal>
+  );
+}
+
 function NewProject(props: { template?: ProjectTemplateId; onClose: () => void; onCreated: (id: string) => void }) {
   const [name, setName] = createSignal("");
   const [deadline, setDeadline] = createSignal(addDays(iso(), 21));
   const [tpl, setTpl] = createSignal<ProjectTemplateId>(props.template ?? "blank");
   const [color, setColor] = createSignal(COLORS[0]);
+  const [icon, setIcon] = createSignal("");
   const create = async () => {
     const n = name().trim();
     if (!n) return;
-    const files = generateSmartProjectFiles(n, tpl(), deadline()).map((f) => (/_project\.md$/i.test(f.path) ? { ...f, content: f.content.replace(/^color:.*$/m, `color: ${color()}`) } : f));
+    const look = (c: string) => c.replace(/^color:.*$/m, `color: ${color()}${icon() ? `\nicon: ${icon()}` : ""}`);
+    const files = generateSmartProjectFiles(n, tpl(), deadline()).map((f) => (/_project\.md$/i.test(f.path) ? { ...f, content: look(f.content) } : f));
     for (const f of files) {
       const folder = f.path.slice(0, f.path.lastIndexOf("/"));
       for (let i = folder.indexOf("/"); ; i = folder.indexOf("/", i + 1)) {
@@ -169,6 +237,7 @@ function NewProject(props: { template?: ProjectTemplateId; onClose: () => void; 
     const main = files.find((f) => /_project\.md$/i.test(f.path)) ?? files[0];
     const id = buildFolderProjectId(main.path.slice(0, main.path.lastIndexOf("/")));
     projectState.update((s) => { if (!s.spotlightProjectId) s.spotlightProjectId = id; });
+    petEvent("project-new");
     props.onCreated(id);
     props.onClose();
   };
@@ -176,12 +245,8 @@ function NewProject(props: { template?: ProjectTemplateId; onClose: () => void; 
     <Modal title={t("proj-new")} onClose={props.onClose}>
       <form class="stack" onSubmit={(e) => { e.preventDefault(); void create(); }}>
         <label class="field"><span>{t("proj-name")}</span><input class="input" data-autofocus dir="auto" value={name()} onInput={(e) => setName(e.currentTarget.value)} /></label>
-        <div class="row wrap">
-          <label class="field"><span>{t("proj-deadline")}</span><input class="input" type="date" value={deadline()} onInput={(e) => setDeadline(e.currentTarget.value)} /></label>
-          <fieldset class="field color-pick"><legend>{t("proj-color")}</legend>
-            <For each={COLORS}>{(c, i) => <button type="button" class="color-dot lg" style={{ background: c }} aria-pressed={color() === c} aria-label={t("proj-color-n", { n: i() + 1 })} onClick={() => setColor(c)} />}</For>
-          </fieldset>
-        </div>
+        <div class="field"><span>{t("proj-deadline")}</span><DatePicker label={t("proj-deadline")} value={deadline()} onChange={(v) => v && setDeadline(v)} /></div>
+        <ProjectLook color={color()} icon={icon()} onColor={setColor} onIcon={setIcon} />
         <fieldset class="choice-grid">
           <legend>{t("dash-template")}</legend>
           <For each={SMART_PROJECT_TEMPLATES}>{(x) => <label class="choice-card"><input type="radio" name="ptpl" checked={tpl() === x.id} onChange={() => setTpl(x.id)} /><strong>{t(`proj-tpl-${x.id}`)}</strong><span>{t(`proj-tpl-${x.id}-desc`)}</span></label>}</For>
@@ -234,7 +299,7 @@ function TaskEditor(props: { task: ProjectTask; onClose: () => void }) {
         <div class="form-grid">
           <label class="field"><span>{t("proj-project")}</span><select class="select" disabled={md} value={x().projectId} onChange={(e) => patch({ projectId: e.currentTarget.value })}><For each={allProjects()}>{(p) => <option value={p.id}>{p.name}</option>}</For></select></label>
           <label class="field"><span>{t("proj-priority")}</span><select class="select" disabled={md} value={x().priority} onChange={(e) => patch({ priority: e.currentTarget.value as Priority })}><For each={PRIORITIES}>{(p) => <option value={p}>{t(`proj-pri-${p}`)}</option>}</For></select></label>
-          <label class="field"><span>{t("proj-due")}</span><input class="input" type="date" disabled={md} value={x().dueDate ?? ""} onInput={(e) => patch({ dueDate: e.currentTarget.value || undefined })} /></label>
+          <label class="field"><span>{t("proj-due")}</span><DatePicker label={t("proj-due")} disabled={md} value={x().dueDate ?? ""} onChange={(v) => patch({ dueDate: v || undefined })} clearable /></label>
           <label class="field"><span>{t("proj-sprint")}</span><select class="select" disabled={md} value={x().sprintId ?? ""} onChange={(e) => patch({ sprintId: e.currentTarget.value || undefined })}><option value="">{t("proj-no-sprint")}</option><For each={projectState.state.sprints.filter((s) => s.projectId === x().projectId)}>{(s) => <option value={s.id}>{s.name}</option>}</For></select></label>
           <label class="field"><span>{t("proj-assignee")}</span><input class="input" dir="auto" disabled={md} value={x().assignee ?? ""} onInput={(e) => patch({ assignee: e.currentTarget.value.trim() || undefined })} /></label>
           <label class="field"><span>{t("proj-tags")}</span><input class="input" disabled={md} value={(x().tags ?? []).join(", ")} onInput={(e) => patch({ tags: e.currentTarget.value.split(",").map((s) => s.trim().replace(/^#/, "")).filter(Boolean) })} /></label>
@@ -294,6 +359,7 @@ function Board(props: { tasks: ProjectTask[]; project: string | null; onEdit: (t
   const add = async (status: ProjectTaskStatus) => {
     const title = await askText(t("proj-add-task"), "", t("action-add"));
     if (!title?.trim()) return;
+    petEvent("todo-added");
     upsertTask({ id: newId("task"), projectId: props.project ?? primaryProject()?.id ?? "inbox", title: title.trim(), done: status === "done", status, priority: "medium", sourceType: "manual", createdAt: Date.now() });
   };
   return (
@@ -382,7 +448,7 @@ function Sprints(props: { project: string | null }) {
       <form class="quick-add" onSubmit={(e) => { e.preventDefault(); add(); }}>
         <input class="input sm" dir="auto" placeholder={t("proj-new-sprint")} aria-label={t("proj-new-sprint")} value={name()} onInput={(e) => setName(e.currentTarget.value)} />
         <input class="input sm" dir="auto" placeholder={t("proj-sprint-goal")} aria-label={t("proj-sprint-goal")} value={goal()} onInput={(e) => setGoal(e.currentTarget.value)} />
-        <input class="input sm" type="date" aria-label={t("proj-end")} value={end()} onInput={(e) => setEnd(e.currentTarget.value)} />
+        <DatePicker size="sm" label={t("proj-end")} value={end()} onChange={setEnd} clearable />
         <button class="btn sm" disabled={!name().trim()}><Plus />{t("action-add")}</button>
       </form>
     </section>
@@ -469,14 +535,14 @@ function Timeline(props: { tasks: ProjectTask[] }) {
       <div class="planner-bar">
         <div class="row">
           <button class="icon-btn" aria-label={t("proj-prev-day")} onClick={() => setDay(addDays(day(), -1))}><ChevronLeft class="flip-rtl" /></button>
-          <input class="input sm" type="date" aria-label={t("proj-day")} value={day()} onInput={(e) => e.currentTarget.value && setDay(e.currentTarget.value)} />
+          <DatePicker size="sm" label={t("proj-day")} value={day()} onChange={(v) => v && setDay(v)} />
           <button class="icon-btn" aria-label={t("proj-next-day")} onClick={() => setDay(addDays(day(), 1))}><ChevronRight class="flip-rtl" /></button>
           <button class="btn sm" disabled={day() === iso()} onClick={() => setDay(iso())}>{t("proj-today")}</button>
         </div>
         <button class="btn sm" onClick={() => void injectDue(day())} title={t("proj-inject-daily-help")}><CalendarPlus />{t("proj-inject-daily")}<Show when={dueToday()}><span class="count">{num(dueToday())}</span></Show></button>
         <div class="row review-range">
-          <input class="input sm" type="date" aria-label={t("proj-start")} value={from()} onInput={(e) => setFrom(e.currentTarget.value)} />
-          <input class="input sm" type="date" aria-label={t("proj-end")} value={to()} onInput={(e) => setTo(e.currentTarget.value)} />
+          <DatePicker size="sm" label={t("proj-start")} value={from()} onChange={setFrom} />
+          <DatePicker size="sm" label={t("proj-end")} value={to()} onChange={setTo} />
           <button class="btn sm" onClick={() => void writeReview(from(), to(), `${from()} – ${to()}`)}><FilePlus2 />{t("proj-sprint-review")}</button>
         </div>
       </div>
@@ -677,8 +743,9 @@ export default function Projects() {
         <Show when={hero()}>
           {(h) => (
             <div class="proj-hero" style={{ "--col": h().p.color }}>
-              <Star class="filled" aria-label={t("proj-primary")} />
+              <ProjectIcon p={h().p} />
               <strong dir="auto" class="ellipsis">{h().p.name}</strong>
+              <Star class="filled" aria-label={t("proj-primary")} />
               <div class="meter" role="progressbar" aria-valuenow={h().prog.percent} aria-valuemin="0" aria-valuemax="100" aria-label={h().p.name}><span style={{ width: `${h().prog.percent}%` }} /></div>
               <span class="muted sm">{num(h().prog.percent)}% · {t("proj-progress", { done: h().prog.done, total: h().prog.total })}</span>
               <Show when={h().c}><span class="sm" classList={{ late: h().c!.urgency === "overdue" || h().c!.urgency === "critical" }}>{countdown(h().c)}</span></Show>
@@ -694,7 +761,7 @@ export default function Projects() {
               return (
                 <button class="chip proj-chip" role="tab" aria-selected={project() === p.id} style={{ "--col": p.color }} title={countdown(computeDeadlineCountdown(p.deadline))}
                   onClick={() => setProject(p.id)} onContextMenu={(e) => projectMenu(e, p, () => setProject(null))}>
-                  <span class="col-dot" />
+                  <ProjectIcon p={p} />
                   <span dir="auto" class="ellipsis">{p.name}</span>
                   <span class="count">{num(prog().percent)}%</span>
                   <Show when={primaryProject()?.id === p.id}><Star class="filled" aria-label={t("proj-primary")} /></Show>
@@ -744,6 +811,7 @@ export default function Projects() {
 
       <Show when={ui.split()} keyed>{(p) => <SplitNote path={p} />}</Show>
       <Show when={creating()} keyed>{(tpl) => <NewProject template={tpl} onClose={() => setCreating(null)} onCreated={(id) => setProject(id)} />}</Show>
+      <Show when={editingProject()} keyed>{(p) => <EditProject p={p} onClose={() => setEditingProject(null)} />}</Show>
       <Show when={picking() && targetProject()}><NotePicker projectId={targetProject()!} onClose={() => setPicking(false)} /></Show>
       <Show when={editing()} keyed>{(x) => <TaskEditor task={x} onClose={() => setEditing(null)} />}</Show>
     </div>

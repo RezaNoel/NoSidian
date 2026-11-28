@@ -21,8 +21,12 @@ pub struct AppState {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_dialog::init())
+    let builder = tauri::Builder::default().plugin(tauri_plugin_dialog::init()).plugin(tauri_plugin_opener::init());
+    #[cfg(target_os = "android")]
+    let builder = builder.plugin(tauri_plugin_sharekit::init());
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    let builder = builder.plugin(tauri_plugin_updater::Builder::new().build()).plugin(tauri_plugin_process::init());
+    builder
         .manage(bridge::McpBridge::default())
         .manage(google::Google::default())
         .setup(|app| {
@@ -69,14 +73,20 @@ pub fn run() {
             commands::file_read,
             commands::file_write,
             commands::files_import,
+            commands::file_add,
             commands::export_text,
             commands::export_bytes,
             google::google_status,
             google::google_connect,
+            google::google_cancel,
             google::google_disconnect,
             google::google_request,
             commands::vault_backup,
             commands::reveal_in_os,
+            commands::files_move_in,
+            commands::open_external_file,
+            commands::youtube_info,
+            commands::share_temp_file,
             commands::entry_abs_path,
             bridge::terminal_exec,
             bridge::mcp_start,

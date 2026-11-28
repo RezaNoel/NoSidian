@@ -4,10 +4,11 @@
 // Uses the Persian (Jalali) calendar when the UI language is Persian. Arrow
 // keys move between days; Enter opens or creates that day's note.
 import { For, Show, createMemo, createSignal } from "solid-js";
-import { Brain, CalendarDays, Cake, ChevronLeft, ChevronRight, Clock, FileText, Flag, Plus, Star, Timer } from "lucide-solid";
+import { Brain, CalendarDays, Cake, ChevronLeft, ChevronRight, Clock, FileText, Flag, ListChecks, ListPlus, Plus, Star, Timer } from "lucide-solid";
 import { marksOn, ymd, type Mark, type MarkKind } from "../state/calendarMarks";
-import { addGoogleEvent, googleStatus } from "../state/google";
-import { askText } from "../state/ui";
+import { addEventToTasks, addGoogleEvent, googleStatus } from "../state/google";
+import { projectState } from "../state/projects";
+import { askText, toast } from "../state/ui";
 import { locale, t } from "../i18n";
 import { calendarFor, intlLocale, monthGrid, monthOf, sameDay, shiftMonth, weekStartFor, type MonthRef } from "../lib/dates";
 import { openDailyNote } from "../state/daily";
@@ -159,7 +160,22 @@ export function CalendarPanel() {
         <Show when={agenda().filter((m) => m.kind !== "daily").length} fallback={<p class="cal-agenda-empty">{t("cal-agenda-empty")}</p>}>
           <ul>
             <For each={agenda().filter((m) => m.kind !== "daily")}>
-              {(m) => { const I = ICONS[m.kind]; return <li><I class={`cal-mark mk-${m.kind}`} aria-hidden="true" /><span dir="auto">{m.label}</span></li>; }}
+              {(m) => {
+                const I = ICONS[m.kind];
+                const inTasks = () => !!m.eventId && projectState.state.tasks.some((x) => x.googleEventId === m.eventId);
+                return (
+                  <li>
+                    <I class={`cal-mark mk-${m.kind}`} aria-hidden="true" />
+                    <span dir="auto">{m.label}</span>
+                    <Show when={m.eventId}>
+                      <button class="icon-btn xs cal-to-task" disabled={inTasks()} title={inTasks() ? t("cal-in-tasks") : t("cal-to-task")} aria-label={inTasks() ? t("cal-in-tasks") : t("cal-to-task")}
+                        onClick={() => { if (addEventToTasks(m.eventId!)) toast(t("cal-added-task")); }}>
+                        <Show when={inTasks()} fallback={<ListPlus />}><ListChecks /></Show>
+                      </button>
+                    </Show>
+                  </li>
+                );
+              }}
             </For>
           </ul>
         </Show>

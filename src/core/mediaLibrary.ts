@@ -160,9 +160,16 @@ export function createDefaultMediaLibrary(now = Date.now()): MediaLibraryState {
 
 export function normalizeMediaLibrary(raw?: Partial<MediaLibraryState> | null): MediaLibraryState {
   if (!raw) return createDefaultMediaLibrary();
+  const movies = Array.isArray(raw.movies) ? raw.movies : [];
+  const books = Array.isArray(raw.books) ? raw.books : [];
+  const ids = (list: unknown, from: { id: string }[]) =>
+    Array.isArray(list) ? list.filter((x): x is string => typeof x === 'string' && from.some((e) => e.id === x)) : [];
   return {
-    movies: Array.isArray(raw.movies) ? raw.movies : [],
-    books: Array.isArray(raw.books) ? raw.books : []
+    movies,
+    books,
+    ...(typeof raw.readingGoal === 'number' ? { readingGoal: raw.readingGoal } : {}),
+    bestBooks: ids(raw.bestBooks, books),
+    bestMovies: ids(raw.bestMovies, movies)
   };
 }
 
@@ -297,7 +304,7 @@ Core insight from ${book.title} :: Summarize the main takeaway in one clear sent
 `;
 }
 
-export function buildMediaNotePath(kind: 'movie' | 'book', title: string): string {
-  const folder = kind === 'movie' ? 'Movies' : 'Books';
+export function buildMediaNotePath(kind: 'movie' | 'book', title: string, folderOverride?: string): string {
+  const folder = (folderOverride ?? '').replace(/^\/+|\/+$/g, '') || (kind === 'movie' ? 'Movies' : 'Books');
   return `${folder}/${sanitizeMediaNoteSlug(title)}.md`;
 }

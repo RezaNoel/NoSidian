@@ -8,19 +8,24 @@ import type { AmbientMusicTrack } from "../core/types";
 import { appDoc } from "./persist";
 import { ambient, syncMusic } from "./focus";
 import { toast } from "./ui";
+import Hls from "hls.js";
 
 export type MusicKind = "file" | "stream" | "youtube" | "spotify" | "soundcloud";
-export interface MusicItem { id: string; kind: MusicKind; name: string; /** File: storage key; stream: URL; embeds: embed URL. */ ref: string; source?: string }
+export interface MusicItem { id: string; kind: MusicKind; name: string; /** File: storage key; stream: URL; embeds: embed URL. */ ref: string; source?: string; /** Other addresses for the same stream, tried in turn. */ alts?: string[] }
 
 export const musicLibrary = appDoc<{ items: MusicItem[] }>("music", () => ({ items: [] }));
 
+// A station can list several addresses; they are tried in turn.
+const station = (id: string, name: string, source: string, urls: string[]): MusicItem => ({ id, kind: "stream", name, source, ref: urls[0], alts: urls.slice(1) });
+
 /** Free internet radio (needs a connection). */
 export const RADIO: MusicItem[] = [
-  { id: "radio-groovesalad", kind: "stream", name: "Groove Salad", ref: "https://ice2.somafm.com/groovesalad-128-mp3", source: "SomaFM" },
-  { id: "radio-dronezone", kind: "stream", name: "Drone Zone", ref: "https://ice2.somafm.com/dronezone-128-mp3", source: "SomaFM" },
-  { id: "radio-lush", kind: "stream", name: "Lush", ref: "https://ice2.somafm.com/lush-128-mp3", source: "SomaFM" },
-  { id: "radio-deepspaceone", kind: "stream", name: "Deep Space One", ref: "https://ice2.somafm.com/deepspaceone-128-mp3", source: "SomaFM" },
-  { id: "radio-fluid", kind: "stream", name: "Fluid", ref: "https://ice2.somafm.com/fluid-128-mp3", source: "SomaFM" },
+  station("radio-javan", "Radio Javan", "Radio Javan", ["https://radio.sr-api.ir/hls/stream.m3u8", "https://radio2.sr-api.ir/hls/stream.m3u8", "https://51.254.225.31/hls/stream.m3u8", "https://rjtvhls.wns.live/hls/stream.m3u8"]),
+  station("radio-faaz", "Radio Faaz", "Radio Faaz", ["http://www.radiofaaz.com:8000/radiofaaz.m3u"]),
+  station("radio-rp-mellow", "Mellow mix", "Radio Paradise", ["https://stream.radioparadise.com/mellow-128", "http://stream.radioparadise.com/mellow-128", "https://stream.radioparadise.com/mellow-64"]),
+  station("radio-rp-main", "Main mix", "Radio Paradise", ["https://stream.radioparadise.com/mp3-128", "http://stream.radioparadise.com/mp3-128", "https://stream.radioparadise.com/aac-64"]),
+  station("radio-nightride", "Nightride", "Nightride FM", ["https://stream.nightride.fm/nightride.mp3", "https://stream.nightride.fm/nightride.m4a"]),
+  station("radio-kexp", "KEXP", "KEXP", ["https://kexp-mp3-128.streamguys1.com/kexp128.mp3", "https://kexp.streamguys1.com/kexp160.aac"]),
 ];
 
 const sig = createRoot(() => {
@@ -37,32 +42,112 @@ export const findItem = (id: string | undefined) => (id ? allItems().find((x) =>
 export const currentItem = () => findItem(ambient.state.musicItem);
 
 let audio: HTMLAudioElement | null = null;
+/** Plays HLS (.m3u8) streams, which the browser audio element cannot play by itself. */
+let hls: Hls | null = null;
 let objectUrl: string | null = null;
 
+// Position of the playing file, for the seek bar.
+const pos = createRoot(() => {
+  const [time, setTime] = createSignal(0);
+  const [duration, setDuration] = createSignal(0);
+  return { time, setTime, duration, setDuration };
+});
+export const musicTime = pos.time;
+export const musicDuration = pos.duration;
+/** Jump forward or back by `sec` seconds in the playing file. */
+export function seekBy(sec: number): void {
+  if (!audio || !Number.isFinite(audio.duration)) return;
+  audio.currentTime = Math.max(0, Math.min(audio.duration - 0.25, audio.currentTime + sec));
+  pos.setTime(audio.currentTime);
+}
+export function seekTo(sec: number): void {
+  if (!audio || !Number.isFinite(audio.duration)) return;
+  audio.currentTime = Math.max(0, Math.min(audio.duration - 0.25, sec));
+  pos.setTime(audio.currentTime);
+}
+
 function stopAudio() {
+  attempt++; // stops a stream that is still trying its addresses
+  hls?.destroy();
+  hls = null;
   if (audio) { audio.pause(); audio.removeAttribute("src"); audio.load(); }
   if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+}
+
+let attempt = 0;
+/** A .m3u link is a text playlist: return the first real stream address in it. */
+async function resolveStream(url: string): Promise<string | null> {
+  if (!/\.m3u(\?|$)/i.test(url)) return url;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) return null;
+  const line = (await res.text()).split(/\r?\n/).map((l) => l.trim()).find((l) => /^https?:\/\//i.test(l));
+  return line ?? null;
+}
+function attachStream(el: HTMLAudioElement, url: string) {
+  hls?.destroy();
+  hls = null;
+  if (/\.m3u8(\?|$)/i.test(url) && Hls.isSupported()) {
+    const h = new Hls();
+    hls = h;
+    h.on(Hls.Events.ERROR, (_e, d) => { if (d.fatal) el.dispatchEvent(new Event("error")); });
+    h.loadSource(url);
+    h.attachMedia(el);
+    return;
+  }
+  el.src = url;
 }
 
 async function playAudioItem(item: MusicItem) {
   audio ??= new Audio();
   stopAudio();
-  audio.volume = ambient.state.musicVolume;
-  audio.onended = () => void next();
+  const run = ++attempt;
+  const el = audio;
+  el.volume = ambient.state.musicVolume;
+  el.onended = () => void next();
+  el.ontimeupdate = () => pos.setTime(el.currentTime);
+  el.ondurationchange = () => pos.setDuration(Number.isFinite(el.duration) ? el.duration : 0);
+  pos.setTime(0);
+  pos.setDuration(0);
   if (item.kind === "file") {
     const blob = await loadAudio(item.ref).catch(() => undefined);
     if (!blob) { toast(t("music-file-missing"), true); return; }
     objectUrl = URL.createObjectURL(blob);
-    audio.src = objectUrl;
-    audio.loop = musicLibrary.state.items.filter((x) => x.kind === "file").length <= 1;
-  } else {
-    audio.src = item.ref;
-    audio.loop = false;
+    el.src = objectUrl;
+    el.loop = musicLibrary.state.items.filter((x) => x.kind === "file").length <= 1;
+    el.oncanplay = () => sig.setLoading(false);
+    el.onerror = () => sig.setLoading(false);
+    sig.setLoading(true);
+    await el.play().catch(() => sig.setLoading(false));
+    return;
   }
+  // Streams: try each address; move on after an error or 12 seconds of silence.
+  const urls = [item.ref, ...(item.alts ?? [])];
+  el.loop = false;
   sig.setLoading(true);
-  audio.oncanplay = () => sig.setLoading(false);
-  audio.onerror = () => { sig.setLoading(false); if (item.kind === "stream") toast(t("music-radio-offline"), true); };
-  await audio.play().catch(() => sig.setLoading(false));
+  for (const url of urls) {
+    if (run !== attempt) return;
+    const target = await resolveStream(url).catch(() => null);
+    if (run !== attempt) return;
+    if (!target) continue;
+    const ok = await new Promise<boolean>((resolve) => {
+      const timer = setTimeout(() => resolve(false), 12_000);
+      el.onplaying = () => { clearTimeout(timer); resolve(true); };
+      el.onerror = () => { clearTimeout(timer); resolve(false); };
+      attachStream(el, target);
+      void el.play().catch((e: DOMException) => { if (e?.name !== "AbortError") { clearTimeout(timer); resolve(false); } });
+    });
+    if (run !== attempt) return;
+    if (ok) {
+      sig.setLoading(false);
+      // A stream that drops later gets one more try from the top.
+      el.onerror = () => { if (run === attempt && ambient.state.musicPlaying) void playAudioItem(item); };
+      return;
+    }
+  }
+  sig.setLoading(false);
+  el.removeAttribute("src");
+  ambient.update((a) => { a.musicPlaying = false; });
+  toast(t("music-radio-offline"), true);
 }
 
 /** Play a built-in generated track. */

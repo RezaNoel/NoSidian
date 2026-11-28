@@ -89,6 +89,16 @@ pub fn write_file(root: &Path, rel: &str, bytes: &[u8]) -> CoreResult<()> {
     fs::write(&p, bytes).map_err(|e| CoreError::io(&p, e))
 }
 
+/// Save bytes as a new file in `folder` under a free name (`a.png`, `a 1.png`...).
+/// Used for files dropped from outside the app. Returns the vault-relative path.
+pub fn add_file(root: &Path, folder: &str, name: &str, bytes: &[u8]) -> CoreResult<String> {
+    let clean: String = name.chars().filter(|c| !matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|')).collect();
+    let clean = clean.trim().trim_start_matches('.');
+    let rel = free_path(root, folder, if clean.is_empty() { "file" } else { clean })?;
+    write_file(root, &rel, bytes)?;
+    Ok(rel)
+}
+
 /// First free path for `name` in `folder`: `a.pdf`, `a 1.pdf`, `a 2.pdf`...
 fn free_path(root: &Path, folder: &str, name: &str) -> CoreResult<String> {
     let (stem, ext) = name.rsplit_once('.').map_or((name.to_string(), String::new()), |(s, e)| (s.to_string(), format!(".{e}")));

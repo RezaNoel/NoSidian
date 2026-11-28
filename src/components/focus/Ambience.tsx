@@ -5,7 +5,7 @@
 import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
 import {
   AudioLines, Bird, Coffee, CloudRain, CloudSnow, Flame, Leaf, Link2, Minus, Music, Pause, Play, Plus, Radio, SkipForward, Sparkles, Square, Star,
-  Trash2, Upload, Waves, Wind, X, Ban, Flower2, Volume2,
+  Trash2, Upload, Waves, Wind, X, Ban, Flower2, Volume2, RotateCcw, RotateCw,
 } from "lucide-solid";
 import { t, type MessageKey } from "../../i18n";
 import { AMBIENT_MUSIC_TRACKS } from "../../core/utils/ambientMusic";
@@ -13,7 +13,9 @@ import { SOUND_CHANNELS } from "../../core/utils/audio";
 import type { AmbientEffectType, SoundChannel } from "../../core/types";
 import { ambient, setChannel, zen } from "../../state/focus";
 import { settings, updateSettings } from "../../state/settings";
-import { RADIO, addFiles, addLink, currentEmbed, currentItem, isPlaying, musicLibrary, musicLoading, next, playItem, playTrack, removeItem, setVolume, stopMusic, togglePlay } from "../../state/music";
+import { RADIO, addFiles, addLink, currentEmbed, currentItem, isPlaying, musicDuration, musicLibrary, musicLoading, musicTime, next, playItem, playTrack, removeItem, seekBy, seekTo, setVolume, stopMusic, togglePlay } from "../../state/music";
+
+const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 import { askText } from "../../state/ui";
 import { Toggle } from "../controls";
 import { openMenu } from "../ContextMenu";
@@ -113,6 +115,15 @@ function Music_() {
         <Show when={currentItem()?.kind === "file"}><button class="icon-btn sm" title={t("music-next")} aria-label={t("music-next")} onClick={() => void next()}><SkipForward /></button></Show>
         <Show when={playing()}><button class="icon-btn sm" title={t("music-stop")} aria-label={t("music-stop")} onClick={stopMusic}><Square /></button></Show>
       </div>
+      <Show when={currentItem()?.kind === "file" && musicDuration() > 0}>
+        <div class="amb-seek" dir="ltr">
+          <button class="icon-btn sm" title={t("player-back")} aria-label={t("player-back")} onClick={() => seekBy(-10)}><RotateCcw /></button>
+          <span class="amb-time">{clock(musicTime())}</span>
+          <input type="range" min="0" max={musicDuration()} step="0.5" value={musicTime()} aria-label={t("player-seek")} onInput={(e) => seekTo(Number(e.currentTarget.value))} />
+          <span class="amb-time">{clock(musicDuration())}</span>
+          <button class="icon-btn sm" title={t("player-forward")} aria-label={t("player-forward")} onClick={() => seekBy(10)}><RotateCw /></button>
+        </div>
+      </Show>
       <label class="amb-slider"><Volume2 aria-hidden="true" /><input type="range" min="0" max="1" step="0.05" value={ambient.state.musicVolume} aria-label={t("focus-volume")} onInput={(e) => setVolume(Number(e.currentTarget.value))} /></label>
 
       <h4 class="amb-sub"><Music aria-hidden="true" />{t("music-built-in")}</h4>
@@ -124,7 +135,7 @@ function Music_() {
 
       <h4 class="amb-sub"><Radio aria-hidden="true" />{t("music-radio")}</h4>
       <div class="amb-list">
-        <For each={RADIO}>{(r) => <button class="amb-item" aria-pressed={activeItem(r.id)} onClick={() => (activeItem(r.id) ? stopMusic() : playItem(r.id))}><span>{r.name}</span></button>}</For>
+        <For each={RADIO}>{(r) => <button class="amb-item" aria-pressed={activeItem(r.id)} title={r.source} onClick={() => (activeItem(r.id) ? stopMusic() : playItem(r.id))}><span>{r.name}</span></button>}</For>
       </div>
 
       <h4 class="amb-sub"><Upload aria-hidden="true" />{t("music-mine")}</h4>

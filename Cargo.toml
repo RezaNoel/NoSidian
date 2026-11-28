@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/nosidian-core", "crates/nosidian-i18n", "src-tauri"]
 
 [workspace.package]
-version = "0.2.0"
+version = "1.2.0"
 edition = "2021"
 license = "MIT"
 rust-version = "1.80"

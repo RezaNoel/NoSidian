@@ -313,6 +313,17 @@ pub fn file_write(state: State<'_, AppState>, path: String, data: String) -> Cmd
     Ok(files::write_file(&active_root(&state)?, &path, &bytes)?)
 }
 
+/// A file dropped from outside the app, saved under a free name in `folder`.
+#[tauri::command]
+pub fn file_add(state: State<'_, AppState>, folder: String, name: String, data: String) -> CmdResult<String> {
+    use base64::Engine;
+    let bytes = base64::engine::general_purpose::STANDARD.decode(data.trim()).map_err(|_| CommandError { code: "invalid-path", detail: name.clone() })?;
+    let root = active_root(&state)?;
+    let rel = files::add_file(&root, &folder, &name, &bytes)?;
+    touch_index(&state, &root, &[rel.as_str()]);
+    Ok(rel)
+}
+
 #[tauri::command]
 pub fn files_import(state: State<'_, AppState>, sources: Vec<PathBuf>, folder: String) -> CmdResult<Vec<String>> {
     let root = active_root(&state)?;
@@ -348,15 +359,87 @@ pub fn reveal_in_os(state: State<'_, AppState>, path: String) -> CmdResult<()> {
     let target = if path.trim().is_empty() { root } else { notes::resolve(&root, &path)? };
     #[cfg(target_os = "windows")]
     let r = {
-        let mut arg = std::ffi::OsString::from("/select,");
-        arg.push(&target);
-        std::process::Command::new("explorer").arg(arg).spawn()
+        // Explorer needs the path quoted exactly as one raw argument (paths with spaces
+        // otherwise open the parent folder without selecting the file), and no \\?\ prefix.
+        use std::os::windows::process::CommandExt;
+        let clean = target.to_string_lossy().replace("/", "\\");
+        let clean = clean.strip_prefix("\\\\?\\").unwrap_or(&clean).to_string();
+        std::process::Command::new("explorer").raw_arg(format!("/select,\"{clean}\"")).spawn()
     };
     #[cfg(target_os = "macos")]
     let r = std::process::Command::new("open").arg("-R").arg(&target).spawn();
     #[cfg(all(unix, not(target_os = "macos")))]
     let r = std::process::Command::new("xdg-open").arg(target.parent().unwrap_or(&target)).spawn();
     r.map(|_| ()).map_err(internal)
+}
+
+/// Move files from outside the vault into `folder` (copy, then remove the original).
+#[tauri::command]
+pub fn files_move_in(state: State<'_, AppState>, sources: Vec<PathBuf>, folder: String) -> CmdResult<Vec<String>> {
+    let root = active_root(&state)?;
+    let added = files::import(&root, &sources, &folder)?;
+    // Only remove an original once its copy exists inside the vault.
+    for (src, rel) in sources.iter().zip(added.iter()) {
+        if notes::resolve(&root, rel).map(|p| p.exists()).unwrap_or(false) {
+            let _ = std::fs::remove_file(src);
+        }
+    }
+    let refs: Vec<&str> = added.iter().map(String::as_str).collect();
+    touch_index(&state, &root, &refs);
+    Ok(added)
+}
+
+/// Open a file outside the vault (a linked attachment) with its default app.
+#[tauri::command]
+pub fn open_external_file(path: PathBuf) -> CmdResult<()> {
+    if !path.is_absolute() || !path.exists() {
+        return Err(CommandError { code: "not-found", detail: path.to_string_lossy().into_owned() });
+    }
+    #[cfg(target_os = "windows")]
+    let r = {
+        use std::os::windows::process::CommandExt;
+        let clean = path.to_string_lossy().replace("/", "\\");
+        std::process::Command::new("explorer").raw_arg(format!("\"{clean}\"")).spawn()
+    };
+    #[cfg(target_os = "macos")]
+    let r = std::process::Command::new("open").arg(&path).spawn();
+    #[cfg(all(unix, not(target_os = "macos")))]
+    let r = std::process::Command::new("xdg-open").arg(&path).spawn();
+    r.map(|_| ()).map_err(internal)
+}
+
+/// Title and channel of a YouTube video (oEmbed JSON), for video cards in notes.
+/// Only YouTube video ids are accepted, so this can't be used to fetch anything else.
+#[tauri::command]
+pub async fn youtube_info(id: String) -> CmdResult<String> {
+    if id.len() != 11 || !id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
+        return Err(CommandError { code: "invalid-path", detail: id });
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let url = format!("https://www.youtube.com/oembed?format=json&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D{id}");
+        ureq::get(&url)
+            .timeout(std::time::Duration::from_secs(12))
+            .call()
+            .map_err(internal)?
+            .into_string()
+            .map_err(internal)
+    })
+    .await
+    .map_err(internal)?
+}
+
+/// Write a generated image to the app's cache so the system share sheet can send it.
+#[tauri::command]
+pub fn share_temp_file(app: tauri::AppHandle, name: String, data: String) -> CmdResult<String> {
+    use base64::Engine;
+    use tauri::Manager;
+    let bytes = base64::engine::general_purpose::STANDARD.decode(data.trim()).map_err(|_| CommandError { code: "invalid-path", detail: name.clone() })?;
+    let safe: String = name.chars().map(|c| if c.is_alphanumeric() || c == '.' || c == '-' || c == '_' || c == ' ' { c } else { '_' }).collect();
+    let dir = app.path().app_cache_dir().map_err(internal)?.join("share");
+    std::fs::create_dir_all(&dir).map_err(internal)?;
+    let path = dir.join(if safe.trim().is_empty() { "share.png".to_string() } else { safe });
+    std::fs::write(&path, bytes).map_err(internal)?;
+    Ok(path.to_string_lossy().into_owned())
 }
 
 /// Absolute filesystem path of a vault entry, for "copy location".

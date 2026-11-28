@@ -2,7 +2,7 @@
 html, body, #root { block-size: 100%; margin: 0; }
 body {
   background: var(--bg-primary); color: var(--text-primary);
-  font-family: var(--font-ui); line-height: 1.5; overflow: hidden;
+  font-family: var(--font-ui); font-size: var(--ui-font-size, 16px); line-height: 1.5; overflow: hidden;
   -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
 }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -10,7 +10,20 @@ button { cursor: pointer; }
 :focus { outline: none; }
 :focus-visible { box-shadow: var(--focus-ring); }
 ::selection { background: var(--accent-soft); }
-* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+/* Scrollbars: thin rounded accent-tinted thumb that grows on hover, no track.
+   (Chromium ignores ::-webkit-scrollbar when scrollbar-width/color are set, so those stay off.) */
+::-webkit-scrollbar { inline-size: 10px; block-size: 10px; width: 10px; height: 10px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb {
+  border-radius: 999px; border: 3px solid transparent; background-clip: padding-box;
+  background-color: color-mix(in srgb, var(--accent) 32%, var(--border-strong));
+}
+::-webkit-scrollbar-thumb:hover { border-width: 2px; background-color: color-mix(in srgb, var(--accent) 70%, transparent); }
+::-webkit-scrollbar-thumb:active { background-color: var(--accent); }
+::-webkit-scrollbar-button { display: none; }
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--accent) 45%, transparent) transparent; }
+}
 
 .sr-only {
   position: absolute !important; inline-size: 1px; block-size: 1px; padding: 0; margin: -1px;
@@ -48,20 +61,25 @@ button { cursor: pointer; }
   .glass, .glass-modal { background: rgb(var(--l1) / 0.96); }
 }
 
-/* Atmospheric backdrop the glass blurs: a slow-moving mesh of soft color. */
+/* Atmospheric backdrop the glass blurs: soft fields of colour. "Soft colour
+   background" on: clearly visible and slowly moving (still with reduced
+   motion); off: a plain background. */
 .backdrop { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .backdrop span {
-  position: absolute; inline-size: 60vmax; block-size: 60vmax; border-radius: 50%;
-  filter: blur(110px); opacity: 0.2; animation: drift 60s ease-in-out infinite alternate;
+  position: absolute; inline-size: 62vmax; block-size: 62vmax; border-radius: 50%;
+  filter: blur(90px); opacity: 0.42; animation: drift 26s ease-in-out infinite alternate; transition: opacity 400ms ease;
 }
-.backdrop span:nth-child(1) { background: var(--mesh-1); inset-block-start: -22vmax; inset-inline-start: -18vmax; }
-.backdrop span:nth-child(2) { background: var(--mesh-2); inset-block-end: -26vmax; inset-inline-end: -16vmax; animation-delay: -11s; }
-.backdrop span:nth-child(3) { background: var(--mesh-3); inset-block-start: 25%; inset-inline-start: 40%; inline-size: 38vmax; block-size: 38vmax; opacity: 0.12; animation-delay: -21s; }
-[data-mesh="false"] .backdrop span { animation: none; }
+.backdrop span:nth-child(1) { background: var(--mesh-1); inset-block-start: -20vmax; inset-inline-start: -16vmax; }
+.backdrop span:nth-child(2) { background: var(--mesh-2); inset-block-end: -24vmax; inset-inline-end: -14vmax; animation-delay: -9s; animation-duration: 31s; }
+.backdrop span:nth-child(3) { background: var(--mesh-3); inset-block-start: 22%; inset-inline-start: 36%; inline-size: 42vmax; block-size: 42vmax; opacity: 0.3; animation-delay: -17s; animation-duration: 22s; }
+[data-mesh="static"] .backdrop span { animation: none; }
+[data-mesh="false"] .backdrop span { opacity: 0; animation: none; }
+/* While sweeping snow or leaves the pointer is a shovel or a broom. */
+html[data-sweep], html[data-sweep] * { cursor: var(--sweep-cursor) !important; }
 @keyframes drift {
   0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(5vmax, 3vmax) scale(1.06); }
-  100% { transform: translate(-4vmax, 6vmax) scale(0.96); }
+  50% { transform: translate(9vmax, 5vmax) scale(1.12); }
+  100% { transform: translate(-7vmax, 10vmax) scale(0.92); }
 }
 
 /* ---------- Common controls ---------- */
